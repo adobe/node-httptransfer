@@ -21,7 +21,7 @@
 
 const assert = require('assert');
 const nock = require('nock');
-const { downloadStream, uploadStream } = require('../lib/stream');
+const { downloadStream, uploadStream, transferStream } = require('../lib/stream');
 const { 
     StringReadable, 
     StringWritable, 
@@ -294,4 +294,52 @@ describe('stream', function() {
             }
         })
     })    
+    describe('transfer', function() {
+        afterEach(async function() {
+            nock.cleanAll()
+        })
+        it('transfer-200', async function() {
+            nock('http://test-transfer-200')
+                .head('/path/to/source.ext')
+                .reply(200, '', {
+                    'content-length': 11
+                });
+
+            nock('http://test-transfer-200')
+                .get('/path/to/source.ext')
+                .reply(200, 'hello world');
+
+            nock('http://test-transfer-200')
+                .matchHeader('content-length', 11)
+                .put('/path/to/target.ext', 'hello world')
+                .reply(201, 'goodbye');
+
+            await transferStream(
+                'http://test-transfer-200/path/to/source.ext', 
+                'http://test-transfer-200/path/to/target.ext'
+            );
+        })
+        it('transfer-200-aws', async function() {
+            nock('http://test-transfer-200.amazonaws.com')
+                .get('/path/to/source.ext')
+                .matchHeader('range', 'bytes=0-0')
+                .reply(200, '', {
+                    'content-range': 'bytes 0-0/11'
+                });
+
+            nock('http://test-transfer-200.amazonaws.com')
+                .get('/path/to/source.ext')
+                .reply(200, 'hello world');
+
+            nock('http://test-transfer-200.amazonaws.com')
+                .matchHeader('content-length', 11)
+                .put('/path/to/target.ext', 'hello world')
+                .reply(201, 'goodbye');
+
+            await transferStream(
+                'http://test-transfer-200.amazonaws.com/path/to/source.ext', 
+                'http://test-transfer-200.amazonaws.com/path/to/target.ext'
+            );
+        })
+    })
 })

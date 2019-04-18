@@ -14,8 +14,10 @@
     "url": "https://git.corp.adobe.com/nui/node-httptransfer.git"
   },
   "dependencies": {
+    "content-range": "^1.1.0",
     "fs-extra": "^7.0.1",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.7"
   },
   "devDependencies": {
     "@nui/eslint-config": "^1.0.2",
