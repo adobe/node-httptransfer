@@ -17,12 +17,12 @@
 
 'use strict';
 
-const { downloadStream, uploadStream } = require('./lib/stream');
+const { downloadStream, uploadStream, transferStream } = require('./lib/stream');
 const { downloadFile, uploadFile } = require('./lib/file');
 const { uploadMultipartFile } = require('./lib/multipart');
 
 module.exports = {
-    downloadStream, uploadStream,
+    downloadStream, uploadStream, transferStream,
     downloadFile, uploadFile,
     uploadMultipartFile
 }
