@@ -14,7 +14,9 @@
     "url": "https://git.corp.adobe.com/nui/node-httptransfer.git"
   },
   "dependencies": {
+    "content-disposition": "^0.5.3",
     "content-range": "^1.1.0",
+    "content-type": "^1.0.4",
     "fs-extra": "^7.0.1",
     "node-fetch": "^2.3.0"
   },

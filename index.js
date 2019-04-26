@@ -20,9 +20,11 @@
 const { downloadStream, uploadStream, transferStream } = require('./lib/stream');
 const { downloadFile, uploadFile } = require('./lib/file');
 const { uploadMultipartFile } = require('./lib/multipart');
+const { getResourceHeaders } = require('./lib/headers');
 
 module.exports = {
     downloadStream, uploadStream, transferStream,
     downloadFile, uploadFile,
-    uploadMultipartFile
+    uploadMultipartFile,
+    getResourceHeaders
 }

@@ -288,7 +288,7 @@ describe('stream', function() {
                 assert.strictEqual(e.message, 'Upload to \'http://test-404-stream-error/path/to/file.ext\' failed with status 404: 404 read failure');
             }
         })
-        it.only('201-stream-read-error', async function() {
+        it.skip('201-stream-read-error', async function() {
             try {
                 nock('http://test-201-stream-read-error')
                     .put('/path/to/file.ext', 'hello world 123')
