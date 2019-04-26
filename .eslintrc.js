@@ -16,5 +16,30 @@
 **************************************************************************/
 
 module.exports = {
-    "extends": "@nui/eslint-config",
+    "extends": "problems",
+    "env": {
+        "node": true
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
+    "plugins": [
+        "mocha"
+    ],
+    "rules": {
+        "prefer-arrow-callback": "off",
+        "prefer-template": "off",
+        "object-shorthand": "off",
+        "no-console": ["off", {"allow": true}],
+        "template-curly-spacing": ["warn", "never"],
+        "no-else-return": "off",
+        "mocha/no-exclusive-tests": "error",
+        "mocha/no-identical-title": "error",
+        "mocha/no-mocha-arrows": "error",
+        "mocha/no-nested-tests": "error",
+        "mocha/no-pending-tests": "error",
+        "mocha/no-return-and-callback": "error",
+        "mocha/no-sibling-hooks": "error",
+        "mocha/no-async-describe": "error"
+    }
 };
