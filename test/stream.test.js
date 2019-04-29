@@ -305,7 +305,7 @@ describe('stream', function() {
             nock('http://test-transfer-200')
                 .get('/path/to/source.ext')
                 .reply(200, 'hello world', {
-                    "content-length": 11
+                    "content-range": "bytes 0-0/11"
                 });
 
             nock('http://test-transfer-200')

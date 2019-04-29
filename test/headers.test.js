@@ -63,25 +63,25 @@ describe('headers', function() {
             });
             assert.strictEqual(result.mimetype, 'image/jpeg');
         }) 
-        it('content-size-none', function() {
+        it('content-range-none', function() {
             const result = parse({});
             assert.strictEqual(result.size, 0);
         })
-        it('content-size-empty', function() {
+        it('content-range-empty', function() {
             const result = parse({
-                'content-length': ''
+                'content-range': ''
             });
             assert.strictEqual(result.size, 0);
         })
-        it('content-size-invalid', function() {
+        it('content-range-invalid', function() {
             const result = parse({
-                'content-length': 'abc'
+                'content-range': 'abc'
             });
             assert.strictEqual(result.size, 0);
         })
-        it('content-size-value', function() {
+        it('content-range-value', function() {
             const result = parse({
-                'content-length': '100'
+                'content-range': 'bytes 0-0/100'
             });
             assert.strictEqual(result.size, 100);
         })
