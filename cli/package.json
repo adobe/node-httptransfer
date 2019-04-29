@@ -1,0 +1,27 @@
+{
+  "name": "@nui/node-httptransfer-cli",
+  "version": "0.0.1",
+  "main": "index.js",
+  "description": "Efficient File Transfer Module for NodeJS",
+  "author": {
+    "name": "Adobe Systems Inc."
+  },
+  "publishConfig": {
+    "registry": "https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git.corp.adobe.com/nui/node-httptransfer.git"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^10.3.0",
+    "@nui/node-httptransfer": "file:..",
+    "uri-js": "^4.2.2",
+    "yargs": "^13.2.2"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-problems": "^2.0.0",
+    "eslint-plugin-mocha": "^5.3.0"
+  }
+}
