@@ -17,7 +17,11 @@ const path = require("path");
 const URL = require("url");
 const yargs = require("yargs");
 const azureStorageBlob = require("@azure/storage-blob");
-const { downloadFile, uploadFile, transferStream } = require("@nui/node-httptransfer");
+const leftPad = require('left-pad');
+const { 
+    downloadFile, uploadFile, uploadMultipartFile,
+    transferStream, 
+    getResourceHeaders } = require("@nui/node-httptransfer");
 
 function createAzureSAS(auth, containerName, blobName, permissions) {
     if (!auth || !auth.accountName || !auth.accountKey) {
@@ -39,6 +43,27 @@ function createAzureSAS(auth, containerName, blobName, permissions) {
     return `https://${auth.accountName}.blob.core.windows.net/${path}?${query}`;
 }
 
+async function commitAzureBlocks(auth, containerName, blobName) {
+    const credential = new azureStorageBlob.SharedKeyCredential(
+        auth.accountName,
+        auth.accountKey
+    );
+    const path = encodeURIComponent(`${containerName}/${blobName}`);
+    const url = `https://${auth.accountName}.blob.core.windows.net/${path}`;
+    const blobURL = new azureStorageBlob.BlockBlobURL(
+        url, 
+        azureStorageBlob.BlockBlobURL.newPipeline(credential)
+    );
+    const blockList = await blobURL.getBlockList(
+        azureStorageBlob.Aborter.none, 
+        "uncommitted"
+    );
+    await blobURL.commitBlockList(
+        azureStorageBlob.Aborter.none,
+        blockList.uncommittedBlocks.map(x => x.name)
+    );
+}
+
 async function resolveLocation(value, options) {
     const url = URL.parse(value);
     if (url.protocol === "https:" || url.protocol === "http:") {
@@ -46,15 +71,31 @@ async function resolveLocation(value, options) {
             url: value
         };
     } else if (url.protocol === "azure:") {
-        return {
-            url: createAzureSAS(
-                options.azureAuth, 
-                url.host, 
-                url.path.substring(1), // skip the '/' prefix
-                options.writable ? "cw" : "r"
-            ),
-            headers: {
-                "x-ms-blob-type": "BlockBlob"
+        const numParts = options.numParts || Math.ceil(options.size / options.maxPartSize);
+        const sasUrl = createAzureSAS(
+            options.azureAuth, 
+            url.host, 
+            url.path.substring(1), // skip the '/' prefix
+            options.writable ? "cw" : "r"
+        );
+        if (numParts > 1) {
+            const urls = [];
+            for (let i = 0; i < numParts; ++i) {
+                // each block id must be the same size
+                const blockId = Buffer.from(leftPad(i, 10, 0)).toString("base64");
+                urls.push(`${sasUrl}&comp=block&blockid=${blockId}`);
+            }
+            return {
+                minPartSize: options.minPartSize,
+                maxPartSize: options.maxPartSize,
+                urls
+            }
+        } else {
+            return {
+                url: sasUrl,
+                headers: {
+                    "x-ms-blob-type": "BlockBlob"
+                }
             }
         }
     } else if (url.protocol === "file:" || url.protocol === null) {
@@ -88,17 +129,19 @@ async function main() {
                     describe: 'File, URL, or azure://container/path/to/blob to send content to',
                     type: 'string'
                 })
-                .option('min', {
+                .option('minPartSize', {
+                    alias: "min",
                     describe: 'Minimum part size',
                     type: 'number',
                     default: 0
                 })
-                .option('max', {
+                .option('maxPartSize', {
+                    alias: "max",
                     describe: 'Maximum part size',
                     type: 'number',
                     default: 100*1000*1000
                 })
-                .option('num', {
+                .option('numParts', {
                     alias: 'n',
                     describe: 'Number of parts',
                     type: 'number'
@@ -125,18 +168,34 @@ async function main() {
         accountName: params["account-name"] || process.env.AZURE_STORAGE_ACCOUNT
     };
 
-    // resolve locations
+    // resolve source
     const source = await resolveLocation(params.source, Object.assign({}, params, {
         writable: false
     }));
+
+    let size;
+    if (source.url) {
+        const headers = await getResourceHeaders(source.url);
+        size = headers.size;
+    } else if (source.file) {
+        const stats = await fs.stat(source.file);
+        size = stats.size;
+    }
+
+    console.log(`Source: ${source.url || source.file}, ${size} bytes`);
+
+    // resolve target
     const target = await resolveLocation(params.target, Object.assign({}, params, {
-        writable: true
+        writable: true,
+        size
     }));
+    if (target.urls) {
+        console.log(`Target: ${target.urls.length} parts, ${target.urls[0]}`);
+    } else {
+        console.log(`Target: ${target.url || target.file}`);
+    }
 
     // transfer
-    console.log(`Source: ${source.url || source.file}`);
-    console.log(`Target: ${target.url || target.file}`);
-
     if (source.file && target.url) {
         await uploadFile(source.file, target.url, {
             headers: target.headers
@@ -151,6 +210,12 @@ async function main() {
                 headers: target.headers
             }
         });
+    } else if (source.file && target.urls) {
+        await uploadMultipartFile(source.file, target);
+
+        console.log("Commit uncommitted blocks");
+        const url = URL.parse(params.target);
+        await commitAzureBlocks(params.azureAuth, url.host, url.path.substring(1));
     } else {
         throw Error("Transfer is not supported")
     }  
