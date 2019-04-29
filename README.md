@@ -74,6 +74,58 @@ async main() {
 
 Assuming `test.png` is 1,800,000 bytes this will upload the first 1,000,000 bytes to `http://my.server.com/test.png.1` and the next 800,000 bytes to `http://my.server.com/test.png.2`.
 
+## Testbed
+
+A CLI tool [testbed](./testbed/index.js) is provided to try out the `node-httptransfer` functionality. It supports uploading, downloading, and transferring file content. It also supports Azure Blob stores through Shared Access Signature (SAS) urls created on the fly.
+
+The tool is not intended to be useful on its own, only to test out new features or debug issues.
+
+### Build
+
+```bash
+cd testbed/
+npm install
+```
+
+### Azure credentials
+
+```bash
+export AZURE_STORAGE_ACCOUNT=<storage account name from https://portal.azure.com>
+export AZURE_STORAGE_KEY=<storage key from https://portal.azure.com>
+```
+
+### Examples
+
+Download an image from a website:
+
+```bash
+node index.js https://website.com/path/to/image.gif image.gif
+```
+
+Download blob.txt from azure:
+
+```bash
+node index.js azure://container/path/to/blob.txt blob.txt
+```
+
+Upload blob.txt to azure:
+
+```bash
+node index.js blob.txt azure://container/path/to/blob.txt
+```
+
+Upload blob.txt in 10,000 byte blocks:
+
+```bash
+node index.js --max 10000 blob.txt azure://container/path/to/blob.txt
+```
+
+Copy blob.txt within a container:
+
+```bash
+node index.js azure://container/path/to/blob.txt azure://container/path/to/target.txt
+```
+
 ### Contributing
 
 Contributions are welcomed! Read the [Contributing Guide](./.github/CONTRIBUTING.md) for more information.
