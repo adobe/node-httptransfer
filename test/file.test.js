@@ -60,7 +60,7 @@ describe('file', function() {
         
                 await downloadFile('http://test-status-404/path/to/file.ext', '.testfile.dat');
             } catch (e) {
-                assert.strictEqual(e.message, 'Download \'http://test-status-404/path/to/file.ext\' failed with status 404');
+                assert.strictEqual(e.message, 'GET \'http://test-status-404/path/to/file.ext\' failed with status 404');
                 const result = await fs.readFile('.testfile.dat', 'utf8');
                 assert.strictEqual(result, '');
             }
@@ -96,7 +96,7 @@ describe('file', function() {
                 await uploadFile('.testfile.dat', 'http://test-status-404/path/to/file.ext');
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'Upload to \'http://test-status-404/path/to/file.ext\' failed with status 404');
+                assert.strictEqual(e.message, 'PUT \'http://test-status-404/path/to/file.ext\' failed with status 404');
             }
         })
     })

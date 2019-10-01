@@ -17,7 +17,7 @@ governing permissions and limitations under the License.
 const assert = require('assert');
 const fs = require('fs-extra');
 const nock = require('nock');
-const { uploadMultipartFile } = require('../lib/multipart');
+const { uploadAEMMultipartFile } = require('../lib/aemmultipart');
 
 describe('multipart', function() {
     describe('upload', function() {
@@ -39,7 +39,7 @@ describe('multipart', function() {
                 .put('/path/to/file-1.ext', 'hello world 123')
                 .reply(201);
     
-            await uploadMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext'
                 ]
@@ -51,7 +51,7 @@ describe('multipart', function() {
                 .put('/path/to/file-1.ext', 'hello world 123')
                 .reply(201);
     
-            await uploadMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
                     'http://test-status-201/path/to/file-2.ext'
@@ -68,7 +68,7 @@ describe('multipart', function() {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('.testfile.dat', {
                 maxPartSize: 14,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -82,7 +82,7 @@ describe('multipart', function() {
                 .put('/path/to/file-1.ext', 'hello world 123')
                 .reply(201);
     
-            await uploadMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('.testfile.dat', {
                 maxPartSize: 15,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -96,7 +96,7 @@ describe('multipart', function() {
                 .put('/path/to/file-1.ext', 'hello world 123')
                 .reply(201);
     
-            await uploadMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('.testfile.dat', {
                 maxPartSize: 16,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -114,7 +114,7 @@ describe('multipart', function() {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('.testfile.dat', {
                 maxPartSize: 14,
                 minPartSize: 7,
                 urls: [
@@ -134,7 +134,7 @@ describe('multipart', function() {
                     .put('/path/to/file-2.ext', 'rld 123')
                     .reply(201);
 
-                await uploadMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('.testfile.dat', {
                     maxPartSize: 14,
                     minPartSize: 8,
                     urls: [
@@ -158,7 +158,7 @@ describe('multipart', function() {
                     .put('/path/to/file-2.ext', 'rld 123')
                     .reply(201);
 
-                await uploadMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('.testfile.dat', {
                     maxPartSize: 14,
                     urls: [
                         'http://test-status-201/path/to/file-1.ext'
@@ -179,7 +179,7 @@ describe('multipart', function() {
                     .put('/path/to/file-2.ext', 'rld 123')
                     .reply(201);
 
-                await uploadMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('.testfile.dat', {
                     maxPartSize: 14,
                     urls: [
                         'http://test-status-201/path/to/file-1.ext',
@@ -187,7 +187,7 @@ describe('multipart', function() {
                     ]
                 });
             } catch (e) {
-                assert.strictEqual(e.message, 'Upload to \'http://test-status-201/path/to/file-1.ext\' failed with status 404');
+                assert.strictEqual(e.message, 'PUT \'http://test-status-201/path/to/file-1.ext\' failed with status 404');
             }
         })
         it('status-201-2urls-maxpart14-404url2', async function() {
@@ -201,7 +201,7 @@ describe('multipart', function() {
                     .put('/path/to/file-2.ext', 'rld 123')
                     .reply(404);
 
-                await uploadMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('.testfile.dat', {
                     maxPartSize: 14,
                     urls: [
                         'http://test-status-201/path/to/file-1.ext',
@@ -209,7 +209,7 @@ describe('multipart', function() {
                     ]
                 });
             } catch (e) {
-                assert.strictEqual(e.message, 'Upload to \'http://test-status-201/path/to/file-2.ext\' failed with status 404');
+                assert.strictEqual(e.message, 'PUT \'http://test-status-201/path/to/file-2.ext\' failed with status 404');
             }
         })
     })
