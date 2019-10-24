@@ -1,0 +1,180 @@
+#
+# ADOBE CONFIDENTIAL
+# __________________
+#
+# Copyright 2018 Adobe Systems Incorporated
+# All Rights Reserved.
+#
+# NOTICE:  All information contained herein is, and remains
+# the property of Adobe Systems Incorporated and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Adobe Systems Incorporated and its
+# suppliers and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Adobe Systems Incorporated.
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+jobs:
+  validate_config:
+    working_directory: ~/validate
+    docker:
+      - image: circleci/node:12.0.0
+    steps:
+      - checkout:
+          path: ~/validate/repo
+
+      - run:
+          name: compare with central cci config
+          command: |
+            cd ~/validate
+            #git clone git@git.corp.adobe.com:nui/circleci.git
+            git clone https://$GITHUB_TOKEN@git.corp.adobe.com/circleci.git
+            cd circleci
+            git checkout $CIRCLE_BRANCH
+            git branch
+            #comparing ~/validate/repo/.circleci/config.yml to ~/validate/circleci/config.yml
+            cmp -s ~/validate/repo/.circleci/config.yml ~/validate/circleci/config.yml || { echo 'circleci/config.yml not in sync'; exit 1; }
+
+  build_action:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:12.0.0
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: Authenticate with artifactory
+          command: |
+            curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local/auth/nui >> ~/.npmrc
+            # this was added only for core repo
+            curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-aem-desktop-release-local/auth/aem-desktop >> ~/.npmrc
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "action/package.json" }}
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+    
+      - run:
+          name: install-npm
+          command: |
+            if [ -d "action" ]; then
+              cd ~/repo/action
+            else
+              cd ~/repo
+            fi
+            npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "action/package.json" }}
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+
+  build_runtime:
+    working_directory: ~/repo
+    machine:
+        enabled: true
+        docker_layer_caching: true
+      
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: Authenticate with artifactory
+          command: |
+            curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local/auth/nui >> ~/.npmrc
+            # this was added only for core repo
+            curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-aem-desktop-release-local/auth/aem-desktop >> ~/.npmrc
+
+      - run:
+          name: create-runtime-docker
+          command: |
+              if [ -d "docker" ] || [  -d "runtime" ]; then
+                if [ -d "docker" ]; then
+                  cd ~/repo/docker
+                elif [ -d "runtime" ]; then
+                  cd ~/repo/runtime
+                fi
+                if [ -f "download-artifacts" ]; then
+                    export ARTIFACTORY_APIKEY=$ARTIFACTORY_TOKEN
+                    ./download-artifacts
+                fi
+                docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
+                export DOCKER_REGISTRY=docker-senseiwins-release.dr-uw2.adobeitc.com/
+                if [ -f "docker-compose.yml" ]; then
+                  docker-compose build runtime
+                fi
+              else
+                cd ~/repo
+                docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
+              fi
+
+      - run:
+          name: test-npm
+          command: |
+              cd ~/repo
+              if [ -d "action" ]; then
+                  cd ~/repo/action
+              fi
+              # circleci user is Missing write access to /usr/local/lib/node_modules
+              sudo chown -R circleci /usr/local/
+              chmod -R u+x+w /usr/local/
+              export NVM_DIR="/opt/circleci/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              nvm install v10.16.3
+              nvm alias default v10.16.3
+              npm install
+              npm install -g @nui/cli
+              npm test
+
+      # Unit-Test-reports for modules without action folder
+      - store_test_results:
+          path: build
+
+      # Test-reports for modules with action folder
+      - store_test_results:
+          path: action/build
+
+      # Test-logs for modules with action folder
+      - store_artifacts:
+          path: action/build
+          destination: build
+
+      # Test-logs for modules without action folder
+      - store_artifacts:
+          path: build
+          destination: build
+      
+      # Test-logs for modules with action folder for image comparision
+      - store_artifacts:
+          path: action/.nui
+          destination: .nui
+
+      # Coverage-report
+      - store_artifacts:
+          path: coverage
+          destination: coverage
+
+# validate_config job is commented until modules are CCI enabled
+workflows:
+    version: 2
+    build:
+        jobs:
+#        - validate_config:
+#            context: nui
+        - build_action:
+#            requires:
+#             - validate_config
+            context: nui
+        - build_runtime:
+#            requires:
+#              - validate_config
+            context: nui
