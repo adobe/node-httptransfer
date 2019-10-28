@@ -24,8 +24,6 @@ describe('file', function() {
         afterEach(async function() {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
-            
-            
             try {
                 await fs.unlink('.testfile.dat');
             } catch (e) {
