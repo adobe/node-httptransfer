@@ -91,6 +91,19 @@ describe('file', function() {
     
             await uploadFile('.testfile.dat', 'http://test-status-201/path/to/file.ext');
         })
+        it('status-201-header', async function() {
+            nock('http://test-status-201')
+                .matchHeader('content-length', 15)
+                .matchHeader('content-type', 'image/jpeg')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+    
+            await uploadFile('.testfile.dat', 'http://test-status-201/path/to/file.ext', {
+                headers: {
+                    'content-type': 'image/jpeg'
+                }
+            });
+        })        
         it('status-404', async function() {
             nock('http://test-status-404')
                 .put('/path/to/file.ext', 'hello world 123')
