@@ -355,7 +355,7 @@ describe('multipart', function() {
 
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'network timeout at: http://timeout-error/path/to/file-1.ext');
+                assert.strictEqual(e.message, 'PUT \'http://timeout-error/path/to/file-1.ext\' failed: network timeout at: http://timeout-error/path/to/file-1.ext');
             }
         })
         it('timeout-error-2', async function() {
@@ -381,7 +381,7 @@ describe('multipart', function() {
 
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'network timeout at: http://timeout-error/path/to/file-2.ext');
+                assert.strictEqual(e.message, 'PUT \'http://timeout-error/path/to/file-2.ext\' failed: network timeout at: http://timeout-error/path/to/file-2.ext');
             }
         })
         it('header-override', async function() {

@@ -97,7 +97,7 @@ describe('stream', function() {
                 await downloadStream('http://badhost/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost badhost:80');
+                assert.strictEqual(e.message, 'GET \'http://badhost/path/to/file.ext\' failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost badhost:80');
             }
         })
         it('timeout-error', async function() {
@@ -111,7 +111,7 @@ describe('stream', function() {
                 await downloadStream('http://test-timeout/path/to/file.ext', writeStream, { timeout: 200 });
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'network timeout at: http://test-timeout/path/to/file.ext');
+                assert.strictEqual(e.message, 'GET \'http://test-timeout/path/to/file.ext\' failed: network timeout at: http://test-timeout/path/to/file.ext');
             }
         })
         // node-fetch uses a PassThrough stream, but any errors are not caught before 
@@ -233,7 +233,7 @@ describe('stream', function() {
                 await uploadStream(readStream, 'http://badhost/path/to/file.ext');
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost badhost:80');
+                assert.strictEqual(e.message, 'PUT \'http://badhost/path/to/file.ext\' failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost badhost:80');
             }
         })
         it('timeout-error', async function() {
@@ -247,7 +247,7 @@ describe('stream', function() {
                 await uploadStream(readStream, 'http://test-timeout/path/to/file.ext', { timeout: 200 });
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'network timeout at: http://test-timeout/path/to/file.ext');
+                assert.strictEqual(e.message, 'PUT \'http://test-timeout/path/to/file.ext\' failed: network timeout at: http://test-timeout/path/to/file.ext');
             }
         })
         // node-fetch uses a PassThrough stream, but any errors are not caught before 
