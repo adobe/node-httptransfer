@@ -25,7 +25,8 @@ describe('multipart', function() {
             await fs.writeFile('.testfile.dat', 'hello world 123', 'utf8');
         })
         afterEach(async function() {
-            nock.cleanAll()
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
             try {
                 await fs.unlink('.testfile.dat');
             } catch (e) {
@@ -125,15 +126,6 @@ describe('multipart', function() {
         })
         it('status-201-2urls-maxpart14-minpart8', async function() {
             try {
-                nock('http://test-status-201')
-                    .matchHeader('content-length', 8)
-                    .put('/path/to/file-1.ext', 'hello wo')
-                    .reply(201);
-                nock('http://test-status-201')
-                    .matchHeader('content-length', 7)
-                    .put('/path/to/file-2.ext', 'rld 123')
-                    .reply(201);
-
                 await uploadAEMMultipartFile('.testfile.dat', {
                     maxPartSize: 14,
                     minPartSize: 8,
@@ -149,15 +141,6 @@ describe('multipart', function() {
         })
         it('status-201-1url-maxpart14', async function() {
             try {
-                nock('http://test-status-201')
-                    .matchHeader('content-length', 8)
-                    .put('/path/to/file-1.ext', 'hello wo')
-                    .reply(201);
-                nock('http://test-status-201')
-                    .matchHeader('content-length', 7)
-                    .put('/path/to/file-2.ext', 'rld 123')
-                    .reply(201);
-
                 await uploadAEMMultipartFile('.testfile.dat', {
                     maxPartSize: 14,
                     urls: [
@@ -174,10 +157,6 @@ describe('multipart', function() {
                     .matchHeader('content-length', 8)
                     .put('/path/to/file-1.ext', 'hello wo')
                     .reply(404);
-                nock('http://test-status-201')
-                    .matchHeader('content-length', 7)
-                    .put('/path/to/file-2.ext', 'rld 123')
-                    .reply(201);
 
                 await uploadAEMMultipartFile('.testfile.dat', {
                     maxPartSize: 14,

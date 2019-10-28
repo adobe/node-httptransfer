@@ -27,7 +27,8 @@ const {
 describe('stream', function() {
     describe('download', function() {
         afterEach(async function() {
-            nock.cleanAll()
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
         })
         it('status-200', async function() {
             nock('http://test-status-200')
@@ -164,7 +165,8 @@ describe('stream', function() {
     })
     describe('upload', function() {
         afterEach(async function() {
-            nock.cleanAll()
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
         })
         it('status-201', async function() {
             nock('http://test-status-201')
@@ -299,7 +301,8 @@ describe('stream', function() {
     })    
     describe('transfer', function() {
         afterEach(async function() {
-            nock.cleanAll()
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
         })
         it('transfer-200', async function() {
             nock('http://test-transfer-200')

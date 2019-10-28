@@ -22,7 +22,10 @@ const { downloadFile, uploadFile } = require('../lib/file');
 describe('file', function() {
     describe('download', function() {
         afterEach(async function() {
-            nock.cleanAll()
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
+            
+            
             try {
                 await fs.unlink('.testfile.dat');
             } catch (e) {
@@ -71,7 +74,8 @@ describe('file', function() {
             await fs.writeFile('.testfile.dat', 'hello world 123', 'utf8');
         })
         afterEach(async function() {
-            nock.cleanAll()
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
             try {
                 await fs.unlink('.testfile.dat');
             } catch (e) {
