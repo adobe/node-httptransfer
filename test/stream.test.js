@@ -321,5 +321,82 @@ describe('stream', function() {
                 'http://test-transfer-200/path/to/target.ext'
             );
         })
+        it('transfer-503-retry-get', async function() {
+            nock('http://test-transfer-503')
+                .get('/path/to/source.ext')
+                .reply(503);
+            nock('http://test-transfer-503')
+                .get('/path/to/source.ext')
+                .reply(200, 'hello world', {
+                    "content-range": "bytes 0-0/11"
+                });
+
+            nock('http://test-transfer-503')
+                .matchHeader('content-length', 11)
+                .put('/path/to/target.ext', 'hello world')
+                .reply(201, 'goodbye');
+
+            await transferStream(
+                'http://test-transfer-503/path/to/source.ext', 
+                'http://test-transfer-503/path/to/target.ext'
+            );
+        })    
+        it('transfer-503-retry-put', async function() {
+            nock('http://test-transfer-503')
+                .get('/path/to/source.ext')
+                .reply(200, 'hello world', {
+                    "content-range": "bytes 0-0/11"
+                });
+            nock('http://test-transfer-503')
+                .get('/path/to/source.ext')
+                .reply(200, 'hello world', {
+                    "content-range": "bytes 0-0/11"
+                });
+
+            nock('http://test-transfer-503')
+                .matchHeader('content-length', 11)
+                .put('/path/to/target.ext', 'hello world')
+                .reply(503);
+            nock('http://test-transfer-503')
+                .matchHeader('content-length', 11)
+                .put('/path/to/target.ext', 'hello world')
+                .reply(201, 'goodbye');
+
+            await transferStream(
+                'http://test-transfer-503/path/to/source.ext', 
+                'http://test-transfer-503/path/to/target.ext'
+            );
+        })
+        it('transfer-404-retry-get-put', async function() {
+            nock('http://test-transfer-404')
+                .get('/path/to/source.ext')
+                .reply(404);
+            nock('http://test-transfer-404')
+                .get('/path/to/source.ext')
+                .reply(200, 'hello world', {
+                    "content-range": "bytes 0-0/11"
+                });
+            nock('http://test-transfer-404')
+                .get('/path/to/source.ext')
+                .reply(200, 'hello world', {
+                    "content-range": "bytes 0-0/11"
+                });
+
+            nock('http://test-transfer-404')
+                .matchHeader('content-length', 11)
+                .put('/path/to/target.ext', 'hello world')
+                .reply(404);
+            nock('http://test-transfer-404')
+                .matchHeader('content-length', 11)
+                .put('/path/to/target.ext', 'hello world')
+                .reply(201, 'goodbye');
+
+            await transferStream(
+                'http://test-transfer-404/path/to/source.ext', 
+                'http://test-transfer-404/path/to/target.ext', {
+                    retryAllErrors: true
+                }
+            );
+        })              
     })
 })

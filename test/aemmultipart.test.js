@@ -136,6 +136,32 @@ describe('multipart', function() {
                 ]
             });
         })
+        it('status-201-10urls-fits2', async function() {
+            nock('http://test-status-201')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://test-status-201')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadAEMMultipartFile('.testfile.dat', {
+                minPartSize: 8,
+                urls: [
+                    'http://test-status-201/path/to/file-1.ext',
+                    'http://test-status-201/path/to/file-2.ext',
+                    'http://test-status-201/path/to/file-3.ext',
+                    'http://test-status-201/path/to/file-4.ext',
+                    'http://test-status-201/path/to/file-5.ext',
+                    'http://test-status-201/path/to/file-6.ext',
+                    'http://test-status-201/path/to/file-7.ext',
+                    'http://test-status-201/path/to/file-8.ext',
+                    'http://test-status-201/path/to/file-9.ext',
+                    'http://test-status-201/path/to/file-10.ext',
+                ]
+            });
+        })        
         it('status-201-2urls-minparttoosmall', async function() {
             // this works, because min part is only a suggestion
             nock('http://test-status-201')
@@ -350,7 +376,8 @@ describe('multipart', function() {
                         'http://timeout-error/path/to/file-2.ext'
                     ]
                 }, {
-                    timeout: 200
+                    timeout: 200,
+                    retryEnabled: false
                 });
 
                 assert.fail('failure expected')
@@ -376,7 +403,8 @@ describe('multipart', function() {
                         'http://timeout-error/path/to/file-2.ext'
                     ]
                 }, {
-                    timeout: 200
+                    timeout: 200,
+                    retryEnabled: false
                 });
 
                 assert.fail('failure expected')
@@ -406,6 +434,58 @@ describe('multipart', function() {
                     "content-type": "image/jpeg"
                 }
             });
-        })             
+        })
+        it('status-404-retry', async function() {
+            nock('http://status-404-retry')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(404);
+            nock('http://status-404-retry')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://status-404-retry')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(404);
+            nock('http://status-404-retry')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+    
+            await uploadAEMMultipartFile('.testfile.dat', {
+                urls: [
+                    'http://status-404-retry/path/to/file-1.ext',
+                    'http://status-404-retry/path/to/file-2.ext'
+                ]
+            }, {
+                retryAllErrors: true
+            });
+        })
+        it('status-503-retry', async function() {
+            nock('http://status-503-retry')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(503);
+            nock('http://status-503-retry')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://status-503-retry')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(503);
+            nock('http://status-503-retry')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+    
+            await uploadAEMMultipartFile('.testfile.dat', {
+                urls: [
+                    'http://status-503-retry/path/to/file-1.ext',
+                    'http://status-503-retry/path/to/file-2.ext'
+                ]
+            });
+        })       
     })
 })

@@ -66,6 +66,65 @@ describe('file', function() {
                 assert.strictEqual(result, '');
             }
         })
+        it('status-404-retry', async function() {
+            nock('http://test-status-404')
+                .get('/path/to/file.ext')
+                .reply(404);
+
+            nock('http://test-status-404')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world');
+
+            await downloadFile('http://test-status-404/path/to/file.ext', '.testfile.dat', {
+                retryAllErrors: true
+            });
+            const result = await fs.readFile('.testfile.dat', 'utf8');
+            assert.strictEqual(result, 'hello world');
+        })
+        it('status-503-retry', async function() {
+            nock('http://test-status-503')
+                .get('/path/to/file.ext')
+                .reply(503);
+
+            nock('http://test-status-503')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world');
+
+            await downloadFile('http://test-status-503/path/to/file.ext', '.testfile.dat');
+            const result = await fs.readFile('.testfile.dat', 'utf8');
+            assert.strictEqual(result, 'hello world');
+        })
+        it('timeout-retry', async function() {
+            nock('http://test-status-timeout')
+                .get('/path/to/file.ext')
+                .delayConnection(500)
+                .reply(200, 'hello world');
+
+            nock('http://test-status-timeout')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world');
+
+            await downloadFile('http://test-status-timeout/path/to/file.ext', '.testfile.dat', {
+                timeout: 200
+            });
+            const result = await fs.readFile('.testfile.dat', 'utf8');
+            assert.strictEqual(result, 'hello world');
+        })
+        it('badhost-retry-failure', async function() {
+            const start = Date.now();
+            try {
+                await downloadFile('http://badhost/path/to/file.ext', '.testfile.dat', {
+                    retryMax: 1000
+                });
+                assert.fail('failure expected')
+            } catch (e) {
+                // expect elapsed to be at least 500ms, since less than that a 3rd 
+                // retry would fit (400ms-500ms wait).
+                const elapsed = Date.now() - start;
+                assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
+                assert.strictEqual(e.message, 'GET \'http://badhost/path/to/file.ext\' failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost badhost:80');
+            }
+        })        
     })
     describe('upload', function() {
         beforeEach(async function() {
@@ -112,6 +171,59 @@ describe('file', function() {
                 assert.fail('failure expected')
             } catch (e) {
                 assert.strictEqual(e.message, 'PUT \'http://test-status-404/path/to/file.ext\' failed with status 404');
+            }
+        })
+        it('status-404-retry', async function() {
+            nock('http://test-status-404')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(404);
+
+            nock('http://test-status-404')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+
+            await uploadFile('.testfile.dat', 'http://test-status-404/path/to/file.ext', {
+                retryAllErrors: true
+            });
+        })
+        it('status-503-retry', async function() {
+            nock('http://test-status-503')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(503);
+
+            nock('http://test-status-503')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+
+            await uploadFile('.testfile.dat', 'http://test-status-503/path/to/file.ext');
+        })
+        it('timeout-retry', async function() {
+            nock('http://test-status-timeout')
+                .put('/path/to/file.ext', 'hello world 123')
+                .delayConnection(500)
+                .reply(201);
+
+            nock('http://test-status-timeout')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+
+            await uploadFile('.testfile.dat', 'http://test-status-timeout/path/to/file.ext', {
+                timeout: 200
+            });
+        })
+        it('badhost-retry-failure', async function() {
+            const start = Date.now();
+            try {
+                await uploadFile('.testfile.dat', 'http://badhost/path/to/file.ext', {
+                    retryMax: 1000
+                });
+                assert.fail('failure expected')
+            } catch (e) {
+                // expect elapsed to be at least 500ms, since less than that a 3rd 
+                // retry would fit (400ms-500ms wait).
+                const elapsed = Date.now() - start;
+                assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
+                assert.strictEqual(e.message, 'PUT \'http://badhost/path/to/file.ext\' failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost badhost:80');
             }
         })
     })

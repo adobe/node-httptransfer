@@ -168,7 +168,47 @@ describe('headers', function() {
                 mimetype: 'application/octet-stream',
                 size: 0
             });
-        })        
+        })
+        it('headers - head - 404 retry', async function() {
+            nock('http://test-headers')
+                .head('/path/to/file.ext')
+                .reply(404);
+            nock('http://test-headers')
+                .head('/path/to/file.ext')
+                .reply(200, '', {
+                    'content-disposition': 'attachment; filename="filename.jpg"',
+                    'content-length': 200,
+                    'content-type': 'image/jpeg'
+                })
+    
+            const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
+                retryAllErrors: true
+            });
+            assert.deepStrictEqual(result, {
+                mimetype: 'image/jpeg',
+                size: 200,
+                filename: 'filename.jpg'
+            });
+        })
+        it('headers - head - 503 retry', async function() {
+            nock('http://test-headers')
+                .head('/path/to/file.ext')
+                .reply(503);
+            nock('http://test-headers')
+                .head('/path/to/file.ext')
+                .reply(200, '', {
+                    'content-disposition': 'attachment; filename="filename.jpg"',
+                    'content-length': 200,
+                    'content-type': 'image/jpeg'
+                })
+    
+            const result = await getResourceHeaders('http://test-headers/path/to/file.ext');
+            assert.deepStrictEqual(result, {
+                mimetype: 'image/jpeg',
+                size: 200,
+                filename: 'filename.jpg'
+            });
+        })       
         it('no headers - get', async function() {
             nock('http://test-headers')
                 .get('/path/to/file.ext')
@@ -218,6 +258,49 @@ describe('headers', function() {
             assert.deepStrictEqual(result, {
                 mimetype: 'application/octet-stream',
                 size: 0
+            });
+        })       
+        it('headers - get - 404 retry', async function() {
+            nock('http://test-headers')
+                .get('/path/to/file.ext')
+                .reply(404);
+            nock('http://test-headers')
+                .get('/path/to/file.ext')
+                .reply(200, '', {
+                    'content-disposition': 'attachment; filename="filename.jpg"',
+                    'content-range': 'bytes 0-0/200',
+                    'content-type': 'image/jpeg'
+                })
+    
+            const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
+                doGet: true,
+                retryAllErrors: true
+            });
+            assert.deepStrictEqual(result, {
+                mimetype: 'image/jpeg',
+                size: 200,
+                filename: 'filename.jpg'
+            });
+        })
+        it('headers - get - 503 retry', async function() {
+            nock('http://test-headers')
+                .get('/path/to/file.ext')
+                .reply(503);
+            nock('http://test-headers')
+                .get('/path/to/file.ext')
+                .reply(200, '', {
+                    'content-disposition': 'attachment; filename="filename.jpg"',
+                    'content-range': 'bytes 0-0/200',
+                    'content-type': 'image/jpeg'
+                })
+    
+            const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
+                doGet: true
+            });
+            assert.deepStrictEqual(result, {
+                mimetype: 'image/jpeg',
+                size: 200,
+                filename: 'filename.jpg'
             });
         })              
     })

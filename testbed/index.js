@@ -12,6 +12,7 @@ governing permissions and limitations under the License.
 
 "use strict";
 
+const filterObject = require('filter-obj');
 const fs = require("fs-extra");
 const path = require("path");
 const URL = require("url");
@@ -159,6 +160,26 @@ async function main() {
                     describe: "Azure storage account name. Environment variable: AZURE_STORAGE_ACCOUNT",
                     type: "string"
                 })
+                .option("retryEnabled", {
+                    describe: "Enable or disable retry on failure",
+                    type: "boolean",
+                    default: true
+                })
+                .option("retryAllErrors", {
+                    describe: "Whether or not to retry on all http error codes or just >=500",
+                    type: "boolean",
+                    default: false
+                })
+                .option("retryMax", {
+                    describe: "Time to retry until throwing an error (ms)",
+                    type: "number",
+                    default: 60000
+                })  
+                .option("retryInterval", {
+                    describe: "Time between retries, used by exponential backoff (ms)",
+                    type: "number",
+                    default: 100
+                })                               
                 .example("$0 azure://container/source.txt blob.txt", "Download path/to/source.txt in container to blob.txt")
                 .example("$0 blob.txt azure://container/target.txt", "Upload blob.txt to path/to/target.txt in container")
                 .example("$0 azure://container/source.txt azure://container/target.txt", "Transfer source.txt to target.txt in container")
@@ -173,6 +194,12 @@ async function main() {
         accountName: params["account-name"] || process.env.AZURE_STORAGE_ACCOUNT
     };
 
+    // capture retry options
+    const retryOptions = filterObject(
+        params,
+        [ "retryEnabled", "retryAllErrors", "retryMax", "retryInterval" ]
+    );
+
     // resolve source
     const source = await resolveLocation(params.source, Object.assign({}, params, {
         writable: false
@@ -181,7 +208,8 @@ async function main() {
     let size;
     if (source.url) {
         const headers = await getResourceHeaders(source.url, {
-            doGet: params.headerGet
+            doGet: params.headerGet,
+            ...retryOptions
         });
         size = headers.size;
     } else if (source.file) {
@@ -205,20 +233,25 @@ async function main() {
     // transfer
     if (source.file && target.url) {
         await uploadFile(source.file, target.url, {
-            headers: target.headers
+            headers: target.headers,
+            ...retryOptions
         });
     } else if (source.url && target.file) {
         await downloadFile(source.url, target.file, {
-            mkdirs: true
+            mkdirs: true,
+            ...retryOptions
         });
     } else if (source.url && target.url) {
         await transferStream(source.url, target.url, {
             target: {
                 headers: target.headers
-            }
+            },
+            ...retryOptions
         });
     } else if (source.file && target.urls) {
-        await uploadAEMMultipartFile(source.file, target);
+        await uploadAEMMultipartFile(source.file, target, {
+            ...retryOptions
+        });
 
         console.log("Commit uncommitted blocks");
         const url = URL.parse(params.target);
