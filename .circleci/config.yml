@@ -16,8 +16,388 @@
 #
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
+
+ssh_keys: &ssh_keys
+  add_ssh_keys:
+    fingerprints:
+      - "98:db:59:8c:95:ec:31:3b:ad:d4:8e:a7:c5:6d:57:8f"
+
+test_results_build: &test_results_build
+  # Unit-Test-reports for modules without action folder
+  store_test_results:
+    path: build
+test_results_ac_build: &test_results_ac_build
+  # Test-reports for modules with action folder
+  store_test_results:
+    path: action/build
+test_logs_ac_bld: &test_logs_ac_bld
+  # Test-logs for modules with action folder
+  store_artifacts:
+    path: action/build
+    destination: build
+test_logs_bld: &test_logs_bld
+  # Test-logs for modules without action folder
+  store_artifacts:
+    path: build
+    destination: build  
+test_logs_ac_nui: &test_logs_ac_nui
+  # Test-logs for modules with action folder for image comparision
+  store_artifacts:
+    path: action/.nui
+    destination: .nui
+coverage: &coverage
+  # Coverage-report
+  store_artifacts:
+    path: coverage
+    destination: coverage
+
 version: 2
+
+commands:
+  artifactory_login: &artifactory_login
+    run:
+      name: Artifactory credentials setup
+      command: |
+        curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local/auth/nui >> ~/.npmrc
+        # this was added only for core repo
+        curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-aem-desktop-release-local/auth/aem-desktop >> ~/.npmrc
+  
 jobs:
+  build_runtime:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:12.0.0
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - *ssh_keys
+      - *artifactory_login
+      - run:
+          name: Creating Docker Runtime
+          command: |
+            mkdir -p ~/cache/docker_runtime
+            if [ -d "docker" ] || [  -d "runtime" ]; then
+              if [ -d "docker" ]; then
+                cd ~/repo/docker
+              elif [ -d "runtime" ]; then
+                cd ~/repo/runtime
+              fi
+              if [ -f "download-artifacts" ]; then
+                  export ARTIFACTORY_APIKEY=$ARTIFACTORY_TOKEN
+                  ./download-artifacts
+              fi
+              docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
+              export DOCKER_REGISTRY=docker-senseiwins-release.dr-uw2.adobeitc.com/
+              if [ -f "docker-compose.yml" ]; then
+                docker-compose build runtime
+                docker image ls
+                imgName=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$CIRCLE_PROJECT_REPONAME")
+                echo $imgName
+                docker save -o ~/cache/docker_runtime/$CIRCLE_PROJECT_REPONAME.tar $imgName
+                ls ~/cache/docker_runtime
+              fi
+            else
+              cd ~/repo
+              docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
+            fi
+      - persist_to_workspace:
+          root: /home/circleci/cache/
+          paths:
+            - docker_runtime
+
+  build:
+    working_directory: ~/repo
+    machine:
+        enabled: true
+        docker_layer_caching: true
+    steps:
+      - checkout:
+          path: ~/repo
+      - *artifactory_login
+      - attach_workspace:
+          at: cache
+      - run:
+          name: Credentials and setup
+          command: |
+            docker login -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN docker-senseiwins-release.dr-uw2.adobeitc.com
+            docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
+      - run:
+          name: Load Docker Runtime
+          command: |
+            if [ -d "docker" ] || [  -d "runtime" ]; then
+              FILE=cache/docker_runtime/$CIRCLE_PROJECT_REPONAME.tar
+              if [ -f $FILE ]; then
+                docker load -i $FILE
+              fi
+            else
+              cd ~/repo
+              docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
+            fi
+      - run:
+          name: Run npm tests
+          command: |
+            cd ~/repo
+            if [ -d "action" ]; then
+                cd ~/repo/action
+            fi
+            # circleci user is missing write access to /usr/local/lib/node_modules
+            sudo chown -R circleci /usr/local/
+            chmod -R u+x+w /usr/local/
+            export NVM_DIR="/opt/circleci/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install v10.16.3
+            nvm alias default v10.16.3
+            npm install -g @nui/cli              
+            npm install              
+            npm test
+      - *test_results_build
+      - *test_results_ac_build
+      - *test_logs_ac_bld
+      - *test_logs_bld
+      - *test_logs_ac_nui
+      - *coverage
+
+  dependent-module-tests:
+    working_directory: ~/repo
+    machine:
+        enabled: true
+        docker_layer_caching: true
+    steps:  
+      - checkout
+      - *ssh_keys
+      - *artifactory_login
+      - attach_workspace:
+          at: cache
+      - run:
+          name: Credentials and setup
+          command: |
+            docker login -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN docker-senseiwins-release.dr-uw2.adobeitc.com
+            docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
+      - run:
+          name: Get dependents, Install and Pack
+          command: |
+            #default location for checkout is in ~/project
+            #setup - ~/appLatest, ~/ci-dependency-it, ~/appLatest/bridgeDir/app, ~/tgzPacks, # ~/appLatest/tgzPacks
+            cd ~
+            # install @nui/cli and nvm, required in for each run
+            # allow circleci-user to make global npm installations
+            sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
+            export NVM_DIR="/opt/circleci/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install v10.16.3
+            nvm alias default v10.16.3
+            npm install -g @nui/cli
+            # ~/appLatest
+            mkdir appLatest
+            # ~/tgzPacks
+            mkdir tgzPacks
+            cd ~/appLatest
+            # ~/appLatest/tgzPacks
+            mkdir tgzPacks
+            mkdir bridgeDir
+            cd bridgeDir
+            #~/appLatest/bridgeDir/app
+            git clone git@git.corp.adobe.com:nui/app.git
+            cd app
+            npm install
+            #~/ci-dependency-it
+            cd ~
+            git clone git@git.corp.adobe.com:nui/ci-dependency-it.git
+            cd ci-dependency-it
+            #git checkout first-cleanup
+            npm install
+            #call node-app to npm-pack modules dependent on $CIRCLE_PROJECT_REPONAME
+            node ~/ci-dependency-it/pack-app.js "@nui/$CIRCLE_PROJECT_REPONAME" "/home/circleci/" "repo/"
+      - run:
+          name: Create Docker Runtime for all dependents
+          command: |
+              cd ~/repo
+              if [ -d "docker" ] || [  -d "runtime" ]; then
+              #  docker load -i cache/docker_runtime/$CIRCLE_PROJECT_REPONAME.tar
+              FILE=cache/docker_runtime/$CIRCLE_PROJECT_REPONAME.tar
+              if [ -f $FILE ]; then
+                docker load -i $FILE
+              fi
+              else
+                cd ~/repo
+                docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
+              fi
+              workDir="/home/circleci/appLatest"
+              cd $workDir
+              ls
+              for D in *; do
+                if [ -d "${D}" ]; then
+                  echo "${D}"
+                  cd $workDir/${D}
+                  echo $(pwd)
+                  if [ -d "docker" ] || [  -d "runtime" ]; then
+                    if [ -d "docker" ]; then
+                      cd $workDir/${D}/docker
+                    elif [ -d "runtime" ]; then
+                      cd $workDir/${D}/runtime
+                    fi
+                    if [ -f "download-artifacts" ]; then
+                        export ARTIFACTORY_APIKEY=$ARTIFACTORY_TOKEN
+                        ./download-artifacts
+                    fi
+                    docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
+                    export DOCKER_REGISTRY=docker-senseiwins-release.dr-uw2.adobeitc.com/
+                    if [ -f "docker-compose.yml" ]; then
+                      docker-compose build runtime
+                    fi
+                    else
+                      cd $workDir/${D}
+                      docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
+                    fi
+                    cd $workDir
+                fi
+              done
+      - run:
+          name: Run npm tests for all dependents
+          command: |
+              # circleci-user is missing write access to /usr/local/lib/node_modules
+              sudo chown -R circleci /usr/local/
+              chmod -R u+x+w /usr/local/
+              export NVM_DIR="/opt/circleci/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              nvm install v10.16.3
+              nvm alias default v10.16.3
+              npm install -g @nui/cli
+              cd ~/repo
+              if [ -d "action" ]; then
+                  cd ~/repo/action
+              fi
+              # only for checkedout project
+              npm install
+              npm test
+              workDir="/home/circleci/appLatest"
+              cd $workDir
+              ls
+              for D in *; do
+                if [ -d "${D}" ]; then
+                  echo "${D}"
+                  if [ "${D}" = "bridgeDir" ] || [ "${D}" = "tgzPacks" ]; then
+                    continue;
+                  fi
+                  cd $workDir/${D}
+                  if [ -d "action" ]; then
+                    cd $workDir/${D}/action
+                  fi
+                  cat package.json
+                  npm test || error=true
+                  cd $workDir
+                fi
+              done
+              if [ $error ]; then
+                exit -1
+              fi
+      - *test_results_build
+      - *test_results_ac_build
+      - *test_logs_ac_bld
+      - *test_logs_bld
+      - *test_logs_ac_nui
+      - *coverage
+
+
+  deploy_app:
+    docker:
+      - image: circleci/node:12.0.0
+    steps:  
+      - checkout
+      - *ssh_keys
+      - *artifactory_login
+      - run:
+          name: Credentials and setup
+          command: |
+            echo "${RUNTIME_NAMESPACE_DEV_WSKPROPS}" | base64 -d > ~/.wskprops
+            docker login -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN docker-senseiwins-release.dr-uw2.adobeitc.com
+            # allow user circleci to make global npm installations
+            sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
+      - run:
+          name: Get dependents, Install and pack
+          command: |
+            #default location for checkout is in ~/project
+            #setup - ~/appLatest, ~/ci-dependency-it, ~/appLatest/bridgeDir/app, ~/tgzPacks, # ~/appLatest/tgzPacks
+            cd ~
+            # install @nui/cli and nvm, required in for each run
+            # allow circleci-user to make global npm installations
+            sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
+            npm install -g @nui/cli
+            # ~/appLatest
+            mkdir appLatest
+            # ~/tgzPacks
+            mkdir tgzPacks
+            cd ~/appLatest
+            # ~/appLatest/tgzPacks
+            mkdir tgzPacks
+            mkdir bridgeDir
+            cd bridgeDir
+            #~/appLatest/bridgeDir/app
+            git clone git@git.corp.adobe.com:nui/app.git
+            cd app
+            npm install
+            #~/ci-dependency-it
+            cd ~
+            git clone git@git.corp.adobe.com:nui/ci-dependency-it.git
+            cd ci-dependency-it
+            # git checkout first-cleanup
+            npm install
+            #call node-app to npm-pack modules dependent on $CIRCLE_PROJECT_REPONAME
+            node ~/ci-dependency-it/pack-app.js "@nui/$CIRCLE_PROJECT_REPONAME" "/home/circleci/" "project/"      
+      - run:
+          name: Deploy unique integration test environment
+          command: |
+            # create unique openwhisk package name for this IT run
+            export PACKAGE=it-$(date '+%Y%m%d')-${CIRCLE_PROJECT_REPONAME:-local}-${CIRCLE_SHA1:0:12}
+            export NUI_URL=https://asset-compute-dev.adobe.io/$PACKAGE
+            echo "================================================================="
+            echo $NUI_URL
+            echo "================================================================="
+            cd ~/appLatest/bridgeDir/app
+            nui deploy-all -p "$PACKAGE" -k -v
+            # add comment with deployment url to PR 
+            #TODO: - (PR is only for nui-app ?) [ -n "$CI_PULL_REQUEST" ] && curl -X POST -H "Authorization: token $GITHUB_TOKEN" -d "{\"body\": \"Deployed build to: $NUI_URL\n\nCircleCI job: $CIRCLE_BUILD_URL\"}" "$GITHUB_API/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/issues/${CI_PULL_REQUEST##*/}/comments"
+            # pass along NUI_URL for next job
+            mkdir -p ~/workspace
+            echo "export NUI_URL=$NUI_URL" >> ~/workspace/env-vars
+            echo "export PACKAGE=$PACKAGE" >> ~/workspace/env-vars
+            cat ~/workspace/env-vars
+      - persist_to_workspace:
+          root: ~/workspace
+          paths:
+            - env-vars
+
+
+  integration_tests:
+      docker:
+      - image: circleci/node:12.0.0
+        environment:
+          AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+          AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+          NUI_API_KEY: ${NUI_API_KEY}
+          NUI_IT_INTEGRATION_YAML: ${NUI_IT_INTEGRATION_YAML}
+          AZURE_STORAGE_KEY: ${AZURE_STORAGE_KEY}
+          AZURE_STORAGE_ACCOUNT: ${AZURE_STORAGE_ACCOUNT}
+    
+      steps:
+        - checkout
+        - *artifactory_login
+        - *ssh_keys
+        - attach_workspace:
+            at: workspace
+        - run: cat workspace/env-vars >> $BASH_ENV
+        - run:
+            name: pull integration tests
+            command: |
+              git clone git@git.corp.adobe.com:nui/integration-tests.git
+              cd integration-tests
+              git pull
+              # git checkout increase-timeout
+              npm install
+              npm test
+              echo "Integration test running against $NUI_URL"
+
   validate_config:
     working_directory: ~/validate
     docker:
@@ -25,156 +405,41 @@ jobs:
     steps:
       - checkout:
           path: ~/validate/repo
-
       - run:
           name: compare with central cci config
           command: |
             cd ~/validate
-            #git clone git@git.corp.adobe.com:nui/circleci.git
-            git clone https://$GITHUB_TOKEN@git.corp.adobe.com/circleci.git
+            git clone git@git.corp.adobe.com:nui/circleci.git
+            # git clone https://$GITHUB_TOKEN@git.corp.adobe.com/circleci.git
             cd circleci
             git checkout $CIRCLE_BRANCH
             git branch
             #comparing ~/validate/repo/.circleci/config.yml to ~/validate/circleci/config.yml
             cmp -s ~/validate/repo/.circleci/config.yml ~/validate/circleci/config.yml || { echo 'circleci/config.yml not in sync'; exit 1; }
 
-  build_action:
-    working_directory: ~/repo
-    docker:
-      - image: circleci/node:12.0.0
-    steps:
-      - checkout:
-          path: ~/repo
-
-      - run:
-          name: Authenticate with artifactory
-          command: |
-            curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local/auth/nui >> ~/.npmrc
-            # this was added only for core repo
-            curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-aem-desktop-release-local/auth/aem-desktop >> ~/.npmrc
-
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "action/package.json" }}
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-    
-      - run:
-          name: install-npm
-          command: |
-            if [ -d "action" ]; then
-              cd ~/repo/action
-            else
-              cd ~/repo
-            fi
-            npm install
-
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "action/package.json" }}
-          key: v1-dependencies-{{ checksum "package.json" }}
-
-
-  build_runtime:
-    working_directory: ~/repo
-    machine:
-        enabled: true
-        docker_layer_caching: true
-      
-    steps:
-      - checkout:
-          path: ~/repo
-
-      - run:
-          name: Authenticate with artifactory
-          command: |
-            curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local/auth/nui >> ~/.npmrc
-            # this was added only for core repo
-            curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-aem-desktop-release-local/auth/aem-desktop >> ~/.npmrc
-
-      - run:
-          name: create-runtime-docker
-          command: |
-              if [ -d "docker" ] || [  -d "runtime" ]; then
-                if [ -d "docker" ]; then
-                  cd ~/repo/docker
-                elif [ -d "runtime" ]; then
-                  cd ~/repo/runtime
-                fi
-                if [ -f "download-artifacts" ]; then
-                    export ARTIFACTORY_APIKEY=$ARTIFACTORY_TOKEN
-                    ./download-artifacts
-                fi
-                docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
-                export DOCKER_REGISTRY=docker-senseiwins-release.dr-uw2.adobeitc.com/
-                if [ -f "docker-compose.yml" ]; then
-                  docker-compose build runtime
-                fi
-              else
-                cd ~/repo
-                docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
-              fi
-
-      - run:
-          name: test-npm
-          command: |
-              cd ~/repo
-              if [ -d "action" ]; then
-                  cd ~/repo/action
-              fi
-              # circleci user is Missing write access to /usr/local/lib/node_modules
-              sudo chown -R circleci /usr/local/
-              chmod -R u+x+w /usr/local/
-              export NVM_DIR="/opt/circleci/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              nvm install v10.16.3
-              nvm alias default v10.16.3
-              npm install
-              npm install -g @nui/cli
-              npm test
-
-      # Unit-Test-reports for modules without action folder
-      - store_test_results:
-          path: build
-
-      # Test-reports for modules with action folder
-      - store_test_results:
-          path: action/build
-
-      # Test-logs for modules with action folder
-      - store_artifacts:
-          path: action/build
-          destination: build
-
-      # Test-logs for modules without action folder
-      - store_artifacts:
-          path: build
-          destination: build
-      
-      # Test-logs for modules with action folder for image comparision
-      - store_artifacts:
-          path: action/.nui
-          destination: .nui
-
-      # Coverage-report
-      - store_artifacts:
-          path: coverage
-          destination: coverage
-
-# validate_config job is commented until modules are CCI enabled
+# validate_config job currently not used
 workflows:
     version: 2
     build:
         jobs:
+        - build_runtime:
+            context: nui
+        - build:
+            requires:
+             - build_runtime
+            context: nui
+        - dependent-module-tests:
+            requires:
+             - build_runtime
+            context: nui
+# deploy only if test pass
+        - deploy_app:
+            requires:
+              - build
+            context: nui
+        - integration_tests:
+            requires:
+              - deploy_app
+            context: nui
 #        - validate_config:
 #            context: nui
-        - build_action:
-#            requires:
-#             - validate_config
-            context: nui
-        - build_runtime:
-#            requires:
-#              - validate_config
-            context: nui
