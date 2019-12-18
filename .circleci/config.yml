@@ -2,7 +2,7 @@
 # ADOBE CONFIDENTIAL
 # __________________
 #
-# Copyright 2018 Adobe Systems Incorporated
+# Copyright 2019 Adobe Systems Incorporated
 # All Rights Reserved.
 #
 # NOTICE:  All information contained herein is, and remains
@@ -61,7 +61,7 @@ commands:
         curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local/auth/nui >> ~/.npmrc
         # this was added only for core repo
         curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-aem-desktop-release-local/auth/aem-desktop >> ~/.npmrc
-  
+
 jobs:
   build_runtime:
     working_directory: ~/repo
@@ -178,7 +178,7 @@ jobs:
           name: Get dependents, Install and Pack
           command: |
             #default location for checkout is in ~/project
-            #setup - ~/appLatest, ~/ci-dependency-it, ~/appLatest/bridgeDir/app, ~/tgzPacks, # ~/appLatest/tgzPacks
+            #setup - ~/appLatest, ~/ci-dependency-it, ~/appLatest/bridgeDir/app, ~/tgzPacks, ~/test_logs, ~/appLatest/tgzPacks
             cd ~
             # install @nui/cli and nvm, required in for each run
             # allow circleci-user to make global npm installations
@@ -192,6 +192,8 @@ jobs:
             mkdir appLatest
             # ~/tgzPacks
             mkdir tgzPacks
+            # only for dependent_module_test
+            mkdir test_logs
             cd ~/appLatest
             # ~/appLatest/tgzPacks
             mkdir tgzPacks
@@ -285,20 +287,30 @@ jobs:
                     cd $workDir/${D}/action
                   fi
                   cat package.json
-                  npm test || error=true
+                  npm test || testFailed="${testFailed} ${D}"
+                  if [ -d "build" ]; then
+                    mkdir /home/circleci/test_logs/${D}
+                    cp -r build /home/circleci/test_logs/${D}
+                  fi
+                  if [ -d ".nui" ]; then
+                    mkdir -p /home/circleci/test_logs/${D}
+                    cp -r .nui /home/circleci/test_logs/${D}
+                  fi
                   cd $workDir
                 fi
               done
-              if [ $error ]; then
+              echo "Tests failed for - ${testFailed}"
+              if [ ! -z "$testFailed" ]; then
                 exit -1
               fi
-      - *test_results_build
-      - *test_results_ac_build
-      - *test_logs_ac_bld
-      - *test_logs_bld
-      - *test_logs_ac_nui
-      - *coverage
+      # Unit-Test-results
+      - store_test_results:
+          path: /home/circleci/test_logs
 
+      # Test-logs for modules with action folder
+      - store_artifacts:
+          path: /home/circleci/test_logs
+          destination: test_logs
 
   deploy_app:
     docker:
