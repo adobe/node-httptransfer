@@ -12,3 +12,9 @@ build/
 
 # npm pack leftovers
 *.tgz
+
+# git stuff
+CODE_OF_CONDUCT.md              
+.github/CONTRIBUTING.md         
+.github/ISSUE_TEMPLATE.md       
+.github/PULL_REQUEST_TEMPLATE.md
