@@ -62,3 +62,6 @@ typings/
 
 # Visual Studio Code configuration
 .vscode
+
+# serverless
+.serverless/action.zip
