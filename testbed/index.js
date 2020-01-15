@@ -13,7 +13,7 @@ governing permissions and limitations under the License.
 "use strict";
 
 const filterObject = require('filter-obj');
-const fs = require("fs-extra");
+const fs = require("fs").promises;
 const path = require("path");
 const URL = require("url");
 const yargs = require("yargs");

@@ -15,13 +15,16 @@ governing permissions and limitations under the License.
 'use strict';
 
 const assert = require('assert');
-const fs = require('fs-extra');
+const fs = require('fs').promises;
 const nock = require('nock');
 const { downloadFile, uploadFile } = require('../lib/file');
+const { testSetResponseBodyOverride, testHasResponseBodyOverrides } = require('../lib/fetch');
+const { createErrorReadable } = require('./streams');
 
 describe('file', function() {
     describe('download', function() {
         afterEach(async function() {
+            assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
             try {
@@ -53,6 +56,37 @@ describe('file', function() {
             await fs.unlink('.testdir/.testfile.dat');
             await fs.rmdir('.testdir');
         })
+        it('status-200-truncate-retry', async function() {
+            nock('http://test-status-200-truncate-retry')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world', {
+                    'content-length': 5
+                });
+
+            nock('http://test-status-200-truncate-retry')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world', {
+                    'content-length': 11
+                });
+
+            await downloadFile('http://test-status-200-truncate-retry/path/to/file.ext', '.testfile.dat');
+            const result = await fs.readFile('.testfile.dat', 'utf8');
+            assert.strictEqual(result, 'hello world');
+        })
+        it('status-200-stream-retry', async function() {
+            nock('http://test-status-200-stream-retry')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world');
+
+            nock('http://test-status-200-stream-retry')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world');
+
+            testSetResponseBodyOverride("GET", createErrorReadable(Error('read error')));
+            await downloadFile('http://test-status-200-stream-retry/path/to/file.ext', '.testfile.dat');
+            const result = await fs.readFile('.testfile.dat', 'utf8');
+            assert.strictEqual(result, 'hello world');
+        })
         it('status-404', async function() {
             try {
                 nock('http://test-status-404')
@@ -81,6 +115,27 @@ describe('file', function() {
             const result = await fs.readFile('.testfile.dat', 'utf8');
             assert.strictEqual(result, 'hello world');
         })
+        it('status-404-stream-retry', async function() {
+            try {
+                nock('http://test-status-404-stream-retry')
+                    .get('/path/to/file.ext')
+                    .reply(404, 'hello world', {
+                        'content-type': 'text/plain'
+                    });
+
+                nock('http://test-status-404-stream-retry')
+                    .get('/path/to/file.ext')
+                    .reply(404, 'hello world', {
+                        'content-type': 'text/plain'
+                    });
+
+                testSetResponseBodyOverride("GET", createErrorReadable(Error('read error')));
+                await downloadFile('http://test-status-404-stream-retry/path/to/file.ext', '.testfile.dat');
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.strictEqual(e.message, 'GET \'http://test-status-404-stream-retry/path/to/file.ext\' failed with status 404: hello world');
+            }
+        })        
         it('status-503-retry', async function() {
             nock('http://test-status-503')
                 .get('/path/to/file.ext')
@@ -122,7 +177,7 @@ describe('file', function() {
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
-                assert.strictEqual(e.message, 'GET \'http://badhost/path/to/file.ext\' failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost badhost:80');
+                assert.ok(e.message.startsWith('GET \'http://badhost/path/to/file.ext\' connect failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost'));
             }
         })        
     })
@@ -131,6 +186,7 @@ describe('file', function() {
             await fs.writeFile('.testfile.dat', 'hello world 123', 'utf8');
         })
         afterEach(async function() {
+            assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
             try {
@@ -223,7 +279,7 @@ describe('file', function() {
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
-                assert.strictEqual(e.message, 'PUT \'http://badhost/path/to/file.ext\' failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost badhost:80');
+                assert.ok(e.message.startsWith('PUT \'http://badhost/path/to/file.ext\' connect failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost'));
             }
         })
     })

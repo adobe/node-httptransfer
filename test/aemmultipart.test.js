@@ -15,9 +15,10 @@ governing permissions and limitations under the License.
 'use strict';
 
 const assert = require('assert');
-const fs = require('fs-extra');
+const fs = require('fs').promises;
 const nock = require('nock');
 const { uploadAEMMultipartFile } = require('../lib/aemmultipart');
+const { testHasResponseBodyOverrides } = require('../lib/fetch');
 
 describe('multipart', function() {
     describe('upload', function() {
@@ -26,6 +27,7 @@ describe('multipart', function() {
             await fs.writeFile('.testfile.dat', 'hello world 123', 'utf8');
         })
         afterEach(async function() {
+            assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
             try {
@@ -382,7 +384,7 @@ describe('multipart', function() {
 
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://timeout-error/path/to/file-1.ext\' failed: network timeout at: http://timeout-error/path/to/file-1.ext');
+                assert.strictEqual(e.message, 'PUT \'http://timeout-error/path/to/file-1.ext\' connect failed: network timeout at: http://timeout-error/path/to/file-1.ext');
             }
         })
         it('timeout-error-2', async function() {
@@ -409,7 +411,7 @@ describe('multipart', function() {
 
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://timeout-error/path/to/file-2.ext\' failed: network timeout at: http://timeout-error/path/to/file-2.ext');
+                assert.strictEqual(e.message, 'PUT \'http://timeout-error/path/to/file-2.ext\' connect failed: network timeout at: http://timeout-error/path/to/file-2.ext');
             }
         })
         it('header-override', async function() {

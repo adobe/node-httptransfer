@@ -17,7 +17,7 @@ governing permissions and limitations under the License.
 const assert = require("assert");
 const rewire = require("rewire");
 
-const { HttpConnectError, HttpTransferError } = require("../lib/error");
+const { HttpConnectError, HttpStreamError, HttpResponseError } = require("../lib/error");
 const { retry } = require("../lib/retry");
 const rewireRetry = rewire("../lib/retry.js");
 const retryDelay = rewireRetry.__get__("retryDelay");
@@ -71,25 +71,25 @@ describe("retry", function() {
                 retryInterval: 100,
             }));
         })
-        it("transfer-error-500", function() {
+        it("response-error-500", function() {
             // retry on >= 500 status with transfer error
-            assert.ok(retryOn(0, new HttpTransferError("GET", "url", 500, "message"), {
+            assert.ok(retryOn(0, new HttpResponseError("GET", "url", 500, "message"), {
                 startTime: Date.now(),
                 retryMax: 60000,
                 retryInterval: 100,
             }));
         })
-        it("transfer-error-404", function() {
+        it("response-error-404", function() {
             // do not retry < 500 status errors
-            assert.ok(!retryOn(0, new HttpTransferError("GET", "url", 404, "message"), {
+            assert.ok(!retryOn(0, new HttpResponseError("GET", "url", 404, "message"), {
                 startTime: Date.now(),
                 retryMax: 60000,
                 retryInterval: 100,
             }));
         })
-        it("transfer-error-404-allerror", function() {
+        it("response-error-404-allerror", function() {
             // retry all failures
-            assert.ok(retryOn(0, new HttpTransferError("GET", "url", 404, "message"), {
+            assert.ok(retryOn(0, new HttpResponseError("GET", "url", 404, "message"), {
                 startTime: Date.now(),
                 retryMax: 60000,
                 retryInterval: 100,
@@ -235,13 +235,13 @@ describe("retry", function() {
             });
             assert.strictEqual(result, 1);
         })
-        it("fail-once-noretry-connect", async function() {
+        it("fail-once-noretry-stream", async function() {
             try {
                 let attempt = 0;
                 await retry(async () => {
                     if (attempt === 0) {
                         ++attempt;
-                        throw new HttpConnectError("GET", "url", "message");
+                        throw new HttpStreamError("GET", "url", 200, "message");
                     }
                     return 1;
                 }, {
@@ -250,16 +250,38 @@ describe("retry", function() {
 
                 assert.fail("not expected to succeed")
             } catch (e) {
-                assert.strictEqual(e.message, "GET 'url' failed: message");
+                assert.strictEqual(e.message, "GET 'url' stream 200 response failed: message");
             }
         })
-        it("fail-once-noretry-transfer", async function() {
+        it("fail-once-retry-stream", async function() {
+            let attempt = 0;
+            const result = await retry(async () => {
+                if (attempt === 0) {
+                    ++attempt;
+                    throw new HttpStreamError("GET", "url", 200, "message");
+                }
+                return 1;
+            });
+            assert.strictEqual(result, 1);
+        })
+        it("fail-second-retry-stream", async function() {
+            let attempt = 0;
+            const result = await retry(async () => {
+                if (attempt < 2) {
+                    ++attempt;
+                    throw new HttpStreamError("GET", "url", 200, "message");
+                }
+                return 1;
+            });
+            assert.strictEqual(result, 1);
+        })
+        it("fail-once-noretry-response", async function() {
             try {
                 let attempt = 0;
                 await retry(async () => {
                     if (attempt === 0) {
                         ++attempt;
-                        throw new HttpTransferError("GET", "url", 404, "message");
+                        throw new HttpResponseError("GET", "url", 404, "message");
                     }
                     return 1;
                 });
@@ -268,13 +290,13 @@ describe("retry", function() {
                 assert.strictEqual(e.message, "GET 'url' failed with status 404: message");
             }
         })
-        it("fail-once-retry-transfer", async function() {
+        it("fail-once-retry-response", async function() {
             try {
                 let attempt = 0;
                 await retry(async () => {
                     if (attempt === 0) {
                         ++attempt;
-                        throw new HttpTransferError("GET", "url", 404, "message");
+                        throw new HttpResponseError("GET", "url", 404, "message");
                     }
                     return 1;
                 });
