@@ -66,7 +66,7 @@ jobs:
   build_runtime:
     working_directory: ~/repo
     docker:
-      - image: circleci/node:12.0.0
+      - image: circleci/node:12.16.1
     steps:
       - checkout
       - setup_remote_docker:
@@ -147,8 +147,8 @@ jobs:
             chmod -R u+x+w /usr/local/
             export NVM_DIR="/opt/circleci/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v10.16.3
-            nvm alias default v10.16.3
+            nvm install v10.19.0
+            nvm alias default v10.19.0
             npm install -g @nui/cli              
             npm install              
             npm test
@@ -186,8 +186,8 @@ jobs:
             sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
             export NVM_DIR="/opt/circleci/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v10.16.3
-            nvm alias default v10.16.3
+            nvm install v10.19.0
+            nvm alias default v10.19.0
             npm install -g @nui/cli
             # ~/appLatest
             mkdir appLatest
@@ -264,8 +264,8 @@ jobs:
               chmod -R u+x+w /usr/local/
               export NVM_DIR="/opt/circleci/.nvm"
               [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              nvm install v10.16.3
-              nvm alias default v10.16.3
+              nvm install v10.19.0
+              nvm alias default v10.19.0
               npm install -g @nui/cli
               cd ~/repo
               if [ -d "action" ]; then
@@ -414,7 +414,7 @@ jobs:
   validate_config:
     working_directory: ~/validate
     docker:
-      - image: circleci/node:12.0.0
+      - image: circleci/node:12.16.1
     steps:
       - checkout:
           path: ~/validate/repo
