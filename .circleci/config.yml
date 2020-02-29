@@ -425,6 +425,10 @@ jobs:
             echo "Getting ready to release!!"
             currentVersion="$(git describe --tags)";
             cd ~
+            # install @nui/cli and nvm, required in for each run
+            # allow circleci-user to make global npm installations
+            sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
+            npm install -g @nui/cli
             git clone git@git.corp.adobe.com:nui/circleci.git
             cd circleci
             git pull
@@ -515,6 +519,10 @@ jobs:
             echo "VERSION_CHANGED -> $VERSION_CHANGED"
             if [ "$VERSION_CHANGED" = "true" ]; then
               cd ~
+              # install @nui/cli and nvm, required in for each run
+              # allow circleci-user to make global npm installations
+              sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
+              npm install -g @nui/cli
               git clone git@git.corp.adobe.com:nui/circleci.git
               cd circleci
               cd ~
