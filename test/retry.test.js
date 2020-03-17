@@ -307,5 +307,25 @@ describe("retry", function() {
         }, {
             retryAllErrors: true
         })
+
+        it("fail-till-max-retry", async function() {
+            let attempt = 0;
+            const start = Date.now();
+            const retryMax = 1500;
+            try {
+                await retry(async () => {
+                    attempt++;
+                    console.log(attempt);
+                    throw new HttpResponseError("GET", "url", 200, "message");
+                }, {
+                    retryMax:retryMax,
+                    retryAllErrors: true
+                });
+                assert.fail('Should have failed');
+            } catch(e) {
+                const duration = Date.now() - start;
+                assert.ok(duration <= retryMax);
+            }
+        })
     })
 })
