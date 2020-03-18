@@ -31,7 +31,7 @@
     "rewire": "^4.0.1"
   },
   "scripts": {
-    "pretest": "eslint ./",
-    "test": "nyc mocha ./test"
+    "test": "nyc mocha ./test",
+    "posttest": "eslint ./"
   }
 }

@@ -165,11 +165,11 @@ describe('file', function() {
             const result = await fs.readFile('.testfile.dat', 'utf8');
             assert.strictEqual(result, 'hello world');
         })
-        it('badhost-retry-failure', async function() {
+        it('badhost-retry-failure (1)', async function() {
             const start = Date.now();
             try {
                 await downloadFile('http://badhost/path/to/file.ext', '.testfile.dat', {
-                    retryMax: 1000
+                    retryMaxDuration: 1000
                 });
                 assert.fail('failure expected')
             } catch (e) {
@@ -267,11 +267,11 @@ describe('file', function() {
                 timeout: 200
             });
         })
-        it('badhost-retry-failure', async function() {
+        it('badhost-retry-failure (2)', async function() {
             const start = Date.now();
             try {
                 await uploadFile('.testfile.dat', 'http://badhost/path/to/file.ext', {
-                    retryMax: 1000
+                    retryMaxDuration: 1000
                 });
                 assert.fail('failure expected')
             } catch (e) {
