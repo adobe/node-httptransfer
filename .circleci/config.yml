@@ -76,32 +76,12 @@ jobs:
       - run:
           name: Creating Docker Runtime
           command: |
-            mkdir -p ~/cache/docker_runtime
-            if [ -d "docker" ] || [  -d "runtime" ]; then
-              if [ -d "docker" ]; then
-                cd ~/repo/docker
-              elif [ -d "runtime" ]; then
-                cd ~/repo/runtime
-              fi
-              if [ -f "download-artifacts" ]; then
-                  export ARTIFACTORY_APIKEY=$ARTIFACTORY_TOKEN
-                  ./download-artifacts
-              fi
-              docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
-              docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
-              export DOCKER_REGISTRY=docker-senseiwins-release.dr-uw2.adobeitc.com/
-              if [ -f "docker-compose.yml" ]; then
-                docker-compose build runtime
-                docker image ls
-                imgName=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$CIRCLE_PROJECT_REPONAME")
-                echo $imgName
-                docker save -o ~/cache/docker_runtime/$CIRCLE_PROJECT_REPONAME.tar $imgName
-                ls ~/cache/docker_runtime
-              fi
-            else
-              cd ~/repo
-              docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
-            fi
+            cd ~
+            git clone git@git.corp.adobe.com:nui/circleci.git
+            cd circleci
+            git pull
+            cat build_runtime.sh
+            ./build_runtime.sh           
       - persist_to_workspace:
           root: /home/circleci/cache/
           paths:
@@ -124,34 +104,14 @@ jobs:
             docker login -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN docker-senseiwins-release.dr-uw2.adobeitc.com
             docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
       - run:
-          name: Load Docker Runtime
+          name: Load Docker Runtime and run npm tests
           command: |
-            if [ -d "docker" ] || [  -d "runtime" ]; then
-              FILE=cache/docker_runtime/$CIRCLE_PROJECT_REPONAME.tar
-              if [ -f $FILE ]; then
-                docker load -i $FILE
-              fi
-            else
-              cd ~/repo
-              docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
-            fi
-      - run:
-          name: Run npm tests
-          command: |
-            cd ~/repo
-            if [ -d "action" ]; then
-                cd ~/repo/action
-            fi
-            # circleci user is missing write access to /usr/local/lib/node_modules
-            sudo chown -R circleci /usr/local/
-            chmod -R u+x+w /usr/local/
-            export NVM_DIR="/opt/circleci/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v10.19.0
-            nvm alias default v10.19.0
-            npm install -g @nui/cli              
-            npm install              
-            npm test
+            cd ~
+            git clone git@git.corp.adobe.com:nui/circleci.git
+            cd circleci
+            git pull
+            cat build.sh
+            ./build.sh
       - *test_results_build
       - *test_results_ac_build
       - *test_logs_ac_bld
@@ -176,138 +136,29 @@ jobs:
             docker login -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN docker-senseiwins-release.dr-uw2.adobeitc.com
             docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
       - run:
-          name: Get dependents, Install and Pack
+          name: Get dependents, Install and Pack (dependent-module-tests_Step_1.sh)
           command: |
-            #default location for checkout is in ~/project
-            #setup - ~/appLatest, ~/ci-dependency-it, ~/appLatest/bridgeDir/app, ~/tgzPacks, ~/test_logs, ~/appLatest/tgzPacks
             cd ~
-            # install @nui/cli and nvm, required in for each run
-            # allow circleci-user to make global npm installations
-            sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
-            export NVM_DIR="/opt/circleci/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v10.19.0
-            nvm alias default v10.19.0
-            npm install -g @nui/cli
-            # ~/appLatest
-            mkdir appLatest
-            # ~/tgzPacks
-            mkdir tgzPacks
-            # only for dependent_module_test
-            mkdir test_logs
-            cd ~/appLatest
-            # ~/appLatest/tgzPacks
-            mkdir tgzPacks
-            mkdir bridgeDir
-            cd bridgeDir
-            #~/appLatest/bridgeDir/app
-            git clone git@git.corp.adobe.com:nui/app.git
-            cd app
-            npm install
-            #~/ci-dependency-it
-            cd ~
-            git clone git@git.corp.adobe.com:nui/ci-dependency-it.git
-            cd ci-dependency-it
-            #git checkout first-cleanup
-            npm install
-            #call node-app to npm-pack modules dependent on $CIRCLE_PROJECT_REPONAME
-            node ~/ci-dependency-it/pack-app.js "@nui/$CIRCLE_PROJECT_REPONAME" "/home/circleci/" "repo/"
+            git clone git@git.corp.adobe.com:nui/circleci.git
+            cd circleci
+            git pull
+            cat dependent-module-tests-step-1.sh
+            ./dependent-module-tests-step-1.sh
       - run:
-          name: Create Docker Runtime for all dependents
+          name: Create Docker Runtime for all dependents (dependent-module-tests_Step_2.sh)
           command: |
-              cd ~/repo
-              if [ -d "docker" ] || [  -d "runtime" ]; then
-              #  docker load -i cache/docker_runtime/$CIRCLE_PROJECT_REPONAME.tar
-              FILE=cache/docker_runtime/$CIRCLE_PROJECT_REPONAME.tar
-              if [ -f $FILE ]; then
-                docker load -i $FILE
-              fi
-              else
-                cd ~/repo
-                docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
-              fi
-              workDir="/home/circleci/appLatest"
-              cd $workDir
-              ls
-              for D in *; do
-                if [ -d "${D}" ]; then
-                  echo "${D}"
-                  cd $workDir/${D}
-                  echo $(pwd)
-                  if [ -d "docker" ] || [  -d "runtime" ]; then
-                    if [ -d "docker" ]; then
-                      cd $workDir/${D}/docker
-                    elif [ -d "runtime" ]; then
-                      cd $workDir/${D}/runtime
-                    fi
-                    if [ -f "download-artifacts" ]; then
-                        export ARTIFACTORY_APIKEY=$ARTIFACTORY_TOKEN
-                        ./download-artifacts
-                    fi
-                    docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
-                    export DOCKER_REGISTRY=docker-senseiwins-release.dr-uw2.adobeitc.com/
-                    if [ -f "docker-compose.yml" ]; then
-                      docker-compose build runtime
-                    fi
-                    else
-                      cd $workDir/${D}
-                      docker login docker-senseiwins-release.dr-uw2.adobeitc.com -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN
-                    fi
-                    cd $workDir
-                fi
-              done
+            cd ~/circleci
+            cat dependent-module-tests-step-2.sh
+            ./dependent-module-tests-step-2.sh
       - run:
-          name: Run npm tests for all dependents
+          name: Run npm tests for all dependents (dependent-module-tests_Step_3.sh)
           command: |
-              # circleci-user is missing write access to /usr/local/lib/node_modules
-              sudo chown -R circleci /usr/local/
-              chmod -R u+x+w /usr/local/
-              export NVM_DIR="/opt/circleci/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              nvm install v10.19.0
-              nvm alias default v10.19.0
-              npm install -g @nui/cli
-              cd ~/repo
-              if [ -d "action" ]; then
-                  cd ~/repo/action
-              fi
-              # only for checkedout project
-              npm install
-              npm test
-              workDir="/home/circleci/appLatest"
-              cd $workDir
-              ls
-              for D in *; do
-                if [ -d "${D}" ]; then
-                  echo "${D}"
-                  if [ "${D}" = "bridgeDir" ] || [ "${D}" = "tgzPacks" ]; then
-                    continue;
-                  fi
-                  cd $workDir/${D}
-                  if [ -d "action" ]; then
-                    cd $workDir/${D}/action
-                  fi
-                  cat package.json
-                  npm test || testFailed="${testFailed} ${D}"
-                  if [ -d "build" ]; then
-                    mkdir /home/circleci/test_logs/${D}
-                    cp -r build /home/circleci/test_logs/${D}
-                  fi
-                  if [ -d ".nui" ]; then
-                    mkdir -p /home/circleci/test_logs/${D}
-                    cp -r .nui /home/circleci/test_logs/${D}
-                  fi
-                  cd $workDir
-                fi
-              done
-              echo "Tests failed for - ${testFailed}"
-              if [ ! -z "$testFailed" ]; then
-                exit -1
-              fi
+            cd ~/circleci
+            cat dependent-module-tests-step-3.sh
+            ./dependent-module-tests-step-3.sh
       # Unit-Test-results
       - store_test_results:
           path: /home/circleci/test_logs
-
       # Test-logs for modules with action folder
       - store_artifacts:
           path: /home/circleci/test_logs
@@ -328,54 +179,21 @@ jobs:
             # allow user circleci to make global npm installations
             sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
       - run:
-          name: Get dependents, Install and pack
+          name: Get dependents, Install and pack (deploy-app-step-1.sh)
           command: |
-            #default location for checkout is in ~/project
-            #setup - ~/appLatest, ~/ci-dependency-it, ~/appLatest/bridgeDir/app, ~/tgzPacks, # ~/appLatest/tgzPacks
             cd ~
-            # install @nui/cli and nvm, required in for each run
-            # allow circleci-user to make global npm installations
-            sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
-            npm install -g @nui/cli
-            # ~/appLatest
-            mkdir appLatest
-            # ~/tgzPacks
-            mkdir tgzPacks
-            cd ~/appLatest
-            # ~/appLatest/tgzPacks
-            mkdir tgzPacks
-            mkdir bridgeDir
-            cd bridgeDir
-            #~/appLatest/bridgeDir/app
-            git clone git@git.corp.adobe.com:nui/app.git
-            cd app
-            npm install
-            #~/ci-dependency-it
-            cd ~
-            git clone git@git.corp.adobe.com:nui/ci-dependency-it.git
-            cd ci-dependency-it
-            # git checkout first-cleanup
-            npm install
-            #call node-app to npm-pack modules dependent on $CIRCLE_PROJECT_REPONAME
-            node ~/ci-dependency-it/pack-app.js "@nui/$CIRCLE_PROJECT_REPONAME" "/home/circleci/" "project/"      
+            git clone git@git.corp.adobe.com:nui/circleci.git
+            cd circleci
+            git pull
+            cat deploy-app-step-1.sh
+            ./deploy-app-step-1.sh
       - run:
-          name: Deploy unique integration test environment
+          name: Deploy unique integration test environment (deploy-app-step-2.sh)
           command: |
-            # create unique openwhisk package name for this IT run
-            export PACKAGE=it-$(date '+%Y%m%d')-${CIRCLE_PROJECT_REPONAME:-local}-${CIRCLE_SHA1:0:12}
-            export NUI_URL=https://asset-compute-dev.adobe.io/$PACKAGE
-            echo "================================================================="
-            echo $NUI_URL
-            echo "================================================================="
-            cd ~/appLatest/bridgeDir/app
-            nui deploy-all -p "$PACKAGE" -k -v
-            # add comment with deployment url to PR 
-            #TODO: - (PR is only for nui-app ?) [ -n "$CI_PULL_REQUEST" ] && curl -X POST -H "Authorization: token $GITHUB_TOKEN" -d "{\"body\": \"Deployed build to: $NUI_URL\n\nCircleCI job: $CIRCLE_BUILD_URL\"}" "$GITHUB_API/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/issues/${CI_PULL_REQUEST##*/}/comments"
-            # pass along NUI_URL for next job
-            mkdir -p ~/workspace
-            echo "export NUI_URL=$NUI_URL" >> ~/workspace/env-vars
-            echo "export PACKAGE=$PACKAGE" >> ~/workspace/env-vars
-            cat ~/workspace/env-vars
+            cd ~/circleci
+            cat deploy-app-step-2.sh
+            ./deploy-app-step-2.sh
+            
       - persist_to_workspace:
           root: ~/workspace
           paths:
@@ -406,7 +224,6 @@ jobs:
               git clone git@git.corp.adobe.com:nui/integration-tests.git
               cd integration-tests
               git pull
-              # git checkout increase-timeout
               npm install
               npm test
               echo "Integration test running against $NUI_URL"
@@ -422,84 +239,13 @@ jobs:
       - run:
           name: Releasing module - npm publish and create git tags
           command: |
-            echo "Getting ready to release!!"
-            currentVersion="$(git describe --tags)";
             cd ~
-            # install @nui/cli and nvm, required in for each run
-            # allow circleci-user to make global npm installations
-            sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
-            npm install -g @nui/cli
             git clone git@git.corp.adobe.com:nui/circleci.git
             cd circleci
             git pull
-            ls
-            dest="/home/circleci/project/"
-            cd ~/project/
-            # check for "action" folder
-            if [ -d "action" ]; then
-                cd action
-                dest="/home/circleci/project/action/"
-            fi
-            cp ~/circleci/.releaserc.json $dest/
-            sleep 2
-            git status
-            npm install
-            npm install --no-save semantic-release
-            npm install --no-save conventional-changelog-eslint
-            npx semantic-release --debug
-            cat package.json
-            newVersion="$(git describe --tags)"
-            git config --global user.email "nuicid@adobe.com"
-            git config --global user.name "nuicid"
-            git status
-            git add package.json
-            git commit -m "no-release: [ci skip] update version in package json"
-            git push origin master
-            echo "currentVersion -> $currentVersion & newVersion -> $newVersion"
-            versionChanged=true
-            if [ "$currentVersion" = "$newVersion" ]; then
-              versionChanged=false
-            fi
-            # pass along VERSION_CHANGED to next job
-            mkdir -p ~/tmpDir
-            echo "export VERSION_CHANGED=$versionChanged" >> ~/tmpDir/env-vars
-            cat ~/tmpDir/env-vars
-            # update README.md
-            # find readme to update
-            if [ "$versionChanged" = "true" ]; then
-              cd ~/project
-              newVersion="${newVersion:1}"
-              git stash save
-              if [ -e README.md ]; then
-                  readme=README.md
-              fi
-              # update and commit readme badge
-              if [ -n "$readme" ]; then
-                  echo "updating version badge in $readme";
-                  sed -i -E \
-                      -e "s|(img.shields.io/badge/.*)-([0-9]+\.[0-9]+\.[0-9]+)-blue\.svg|\1-${newVersion}-blue.svg|" \
-                      -e "s|(img.shields.io/badge/.*)-([0-9]+\.[0-9]+\.[0-9]+)\.tgz|\1-${newVersion}.tgz|" \
-                      "$readme" && echo "updated Readme.md"
-                  git add "$readme"
-                  git status
-                  git diff
-                  git commit -m "[ci skip] badge in README.md to $newVersion"
-                  git push origin master
-              fi
-              ### preDependentVersionUpdate
-              cd ~
-              mkdir appLatest && cd appLatest && mkdir bridgeDir && cd bridgeDir
-              #~/appLatest/bridgeDir/app
-              git clone git@git.corp.adobe.com:nui/app.git
-              cd app
-              npm install
-              #~/ci-dependency-it
-              cd ~
-              git clone git@git.corp.adobe.com:nui/ci-dependency-it.git
-              cd ci-dependency-it
-              npm install
-              node ~/ci-dependency-it/preDependentVersionUpdate-app.js "@nui/$CIRCLE_PROJECT_REPONAME" "/home/circleci/" "project/"
-            fi
+            cat release.sh
+            ./release.sh
+            
       - persist_to_workspace:
           root: ~/tmpDir
           paths:
@@ -518,29 +264,12 @@ jobs:
       - run:
           name: Create PR for dependent repos to update version
           command: |
-            # if no-release
-            echo "VERSION_CHANGED -> $VERSION_CHANGED"
-            if [ "$VERSION_CHANGED" = "true" ]; then
-              cd ~
-              # install @nui/cli and nvm, required in for each run
-              # allow circleci-user to make global npm installations
-              sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
-              npm install -g @nui/cli
-              git clone git@git.corp.adobe.com:nui/circleci.git
-              cd circleci
-              cd ~
-              mkdir appLatest && cd appLatest && mkdir bridgeDir && cd bridgeDir
-              #~/appLatest/bridgeDir/app
-              git clone git@git.corp.adobe.com:nui/app.git
-              cd app
-              npm install
-              #~/ci-dependency-it
-              cd ~
-              git clone git@git.corp.adobe.com:nui/ci-dependency-it.git
-              cd ci-dependency-it
-              npm install
-              node ~/ci-dependency-it/release-app.js "@nui/$CIRCLE_PROJECT_REPONAME" "/home/circleci/" "project/"
-            fi
+            cd ~
+            git clone git@git.corp.adobe.com:nui/circleci.git
+            cd circleci
+            git pull
+            cat dependent-version-update.sh
+            ./dependent-version-update.sh
               
   validate_config:
     working_directory: ~/validate
