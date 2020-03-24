@@ -32,6 +32,7 @@ describe('file', function() {
             } catch (e) {
                 // don't fail if the file doesn't exist, it's only done to clean up 
                 // after ourselves
+                console.log(e);
             }
         })
         it('status-200', async function() {
@@ -194,6 +195,7 @@ describe('file', function() {
             } catch (e) {
                 // don't fail if the file doesn't exist, it's only done to clean up 
                 // after ourselves
+                console.log(e);
             }
         })
         it('status-201', async function() {

@@ -201,9 +201,7 @@ async function main() {
     );
 
     // resolve source
-    const source = await resolveLocation(params.source, Object.assign({}, params, {
-        writable: false
-    }));
+    const source = await resolveLocation(params.source, { ...params, writable: false});
 
     let size;
     if (source.url) {
@@ -220,10 +218,8 @@ async function main() {
     console.log(`Source: ${source.url || source.file}, ${size} bytes`);
 
     // resolve target
-    const target = await resolveLocation(params.target, Object.assign({}, params, {
-        writable: true,
-        size
-    }));
+    const target = await resolveLocation(params.target, { ...params, writable: true,
+        size});
     if (target.urls) {
         console.log(`Target: ${target.urls.length} parts, ${target.urls[0]}`);
     } else {

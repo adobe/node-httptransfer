@@ -20,13 +20,14 @@ const nock = require('nock');
 const { uploadAEMMultipartFile } = require('../lib/aemmultipart');
 const { testHasResponseBodyOverrides } = require('../lib/fetch');
 
-describe('multipart', function() {
-    describe('upload', function() {
-        beforeEach(async function() {
+describe('multipart', function () {
+    describe('upload', function () {
+        beforeEach(async function () {
             // 15 characters
             await fs.writeFile('.testfile.dat', 'hello world 123', 'utf8');
         })
-        afterEach(async function() {
+
+        afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
@@ -34,23 +35,24 @@ describe('multipart', function() {
                 await fs.unlink('.testfile.dat');
             } catch (e) {
                 // don't fail if the file doesn't exist, it's only clean up 
+                console.log(e);
             }
         })
-        it('no target', async function() {
+        it('no target', async function () {
             try {
                 await uploadAEMMultipartFile('.testfile.dat');
             } catch (e) {
                 assert.equal(e.message, 'target not provided');
             }
         })
-        it('no target urls', async function() {
+        it('no target urls', async function () {
             try {
                 await uploadAEMMultipartFile('.testfile.dat', {});
             } catch (e) {
                 assert.equal(e.message, 'invalid number of target urls');
             }
         })
-        it('min-part-size larger than max-part-size', async function() {
+        it('min-part-size larger than max-part-size', async function () {
             try {
                 await uploadAEMMultipartFile('.testfile.dat', {
                     urls: [
@@ -61,21 +63,21 @@ describe('multipart', function() {
                 });
             } catch (e) {
                 assert.equal(e.message, 'minPartSize (1000) > maxPartSize: (500)');
-            }            
+            }
         })
-        it('status-201-1url', async function() {
+        it('status-201-1url', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 15)
                 .put('/path/to/file-1.ext', 'hello world 123')
                 .reply(201);
-    
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext'
                 ]
             });
         })
-        it('status-201-2urls', async function() {
+        it('status-201-2urls', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 8)
                 .put('/path/to/file-1.ext', 'hello wo')
@@ -84,7 +86,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 7)
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
-    
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -92,7 +94,7 @@ describe('multipart', function() {
                 ]
             });
         })
-        it('status-201-2urls-maxpartjustenough', async function() {
+        it('status-201-2urls-maxpartjustenough', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 8)
                 .put('/path/to/file-1.ext', 'hello wo')
@@ -101,7 +103,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 7)
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
-                
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 maxPartSize: 8,
                 urls: [
@@ -110,7 +112,7 @@ describe('multipart', function() {
                 ]
             });
         })
-        it('status-201-2urls-maxparttoosmall', async function() {
+        it('status-201-2urls-maxparttoosmall', async function () {
             try {
                 await uploadAEMMultipartFile('.testfile.dat', {
                     maxPartSize: 7,
@@ -124,7 +126,7 @@ describe('multipart', function() {
                 assert.strictEqual(e.message, 'File \'.testfile.dat\' is too large to upload: 15 bytes, maxPartSize: 7 bytes, numUploadURIs: 2');
             }
         })
-        it('status-201-2urls-fitminpart', async function() {
+        it('status-201-2urls-fitminpart', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 15)
                 .put('/path/to/file-1.ext', 'hello world 123')
@@ -138,7 +140,7 @@ describe('multipart', function() {
                 ]
             });
         })
-        it('status-201-10urls-fits2', async function() {
+        it('status-201-10urls-fits2', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 8)
                 .put('/path/to/file-1.ext', 'hello wo')
@@ -163,8 +165,8 @@ describe('multipart', function() {
                     'http://test-status-201/path/to/file-10.ext',
                 ]
             });
-        })        
-        it('status-201-2urls-minparttoosmall', async function() {
+        })
+        it('status-201-2urls-minparttoosmall', async function () {
             // this works, because min part is only a suggestion
             nock('http://test-status-201')
                 .matchHeader('content-length', 8)
@@ -183,7 +185,7 @@ describe('multipart', function() {
                 ]
             });
         })
-        it('status-201-2urls-smallerpreferred', async function() {
+        it('status-201-2urls-smallerpreferred', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 8)
                 .put('/path/to/file-1.ext', 'hello wo')
@@ -192,7 +194,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 7)
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
- 
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -202,7 +204,7 @@ describe('multipart', function() {
                 partSize: 7,
             });
         })
-        it('status-201-2urls-largerpreferred', async function() {
+        it('status-201-2urls-largerpreferred', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 9)
                 .put('/path/to/file-1.ext', 'hello wor')
@@ -211,7 +213,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 6)
                 .put('/path/to/file-2.ext', 'ld 123')
                 .reply(201);
- 
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -221,7 +223,7 @@ describe('multipart', function() {
                 partSize: 9,
             });
         })
-        it('status-201-2urls-preferred-smallerminsize', async function() {
+        it('status-201-2urls-preferred-smallerminsize', async function () {
             // minPartSize smaller than preferred has no effect
             nock('http://test-status-201')
                 .matchHeader('content-length', 9)
@@ -231,7 +233,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 6)
                 .put('/path/to/file-2.ext', 'ld 123')
                 .reply(201);
- 
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 minPartSize: 8,
                 urls: [
@@ -242,7 +244,7 @@ describe('multipart', function() {
                 partSize: 9,
             });
         })
-        it('status-201-2urls-preferred-largerminsize', async function() {
+        it('status-201-2urls-preferred-largerminsize', async function () {
             // preferred is limited on the lower-bound by minPartSize, so 
             // the picked part size is the minPartSize
             nock('http://test-status-201')
@@ -253,7 +255,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 6)
                 .put('/path/to/file-2.ext', 'ld 123')
                 .reply(201);
- 
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 minPartSize: 9,
                 urls: [
@@ -264,7 +266,7 @@ describe('multipart', function() {
                 partSize: 8,
             });
         })
-        it('status-201-2urls-preferred-smallermaxsize', async function() {
+        it('status-201-2urls-preferred-smallermaxsize', async function () {
             // minPartSize smaller than preferred has no effect
             nock('http://test-status-201')
                 .matchHeader('content-length', 8)
@@ -274,7 +276,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 7)
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
- 
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 maxPartSize: 8,
                 urls: [
@@ -285,7 +287,7 @@ describe('multipart', function() {
                 partSize: 9,
             });
         })
-        it('status-201-2urls-preferred-largermaxsize', async function() {
+        it('status-201-2urls-preferred-largermaxsize', async function () {
             // preferred is limited on the lower-bound by minPartSize, so 
             // the picked part size is the minPartSize
             nock('http://test-status-201')
@@ -296,7 +298,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 7)
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
- 
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 maxPartSize: 9,
                 urls: [
@@ -307,13 +309,13 @@ describe('multipart', function() {
                 partSize: 8,
             });
         })
-        it('status-404-url1', async function() {
+        it('status-404-url1', async function () {
             try {
                 nock('http://test-status-404')
                     .matchHeader('content-length', 8)
                     .put('/path/to/file-1.ext', 'hello wo')
                     .reply(404);
-                
+
                 await uploadAEMMultipartFile('.testfile.dat', {
                     urls: [
                         'http://test-status-404/path/to/file-1.ext',
@@ -324,7 +326,7 @@ describe('multipart', function() {
                 assert.strictEqual(e.message, 'PUT \'http://test-status-404/path/to/file-1.ext\' failed with status 404');
             }
         })
-        it('status-404-url2', async function() {
+        it('status-404-url2', async function () {
             try {
                 nock('http://test-status-404')
                     .matchHeader('content-length', 8)
@@ -345,7 +347,7 @@ describe('multipart', function() {
                 assert.strictEqual(e.message, 'PUT \'http://test-status-404/path/to/file-2.ext\' failed with status 404');
             }
         })
-        it('method-post', async function() {
+        it('method-post', async function () {
             nock('http://test-method-post')
                 .matchHeader('content-length', 8)
                 .post('/path/to/file-1.ext', 'hello wo')
@@ -364,7 +366,7 @@ describe('multipart', function() {
                 method: 'POST'
             });
         })
-        it('timeout-error-1', async function() {
+        it('timeout-error-1', async function () {
             try {
                 nock('http://timeout-error')
                     .matchHeader('content-length', 8)
@@ -387,7 +389,7 @@ describe('multipart', function() {
                 assert.strictEqual(e.message, 'PUT \'http://timeout-error/path/to/file-1.ext\' connect failed: network timeout at: http://timeout-error/path/to/file-1.ext');
             }
         })
-        it('timeout-error-2', async function() {
+        it('timeout-error-2', async function () {
             try {
                 nock('http://timeout-error')
                     .matchHeader('content-length', 8)
@@ -414,7 +416,7 @@ describe('multipart', function() {
                 assert.strictEqual(e.message, 'PUT \'http://timeout-error/path/to/file-2.ext\' connect failed: network timeout at: http://timeout-error/path/to/file-2.ext');
             }
         })
-        it('header-override', async function() {
+        it('header-override', async function () {
             nock('http://header-override')
                 .matchHeader('content-length', 8)
                 .matchHeader('content-type', 'image/jpeg')
@@ -425,7 +427,7 @@ describe('multipart', function() {
                 .matchHeader('content-type', 'image/jpeg')
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
-    
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://header-override/path/to/file-1.ext',
@@ -437,7 +439,7 @@ describe('multipart', function() {
                 }
             });
         })
-        it('status-404-retry', async function() {
+        it('status-404-retry', async function () {
             nock('http://status-404-retry')
                 .matchHeader('content-length', 8)
                 .put('/path/to/file-1.ext', 'hello wo')
@@ -454,7 +456,7 @@ describe('multipart', function() {
                 .matchHeader('content-length', 7)
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
-    
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://status-404-retry/path/to/file-1.ext',
@@ -464,7 +466,7 @@ describe('multipart', function() {
                 retryAllErrors: true
             });
         })
-        it('status-503-retry', async function() {
+        it('status-503-retry', async function () {
             nock('http://status-503-retry')
                 .matchHeader('content-length', 8)
                 .put('/path/to/file-1.ext', 'hello wo')
@@ -481,13 +483,13 @@ describe('multipart', function() {
                 .matchHeader('content-length', 7)
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
-    
+
             await uploadAEMMultipartFile('.testfile.dat', {
                 urls: [
                     'http://status-503-retry/path/to/file-1.ext',
                     'http://status-503-retry/path/to/file-2.ext'
                 ]
             });
-        })       
+        })
     })
 })
