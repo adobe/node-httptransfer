@@ -18,7 +18,7 @@
     "content-range": "^1.1.0",
     "content-type": "^1.0.4",
     "filter-obj": "^2.0.1",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "node-fetch-npm": "^2.0.3"
   },
   "devDependencies": {
