@@ -61,6 +61,15 @@ commands:
         curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local/auth/nui >> ~/.npmrc
         # this was added only for core repo
         curl --fail -s -u${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN} https://artifactory.corp.adobe.com/artifactory/api/npm/npm-aem-desktop-release-local/auth/aem-desktop >> ~/.npmrc
+  pull_scripts: &pull_scripts
+    run:
+      name: Pull CI scripts
+      environment:
+        # change branch here in case you test a CI change
+        BRANCH: master
+      command: |
+        echo "checking out branch $BRANCH..."
+        git clone --single-branch --branch $BRANCH git@git.corp.adobe.com:nui/circleci.git ~/circleci
 
 jobs:
   build_runtime:
@@ -73,15 +82,12 @@ jobs:
           docker_layer_caching: true
       - *ssh_keys
       - *artifactory_login
+      - *pull_scripts
       - run:
           name: Creating Docker Runtime
           command: |
-            cd ~
-            git clone git@git.corp.adobe.com:nui/circleci.git
-            cd circleci
-            git pull
-            cat build_runtime.sh
-            ./build_runtime.sh           
+            cat ~/circleci/build_runtime.sh
+            ~/circleci/build_runtime.sh
       - persist_to_workspace:
           root: /home/circleci/cache/
           paths:
@@ -103,15 +109,12 @@ jobs:
           command: |
             docker login -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN docker-senseiwins-release.dr-uw2.adobeitc.com
             docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
+      - *pull_scripts
       - run:
           name: Load Docker Runtime and run npm tests
           command: |
-            cd ~
-            git clone git@git.corp.adobe.com:nui/circleci.git
-            cd circleci
-            git pull
-            cat build.sh
-            ./build.sh
+            cat ~/circleci/build.sh
+            ~/circleci/build.sh
       - *test_results_build
       - *test_results_ac_build
       - *test_logs_ac_bld
@@ -135,27 +138,22 @@ jobs:
           command: |
             docker login -u $ARTIFACTORY_UW2_USER -p $ARTIFACTORY_UW2_TOKEN docker-senseiwins-release.dr-uw2.adobeitc.com
             docker login docker-project-nui-snapshot.dr.corp.adobe.com -u $ARTIFACTORY_USER -p $ARTIFACTORY_TOKEN
+      - *pull_scripts
       - run:
           name: Get dependents, Install and Pack (dependent-module-tests_Step_1.sh)
           command: |
-            cd ~
-            git clone git@git.corp.adobe.com:nui/circleci.git
-            cd circleci
-            git pull
-            cat dependent-module-tests-step-1.sh
-            ./dependent-module-tests-step-1.sh
+            cat ~/circleci/dependent-module-tests-step-1.sh
+            ~/circleci/dependent-module-tests-step-1.sh
       - run:
           name: Create Docker Runtime for all dependents (dependent-module-tests_Step_2.sh)
           command: |
-            cd ~/circleci
-            cat dependent-module-tests-step-2.sh
-            ./dependent-module-tests-step-2.sh
+            cat ~/circleci/dependent-module-tests-step-2.sh
+            ~/circleci/dependent-module-tests-step-2.sh
       - run:
           name: Run npm tests for all dependents (dependent-module-tests_Step_3.sh)
           command: |
-            cd ~/circleci
-            cat dependent-module-tests-step-3.sh
-            ./dependent-module-tests-step-3.sh
+            cat ~/circleci/dependent-module-tests-step-3.sh
+            ~/circleci/dependent-module-tests-step-3.sh
       # Unit-Test-results
       - store_test_results:
           path: /home/circleci/test_logs
@@ -171,6 +169,7 @@ jobs:
       - checkout
       - *ssh_keys
       - *artifactory_login
+      - *pull_scripts
       - run:
           name: Credentials and setup
           command: |
@@ -179,20 +178,16 @@ jobs:
             # allow user circleci to make global npm installations
             sudo chown -R circleci /usr/local/ && chmod -R u+x+w /usr/local/
       - run:
-          name: Get dependents, Install and pack (deploy-app-step-1.sh)
+          name: Install nui/app and update with local changes
           command: |
-            cd ~
-            git clone git@git.corp.adobe.com:nui/circleci.git
-            cd circleci
-            git pull
-            cat deploy-app-step-1.sh
-            ./deploy-app-step-1.sh
+            cat ~/circleci/deploy-app-step-1.sh
+            ~/circleci/deploy-app-step-1.sh
       - run:
-          name: Deploy unique integration test environment (deploy-app-step-2.sh)
+          name: Deploy unique integration test environment
           command: |
-            cd ~/circleci
-            cat deploy-app-step-2.sh
-            ./deploy-app-step-2.sh
+            cd ~/appLatest/bridgeDir/app
+            cat ~/circleci/deploy-app-step-2.sh
+            ~/circleci/deploy-app-step-2.sh
             
       - persist_to_workspace:
           root: ~/workspace
@@ -236,15 +231,12 @@ jobs:
       - checkout
       - *ssh_keys
       - *artifactory_login
+      - *pull_scripts
       - run:
           name: Releasing module - npm publish and create git tags
           command: |
-            cd ~
-            git clone git@git.corp.adobe.com:nui/circleci.git
-            cd circleci
-            git pull
-            cat release.sh
-            ./release.sh
+            cat ~/circleci/release.sh
+            ~/circleci/release.sh
             
       - persist_to_workspace:
           root: ~/tmpDir
@@ -261,15 +253,12 @@ jobs:
       - attach_workspace:
           at: tmpDir
       - run: cat tmpDir/env-vars >> $BASH_ENV
+      - *pull_scripts
       - run:
           name: Create PR for dependent repos to update version
           command: |
-            cd ~
-            git clone git@git.corp.adobe.com:nui/circleci.git
-            cd circleci
-            git pull
-            cat dependent-version-update.sh
-            ./dependent-version-update.sh
+            cat ~/circleci/dependent-version-update.sh
+            ~/circleci/dependent-version-update.sh
               
   validate_config:
     working_directory: ~/validate
