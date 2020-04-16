@@ -18,7 +18,7 @@ const stream = require('stream');
 const { StringDecoder } = require('string_decoder');
 
 /**
- * Readable that provides characters from a string in UTF8 encoding one 
+ * Readable that provides characters from a string in UTF8 encoding one
  * character at a time.
  */
 class StringReadable extends stream.Readable {
@@ -69,7 +69,7 @@ class StringWritable extends stream.Writable {
 
 /**
  * Create a readable that emits the provided error on first read.
- * 
+ *
  * @param {Error} error Error to emit on first read
  */
 function createErrorReadable(error) {
@@ -82,7 +82,7 @@ function createErrorReadable(error) {
 
 /**
  * Create a writable that emits the provided error on first read.
- * 
+ *
  * @param {Error} error Error to emit on first read
  */
 function createErrorWritable(error) {

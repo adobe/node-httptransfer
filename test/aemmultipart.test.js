@@ -34,7 +34,7 @@ describe('multipart', function () {
             try {
                 await fs.unlink('.testfile.dat');
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only clean up 
+                // don't fail if the file doesn't exist, it's only clean up
                 console.log(e);
             }
         })
@@ -245,7 +245,7 @@ describe('multipart', function () {
             });
         })
         it('status-201-2urls-preferred-largerminsize', async function () {
-            // preferred is limited on the lower-bound by minPartSize, so 
+            // preferred is limited on the lower-bound by minPartSize, so
             // the picked part size is the minPartSize
             nock('http://test-status-201')
                 .matchHeader('content-length', 9)
@@ -288,7 +288,7 @@ describe('multipart', function () {
             });
         })
         it('status-201-2urls-preferred-largermaxsize', async function () {
-            // preferred is limited on the lower-bound by minPartSize, so 
+            // preferred is limited on the lower-bound by minPartSize, so
             // the picked part size is the minPartSize
             nock('http://test-status-201')
                 .matchHeader('content-length', 8)

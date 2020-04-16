@@ -19,10 +19,10 @@ const URL = require("url");
 const yargs = require("yargs");
 const azureStorageBlob = require("@azure/storage-blob");
 const leftPad = require("left-pad");
-const { 
+const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
-    transferStream, 
-    getResourceHeaders 
+    transferStream,
+    getResourceHeaders
 } = require("@nui/node-httptransfer");
 
 function createAzureSAS(auth, containerName, blobName, permissions) {
@@ -53,11 +53,11 @@ async function commitAzureBlocks(auth, containerName, blobName) {
     const path = encodeURIComponent(`${containerName}/${blobName}`);
     const url = `https://${auth.accountName}.blob.core.windows.net/${path}`;
     const blobURL = new azureStorageBlob.BlockBlobURL(
-        url, 
+        url,
         azureStorageBlob.BlockBlobURL.newPipeline(credential)
     );
     const blockList = await blobURL.getBlockList(
-        azureStorageBlob.Aborter.none, 
+        azureStorageBlob.Aborter.none,
         "uncommitted"
     );
     await blobURL.commitBlockList(
@@ -75,8 +75,8 @@ async function resolveLocation(value, options) {
     } else if (url.protocol === "azure:") {
         const numParts = options.numParts || Math.ceil(options.size / options.maxPartSize);
         const sasUrl = createAzureSAS(
-            options.azureAuth, 
-            url.host, 
+            options.azureAuth,
+            url.host,
             url.path.substring(1), // skip the "/" prefix
             options.writable ? "cw" : "r"
         );
@@ -121,7 +121,7 @@ async function main() {
     // parse command line
     const params = yargs
         .strict()
-        .command("* <source> <target>", "Testbed for node-httptransfer", yargs => 
+        .command("* <source> <target>", "Testbed for node-httptransfer", yargs =>
             yargs
                 .positional("source", {
                     describe: "File, URL, or azure://container/path/to/blob to retrieve content from",
@@ -174,12 +174,12 @@ async function main() {
                     describe: "Time to retry until throwing an error (ms)",
                     type: "number",
                     default: 60000
-                })  
+                })
                 .option("retryInterval", {
                     describe: "Time between retries, used by exponential backoff (ms)",
                     type: "number",
                     default: 100
-                })                               
+                })
                 .example("$0 azure://container/source.txt blob.txt", "Download path/to/source.txt in container to blob.txt")
                 .example("$0 blob.txt azure://container/target.txt", "Upload blob.txt to path/to/target.txt in container")
                 .example("$0 azure://container/source.txt azure://container/target.txt", "Transfer source.txt to target.txt in container")
@@ -254,7 +254,7 @@ async function main() {
         await commitAzureBlocks(params.azureAuth, url.host, url.path.substring(1));
     } else {
         throw Error("Transfer is not supported")
-    }  
+    }
 }
 
 main()

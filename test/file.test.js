@@ -30,7 +30,7 @@ describe('file', function() {
             try {
                 await fs.unlink('.testfile.dat');
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up 
+                // don't fail if the file doesn't exist, it's only done to clean up
                 // after ourselves
                 console.log(e);
             }
@@ -39,7 +39,7 @@ describe('file', function() {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
-    
+
             await downloadFile('http://test-status-200/path/to/file.ext', '.testfile.dat');
             const result = await fs.readFile('.testfile.dat', 'utf8');
             assert.strictEqual(result, 'hello world');
@@ -48,7 +48,7 @@ describe('file', function() {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
-    
+
             await downloadFile('http://test-status-200/path/to/file.ext', '.testdir/.testfile.dat', {
                 mkdirs: true
             });
@@ -93,7 +93,7 @@ describe('file', function() {
                 nock('http://test-status-404')
                     .get('/path/to/file.ext')
                     .reply(404, 'hello world');
-        
+
                 await downloadFile('http://test-status-404/path/to/file.ext', '.testfile.dat');
             } catch (e) {
                 assert.strictEqual(e.message, 'GET \'http://test-status-404/path/to/file.ext\' failed with status 404');
@@ -136,7 +136,7 @@ describe('file', function() {
             } catch (e) {
                 assert.strictEqual(e.message, 'GET \'http://test-status-404-stream-retry/path/to/file.ext\' failed with status 404: hello world');
             }
-        })        
+        })
         it('status-503-retry', async function() {
             nock('http://test-status-503')
                 .get('/path/to/file.ext')
@@ -174,13 +174,13 @@ describe('file', function() {
                 });
                 assert.fail('failure expected')
             } catch (e) {
-                // expect elapsed to be at least 500ms, since less than that a 3rd 
+                // expect elapsed to be at least 500ms, since less than that a 3rd
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.startsWith('GET \'http://badhost/path/to/file.ext\' connect failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost'));
             }
-        })        
+        })
     })
     describe('upload', function() {
         beforeEach(async function() {
@@ -193,7 +193,7 @@ describe('file', function() {
             try {
                 await fs.unlink('.testfile.dat');
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up 
+                // don't fail if the file doesn't exist, it's only done to clean up
                 // after ourselves
                 console.log(e);
             }
@@ -203,7 +203,7 @@ describe('file', function() {
                 .matchHeader('content-length', 15)
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(201);
-    
+
             await uploadFile('.testfile.dat', 'http://test-status-201/path/to/file.ext');
         })
         it('status-201-header', async function() {
@@ -212,18 +212,18 @@ describe('file', function() {
                 .matchHeader('content-type', 'image/jpeg')
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(201);
-    
+
             await uploadFile('.testfile.dat', 'http://test-status-201/path/to/file.ext', {
                 headers: {
                     'content-type': 'image/jpeg'
                 }
             });
-        })        
+        })
         it('status-404', async function() {
             nock('http://test-status-404')
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(404);
-    
+
             try {
                 await uploadFile('.testfile.dat', 'http://test-status-404/path/to/file.ext');
                 assert.fail('failure expected')
@@ -277,7 +277,7 @@ describe('file', function() {
                 });
                 assert.fail('failure expected')
             } catch (e) {
-                // expect elapsed to be at least 500ms, since less than that a 3rd 
+                // expect elapsed to be at least 500ms, since less than that a 3rd
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
