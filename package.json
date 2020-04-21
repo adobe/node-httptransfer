@@ -1,6 +1,6 @@
 {
   "name": "@nui/node-httptransfer",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "main": "index.js",
   "description": "Efficient File Transfer Module for NodeJS",
   "author": {
