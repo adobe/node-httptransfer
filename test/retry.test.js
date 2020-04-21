@@ -88,6 +88,9 @@ describe("retry", function () {
         })
     })
     describe("retryInit", function () {
+        this.beforeEach( () => {
+            delete process.env.__OW_ACTION_DEADLINE;
+        })
         it("none", function () {
             const options = retryInit();
             assertStartTime(options);
@@ -97,7 +100,7 @@ describe("retry", function () {
                 retryInitialDelay: 100,
                 retryAllErrors: false,
                 retryBackoff: 2,
-                timeout: 60000
+                timeout: 30000
             });
         })
         it("empty", function () {
@@ -109,7 +112,7 @@ describe("retry", function () {
                 retryInitialDelay: 100,
                 retryAllErrors: false,
                 retryBackoff: 2,
-                timeout: 60000
+                timeout: 30000
             });
         })
         it("disabled", function () {
@@ -129,7 +132,7 @@ describe("retry", function () {
                 retryInitialDelay: 100,
                 retryAllErrors: true,
                 retryBackoff: 2,
-                timeout: 60000
+                timeout: 30000
             });
         })
         it("retryMaxDuration", function () {
@@ -143,7 +146,31 @@ describe("retry", function () {
                 retryInitialDelay: 100,
                 retryAllErrors: false,
                 retryBackoff: 2,
-                timeout: 40000
+                timeout: 30000
+            });
+        })
+        it("retryMaxDuration will surpass action timeout", function () {
+            process.env.__OW_ACTION_DEADLINE = Date.now() + 2000;
+            const options = retryInit();
+            assertStartTime(options);
+            assert.ok(options.retryMaxDuration < 3000, options.retryMaxDuration > 0);
+            assert.strictEqual(options.retryInitialDelay, 100);
+            assert.strictEqual(options.retryBackoff, 2);
+            assert.strictEqual(options.retryAllErrors, false);
+            assert.strictEqual(options.timeout, options.retryMaxDuration * 0.5);
+        })
+        it("socketTimeout is greater than retryMaxDuration", function () {
+            const options = retryInit({
+                socketTimeout: 70000
+            });
+            assertStartTime(options);
+            assert.deepStrictEqual(options, {
+                startTime: options.startTime,
+                retryMaxDuration: 60000,
+                retryInitialDelay: 100,
+                retryAllErrors: false,
+                retryBackoff: 2,
+                timeout: 30000
             });
         })
         it("retryInitialDelay", function () {
@@ -157,7 +184,7 @@ describe("retry", function () {
                 retryInitialDelay: 400,
                 retryAllErrors: false,
                 retryBackoff: 2,
-                timeout: 60000
+                timeout: 30000
             });
         })
     })
