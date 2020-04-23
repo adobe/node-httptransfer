@@ -2,13 +2,13 @@
 
 ## Introduction
 
-The `node-httptransfer` package is designed to easily and correctly transfer file content from HTTP urls to HTTP urls and between HTTP urls.
+The `node-httptransfer` package is designed to easily and correctly transfer file content from HTTP(S) urls to HTTP(S) urls and between HTTP(S) urls.
 
 The lower-level stream API allows you to transfer content from a URL to any writable stream, and similarly transfer any readable stream to a URL.
 
 The higher-level file API abstracts away the streams and allows you to transfer content to/from files on disk.
 
-The `node-httptransfer` package requires the async/await features and is built using the [node-fetch](https://www.npmjs.com/package/node-fetch) package.
+The `node-httptransfer` package requires the async/await features and is built using the [node-fetch-npm](https://www.npmjs.com/package/node-fetch-npm) package.
 
 ## Installation
 
