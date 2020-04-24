@@ -361,7 +361,7 @@ describe("retry", function () {
                 console.log(e);
                 const duration = Date.now() - start;
                 assert.ok(attempt === 4); // will always fail at 4th attempt with new rules
-                assert.ok(duration <= retryMax + buffer);
+                assert.ok(duration <= retryMax + buffer, `duration: ${duration}, retryMax: ${retryMax}, buffer: ${buffer}`);
             }
         })
     })
