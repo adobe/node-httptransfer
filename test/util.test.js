@@ -23,7 +23,7 @@ describe("util", function() {
             await util.createReadStream("badfile");
             assert.fail("failure expected")
         } catch (e) {
-            assert.strictEqual(e.message, "ENOENT: no such file or directory, open 'badfile'");
+            assert.ok(e.message.includes("ENOENT: no such file or directory"));
         }
     })
     it("createWriteStream-error", async function() {
@@ -31,7 +31,7 @@ describe("util", function() {
             await util.createWriteStream("badfolder/badfile");
             assert.fail("failure expected")
         } catch (e) {
-            assert.strictEqual(e.message, "ENOENT: no such file or directory, open 'badfolder/badfile'");
+            assert.ok(e.message.includes("ENOENT: no such file or directory"));
         }
     })
 })
