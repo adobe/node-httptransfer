@@ -63,7 +63,7 @@ describe('stream', function () {
                 await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
                 assert.fail('failure expected');
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('truncated'));
             }
@@ -78,7 +78,7 @@ describe('stream', function () {
                 await downloadStream('http://test-status-404-empty/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
             }
         })
@@ -94,7 +94,7 @@ describe('stream', function () {
                 await downloadStream('http://test-status-404-octet/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
             }
         })
@@ -110,7 +110,7 @@ describe('stream', function () {
                 await downloadStream('http://test-status-404-text/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
             }
         })
@@ -134,7 +134,7 @@ describe('stream', function () {
                 await downloadStream('http://test-timeout/path/to/file.ext', writeStream, { timeout: 200 });
                 assert.fail('failure expected')
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('network timeout'));
             }
@@ -152,7 +152,7 @@ describe('stream', function () {
                 await downloadStream('http://test-reply-error/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('Connection Reset'));
             }
@@ -173,7 +173,7 @@ describe('stream', function () {
                 await downloadStream(`http://test-200-stream-error/path/to/file.ext`, writeStream);
                 assert.fail('failure expected');
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed'));
                 assert.ok(e.message.includes('read failure'));
             }
@@ -196,7 +196,7 @@ describe('stream', function () {
                 await downloadStream('http://test-404-stream-error/path/to/file.ext', writeStream);
                 assert.fail('failure expected');
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('read failure'));
             }
@@ -211,7 +211,7 @@ describe('stream', function () {
                 await downloadStream('http://test-200-stream-write-error/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('write failure'));
             }
