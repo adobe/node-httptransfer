@@ -10,6 +10,10 @@ The higher-level file API abstracts away the streams and allows you to transfer 
 
 The `node-httptransfer` package requires the async/await features and is built using the [node-fetch-npm](https://www.npmjs.com/package/node-fetch-npm) package.
 
+## Restrictions
+
+Currently, only Linux is supported.
+
 ## Installation
 
 Install `node-httptransfer` in to your NodeJS project using:
