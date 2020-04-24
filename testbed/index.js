@@ -23,7 +23,7 @@ const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
     transferStream,
     getResourceHeaders
-} = require("@nui/node-httptransfer");
+} = require("../index.js");
 
 function createAzureSAS(auth, containerName, blobName, permissions) {
     if (!auth || !auth.accountName || !auth.accountKey) {

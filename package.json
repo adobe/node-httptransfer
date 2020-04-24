@@ -4,7 +4,7 @@
   "main": "index.js",
   "description": "Efficient File Transfer Module for NodeJS",
   "author": {
-    "name": "Adobe Systems Inc."
+    "name": "Adobe Inc."
   },
   "license": "Apache-2.0",
   "repository": {
