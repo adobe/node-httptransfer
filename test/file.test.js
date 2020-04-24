@@ -41,8 +41,6 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
@@ -91,8 +89,6 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-200-truncated.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
@@ -113,8 +109,6 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-filestream.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
@@ -135,8 +129,6 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-404.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
@@ -158,8 +150,6 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-404-retry.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
@@ -188,8 +178,6 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-404-stream-retry.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
@@ -209,8 +197,6 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-503-retry.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
@@ -233,8 +219,6 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-timeout-retry.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
@@ -259,36 +243,25 @@ describe('file', function() {
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-timeout-retry-1.dat'));
             } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
                 console.log(e);
             }
         });
     });
     describe('upload', function() {
-        beforeEach(async function() {
-            await fs.writeFile(path.resolve('./test-transfer-file.dat'), 'hello world 123', 'utf8');
-        });
-
         afterEach(async function() {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
-            try {
-                await fs.unlink(path.resolve('./test-transfer-file.dat'));
-            } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
-                console.log(e);
-            }
         });
+
         it('status-201', async function() {
             nock('http://test-status-201')
                 .matchHeader('content-length', 15)
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(201);
 
-            await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://test-status-201/path/to/file.ext');
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'hello world 123', 'utf8');
+            await uploadFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'http://test-status-201/path/to/file.ext');
         });
         it('status-201-header', async function() {
             nock('http://test-status-201')
@@ -297,23 +270,37 @@ describe('file', function() {
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(201);
 
-            await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://test-status-201/path/to/file.ext', {
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'hello world 123', 'utf8');
+            await uploadFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'http://test-status-201/path/to/file.ext', {
                 headers: {
                     'content-type': 'image/jpeg'
                 }
             });
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-201.dat'));
+            } catch (e) {
+                console.log(e);
+            }
         });
         it('status-404', async function() {
             nock('http://test-status-404')
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(404);
 
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-404.dat'), 'hello world 123', 'utf8');
             try {
-                await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://test-status-404/path/to/file.ext');
+                await uploadFile(path.resolve('./test-transfer-file-up-status-404.dat'), 'http://test-status-404/path/to/file.ext');
                 assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
+            }
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-404.dat'));
+            } catch (e) {
+                console.log(e);
             }
         });
         it('status-404-retry', async function() {
@@ -325,9 +312,16 @@ describe('file', function() {
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(201);
 
-            await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://test-status-404/path/to/file.ext', {
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-404-retry.dat'), 'hello world 123', 'utf8');
+            await uploadFile(path.resolve('./test-transfer-file-up-status-404-retry.dat'), 'http://test-status-404/path/to/file.ext', {
                 retryAllErrors: true
             });
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-404-retry.dat'));
+            } catch (e) {
+                console.log(e);
+            }
         });
         it('status-503-retry', async function() {
             nock('http://test-status-503')
@@ -338,7 +332,14 @@ describe('file', function() {
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(201);
 
-            await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://test-status-503/path/to/file.ext');
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-503-retry.dat'), 'hello world 123', 'utf8');
+            await uploadFile(path.resolve('./test-transfer-file-up-status-503-retry.dat'), 'http://test-status-503/path/to/file.ext');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-503-retry.dat'));
+            } catch (e) {
+                console.log(e);
+            }
         });
         it('timeout-retry', async function() {
             nock('http://test-status-timeout')
@@ -350,14 +351,22 @@ describe('file', function() {
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(201);
 
-            await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://test-status-timeout/path/to/file.ext', {
+            await fs.writeFile(path.resolve('./test-transfer-file-up-timeout-retry.dat'), 'hello world 123', 'utf8');
+            await uploadFile(path.resolve('./test-transfer-file-up-timeout-retry.dat'), 'http://test-status-timeout/path/to/file.ext', {
                 timeout: 200
             });
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-timeout-retry.dat'));
+            } catch (e) {
+                console.log(e);
+            }
         });
         it('badhost-retry-failure (2)', async function() {
             const start = Date.now();
             try {
-                await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://badhost/path/to/file.ext', {
+                await fs.writeFile(path.resolve('./test-transfer-file-up-badhost-retry-failure.dat'), 'hello world 123', 'utf8');
+                await uploadFile(path.resolve('./test-transfer-file-up-badhost-retry-failure.dat'), 'http://badhost/path/to/file.ext', {
                     retryMaxDuration: 1000
                 });
                 assert.fail('failure expected');
@@ -370,6 +379,12 @@ describe('file', function() {
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('ENOTFOUND'));
                 assert.ok(e.message.includes('badhost'));
+            }
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-badhost-retry-failure.dat'));
+            } catch (e) {
+                console.log(e);
             }
         });
     });
