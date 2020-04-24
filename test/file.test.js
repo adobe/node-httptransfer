@@ -178,7 +178,7 @@ describe('file', function() {
                 await downloadFile('http://badhost/path/to/file.ext', path.resolve('./test-transfer-file.dat'), {
                     retryMaxDuration: 1000
                 });
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 // expect elapsed to be at least 500ms, since less than that a 3rd
                 // retry would fit (400ms-500ms wait).
@@ -236,7 +236,7 @@ describe('file', function() {
 
             try {
                 await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://test-status-404/path/to/file.ext');
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
@@ -286,7 +286,7 @@ describe('file', function() {
                 await uploadFile(path.resolve('./test-transfer-file.dat'), 'http://badhost/path/to/file.ext', {
                     retryMaxDuration: 1000
                 });
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 // expect elapsed to be at least 500ms, since less than that a 3rd
                 // retry would fit (400ms-500ms wait).
