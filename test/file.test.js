@@ -55,8 +55,20 @@ describe('file', function() {
             });
             const result = await fs.readFile(path.resolve('./testdir/test-transfer-file.dat'), 'utf8');
             assert.deepStrictEqual(result, 'hello world');
-            await fs.unlink(path.resolve('./testdir/test-transfer-file.dat'));
-            await fs.rmdir(path.resolve('./testdir'));
+
+            try{
+                await fs.unlink(path.resolve('./testdir/test-transfer-file.dat'));
+            } catch(e){
+                // don't fail if it doesn't exist, it's only clean up
+                console.log(e);
+            }
+
+            try{
+                await fs.rmdir(path.resolve('./testdir'));
+            } catch(e){
+                // don't fail if it doesn't exist, it's only clean up
+                console.log(e);
+            }
         });
         it('status-200-truncate-retry', async function() {
             nock('http://test-status-200-truncate-retry')
@@ -97,9 +109,6 @@ describe('file', function() {
 
                 await downloadFile('http://test-status-404/path/to/file.ext', path.resolve('./test-transfer-file.dat'));
             } catch (e) {
-                console.log('***************');
-                console.log(e);
-                console.log('***************');
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
                 const result = await fs.readFile(path.resolve('./test-transfer-file.dat'), 'utf8');
