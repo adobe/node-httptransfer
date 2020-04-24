@@ -345,7 +345,7 @@ describe("retry", function () {
             let attempt = 0;
             const start = Date.now();
             const retryMax = 1500;
-            const buffer = 200; // buffer to finish calls if backoff is too large
+            const buffer = 500; // buffer to finish calls if backoff is too large
 
             try {
                 await retry(async () => {
