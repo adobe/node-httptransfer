@@ -17,6 +17,7 @@ governing permissions and limitations under the License.
 const assert = require('assert');
 const fs = require('fs').promises;
 const nock = require('nock');
+const path = require('path');
 const { downloadFile, uploadFile } = require('../lib/file');
 const { testSetResponseBodyOverride, testHasResponseBodyOverrides } = require('../lib/fetch');
 const { createErrorReadable } = require('./streams');
@@ -28,13 +29,13 @@ describe('file', function() {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
             try {
-                await fs.unlink('test-transfer-file.dat');
+                await fs.unlink(path.resolve('./test-transfer-file.dat'));
             } catch (e) {
                 // don't fail if the file doesn't exist, it's only done to clean up
                 // after ourselves
                 console.log(e);
             }
-        })
+        });
         it('status-200', async function() {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
@@ -43,7 +44,7 @@ describe('file', function() {
             await downloadFile('http://test-status-200/path/to/file.ext', 'test-transfer-file.dat');
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
             assert.deepStrictEqual(result, 'hello world');
-        })
+        });
         it('status-200-mkdir', async function() {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
@@ -56,7 +57,7 @@ describe('file', function() {
             assert.deepStrictEqual(result, 'hello world');
             await fs.unlink('.testdir/test-transfer-file.dat');
             await fs.rmdir('.testdir');
-        })
+        });
         it('status-200-truncate-retry', async function() {
             nock('http://test-status-200-truncate-retry')
                 .get('/path/to/file.ext')
@@ -73,7 +74,7 @@ describe('file', function() {
             await downloadFile('http://test-status-200-truncate-retry/path/to/file.ext', 'test-transfer-file.dat');
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
             assert.deepStrictEqual(result, 'hello world');
-        })
+        });
         it('status-200-stream-retry', async function() {
             nock('http://test-status-200-stream-retry')
                 .get('/path/to/file.ext')
@@ -87,8 +88,8 @@ describe('file', function() {
             await downloadFile('http://test-status-200-stream-retry/path/to/file.ext', 'test-transfer-file.dat');
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
             assert.deepStrictEqual(result, 'hello world');
-        })
-        it('status-404', async function() {
+        });
+        it.only('status-404', async function() {
             try {
                 nock('http://test-status-404')
                     .get('/path/to/file.ext')
@@ -96,12 +97,15 @@ describe('file', function() {
 
                 await downloadFile('http://test-status-404/path/to/file.ext', 'test-transfer-file.dat');
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                console.log('***************');
+                console.log(e);
+                console.log('***************');
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
                 const result = await fs.readFile('test-transfer-file.dat', 'utf8');
                 assert.deepStrictEqual(result, '');
             }
-        })
+        });
         it('status-404-retry', async function() {
             nock('http://test-status-404')
                 .get('/path/to/file.ext')
@@ -116,7 +120,7 @@ describe('file', function() {
             });
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
             assert.deepStrictEqual(result, 'hello world');
-        })
+        });
         it('status-404-stream-retry', async function() {
             try {
                 nock('http://test-status-404-stream-retry')
@@ -135,10 +139,10 @@ describe('file', function() {
                 await downloadFile('http://test-status-404-stream-retry/path/to/file.ext', 'test-transfer-file.dat');
                 assert.fail('failure expected');
             } catch (e) {
-                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('status-503-retry', async function() {
             nock('http://test-status-503')
                 .get('/path/to/file.ext')
@@ -151,7 +155,7 @@ describe('file', function() {
             await downloadFile('http://test-status-503/path/to/file.ext', 'test-transfer-file.dat');
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
             assert.deepStrictEqual(result, 'hello world');
-        })
+        });
         it('timeout-retry', async function() {
             nock('http://test-status-timeout')
                 .get('/path/to/file.ext')
@@ -167,7 +171,7 @@ describe('file', function() {
             });
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
             assert.deepStrictEqual(result, 'hello world');
-        })
+        });
         it('badhost-retry-failure (1)', async function() {
             const start = Date.now();
             try {
@@ -180,26 +184,30 @@ describe('file', function() {
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
-                assert.ok(e.message.startsWith('GET \'http://badhost/path/to/file.ext\' connect failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost'));
+                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok(e.message.includes('badhost'));
             }
-        })
-    })
+        });
+    });
     describe('upload', function() {
         beforeEach(async function() {
-            await fs.writeFile('test-transfer-file.dat', 'hello world 123', 'utf8');
-        })
+            await fs.writeFile(path.resolve('./test-transfer-file.dat'), 'hello world 123', 'utf8');
+        });
+
         afterEach(async function() {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
             try {
-                await fs.unlink('test-transfer-file.dat');
+                await fs.unlink(path.resolve('./test-transfer-file.dat'));
             } catch (e) {
                 // don't fail if the file doesn't exist, it's only done to clean up
                 // after ourselves
                 console.log(e);
             }
-        })
+        });
         it('status-201', async function() {
             nock('http://test-status-201')
                 .matchHeader('content-length', 15)
@@ -207,7 +215,7 @@ describe('file', function() {
                 .reply(201);
 
             await uploadFile('test-transfer-file.dat', 'http://test-status-201/path/to/file.ext');
-        })
+        });
         it('status-201-header', async function() {
             nock('http://test-status-201')
                 .matchHeader('content-length', 15)
@@ -220,7 +228,7 @@ describe('file', function() {
                     'content-type': 'image/jpeg'
                 }
             });
-        })
+        });
         it('status-404', async function() {
             nock('http://test-status-404')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -233,7 +241,7 @@ describe('file', function() {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('status-404-retry', async function() {
             nock('http://test-status-404')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -246,7 +254,7 @@ describe('file', function() {
             await uploadFile('test-transfer-file.dat', 'http://test-status-404/path/to/file.ext', {
                 retryAllErrors: true
             });
-        })
+        });
         it('status-503-retry', async function() {
             nock('http://test-status-503')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -257,7 +265,7 @@ describe('file', function() {
                 .reply(201);
 
             await uploadFile('test-transfer-file.dat', 'http://test-status-503/path/to/file.ext');
-        })
+        });
         it('timeout-retry', async function() {
             nock('http://test-status-timeout')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -271,7 +279,7 @@ describe('file', function() {
             await uploadFile('test-transfer-file.dat', 'http://test-status-timeout/path/to/file.ext', {
                 timeout: 200
             });
-        })
+        });
         it('badhost-retry-failure (2)', async function() {
             const start = Date.now();
             try {
@@ -284,8 +292,11 @@ describe('file', function() {
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
-                assert.ok(e.message.startsWith('PUT \'http://badhost/path/to/file.ext\' connect failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost'));
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok(e.message.includes('badhost'));
             }
-        })
-    })
-})
+        });
+    });
+});
