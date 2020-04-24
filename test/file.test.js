@@ -28,36 +28,37 @@ describe('file', function() {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
-            try {
-                await fs.unlink(path.resolve('./test-transfer-file.dat'));
-            } catch (e) {
-                // don't fail if the file doesn't exist, it's only done to clean up
-                // after ourselves
-                console.log(e);
-            }
         });
         it('status-200', async function() {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
 
-            await downloadFile('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file.dat'));
-            const result = await fs.readFile(path.resolve('./test-transfer-file.dat'), 'utf8');
+            await downloadFile('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file-status-200.dat'));
+            const result = await fs.readFile(path.resolve('./test-transfer-file-status-200.dat'), 'utf8');
             assert.deepStrictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
+            }
         });
         it('status-200-mkdir', async function() {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
 
-            await downloadFile('http://test-status-200/path/to/file.ext', path.resolve('./testdir/test-transfer-file.dat'), {
+            await downloadFile('http://test-status-200/path/to/file.ext', path.resolve('./testdir/test-transfer-file-mkdir.dat'), {
                 mkdirs: true
             });
-            const result = await fs.readFile(path.resolve('./testdir/test-transfer-file.dat'), 'utf8');
+            const result = await fs.readFile(path.resolve('./testdir/test-transfer-file-mkdir.dat'), 'utf8');
             assert.deepStrictEqual(result, 'hello world');
 
             try{
-                await fs.unlink(path.resolve('./testdir/test-transfer-file.dat'));
+                await fs.unlink(path.resolve('./testdir/test-transfer-file-mkdir.dat'));
             } catch(e){
                 // don't fail if it doesn't exist, it's only clean up
                 console.log(e);
@@ -83,9 +84,17 @@ describe('file', function() {
                     'content-length': 11
                 });
 
-            await downloadFile('http://test-status-200-truncate-retry/path/to/file.ext', path.resolve('./test-transfer-file.dat'));
-            const result = await fs.readFile(path.resolve('./test-transfer-file.dat'), 'utf8');
+            await downloadFile('http://test-status-200-truncate-retry/path/to/file.ext', path.resolve('./test-transfer-file-status-200-truncated.dat'));
+            const result = await fs.readFile(path.resolve('./test-transfer-file-status-200-truncated.dat'), 'utf8');
             assert.deepStrictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-200-truncated.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
+            }
         });
         it('status-200-stream-retry', async function() {
             nock('http://test-status-200-stream-retry')
@@ -97,9 +106,17 @@ describe('file', function() {
                 .reply(200, 'hello world');
 
             testSetResponseBodyOverride("GET", createErrorReadable(Error('read error')));
-            await downloadFile('http://test-status-200-stream-retry/path/to/file.ext', path.resolve('./test-transfer-file.dat'));
-            const result = await fs.readFile(path.resolve('./test-transfer-file.dat'), 'utf8');
+            await downloadFile('http://test-status-200-stream-retry/path/to/file.ext', path.resolve('./test-transfer-file-filestream.dat'));
+            const result = await fs.readFile(path.resolve('./test-transfer-file-filestream.dat'), 'utf8');
             assert.deepStrictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-filestream.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
+            }
         });
         it('status-404', async function() {
             try {
@@ -107,12 +124,20 @@ describe('file', function() {
                     .get('/path/to/file.ext')
                     .reply(404, 'hello world');
 
-                await downloadFile('http://test-status-404/path/to/file.ext', path.resolve('./test-transfer-file.dat'));
+                await downloadFile('http://test-status-404/path/to/file.ext', path.resolve('./test-transfer-file-status-404.dat'));
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
-                const result = await fs.readFile(path.resolve('./test-transfer-file.dat'), 'utf8');
+                const result = await fs.readFile(path.resolve('./test-transfer-file-status-404.dat'), 'utf8');
                 assert.deepStrictEqual(result, '');
+            }
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-404.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
             }
         });
         it('status-404-retry', async function() {
@@ -124,11 +149,19 @@ describe('file', function() {
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
 
-            await downloadFile('http://test-status-404/path/to/file.ext', path.resolve('./test-transfer-file.dat'), {
+            await downloadFile('http://test-status-404/path/to/file.ext', path.resolve('./test-transfer-file-status-404-retry.dat'), {
                 retryAllErrors: true
             });
-            const result = await fs.readFile(path.resolve('./test-transfer-file.dat'), 'utf8');
+            const result = await fs.readFile(path.resolve('./test-transfer-file-status-404-retry.dat'), 'utf8');
             assert.deepStrictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-404-retry.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
+            }
         });
         it('status-404-stream-retry', async function() {
             try {
@@ -145,11 +178,19 @@ describe('file', function() {
                     });
 
                 testSetResponseBodyOverride("GET", createErrorReadable(Error('read error')));
-                await downloadFile('http://test-status-404-stream-retry/path/to/file.ext', path.resolve('./test-transfer-file.dat'));
+                await downloadFile('http://test-status-404-stream-retry/path/to/file.ext', path.resolve('./test-transfer-file-status-404-stream-retry.dat'));
                 assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
+            }
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-404-stream-retry.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
             }
         });
         it('status-503-retry', async function() {
@@ -161,9 +202,17 @@ describe('file', function() {
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
 
-            await downloadFile('http://test-status-503/path/to/file.ext', path.resolve('./test-transfer-file.dat'));
-            const result = await fs.readFile(path.resolve('./test-transfer-file.dat'), 'utf8');
+            await downloadFile('http://test-status-503/path/to/file.ext', path.resolve('./test-transfer-file-status-503-retry.dat'));
+            const result = await fs.readFile(path.resolve('./test-transfer-file-status-503-retry.dat'), 'utf8');
             assert.deepStrictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-503-retry.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
+            }
         });
         it('timeout-retry', async function() {
             nock('http://test-status-timeout')
@@ -175,16 +224,24 @@ describe('file', function() {
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
 
-            await downloadFile('http://test-status-timeout/path/to/file.ext', path.resolve('./test-transfer-file.dat'), {
+            await downloadFile('http://test-status-timeout/path/to/file.ext', path.resolve('./test-transfer-file-timeout-retry.dat'), {
                 timeout: 200
             });
-            const result = await fs.readFile(path.resolve('./test-transfer-file.dat'), 'utf8');
+            const result = await fs.readFile(path.resolve('./test-transfer-file-timeout-retry.dat'), 'utf8');
             assert.deepStrictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-timeout-retry.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
+            }
         });
         it('badhost-retry-failure (1)', async function() {
             const start = Date.now();
             try {
-                await downloadFile('http://badhost/path/to/file.ext', path.resolve('./test-transfer-file.dat'), {
+                await downloadFile('http://badhost/path/to/file.ext', path.resolve('./test-transfer-file-timeout-retry-1.dat'), {
                     retryMaxDuration: 1000
                 });
                 assert.fail('failure expected');
@@ -197,6 +254,14 @@ describe('file', function() {
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('ENOTFOUND'));
                 assert.ok(e.message.includes('badhost'));
+            }
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-timeout-retry-1.dat'));
+            } catch (e) {
+                // don't fail if the file doesn't exist, it's only done to clean up
+                // after ourselves
+                console.log(e);
             }
         });
     });
