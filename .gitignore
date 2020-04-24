@@ -63,9 +63,6 @@ typings/
 .serverless/action.zip
 .webpack
 
-# tests
-test-transfer-file.dat
-
 # AIO
 .aio
 dist/

@@ -10,12 +10,14 @@
 
 language: node_js
 os:
+  - windows
   - linux
   - osx
 
 node_js:
   - "10"
   - "10.15"
+  - "10.19"
   - "10.20"
   - "12"
   - "14"
