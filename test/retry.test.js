@@ -35,12 +35,12 @@ describe("retry", function () {
         it("attempts with default interval value", function () {
             const ms = retryDelay(100);
             assert.ok(ms >= 100 && ms < 201, ms);
-        })
+        });
 
         it("attempt starting with custom interval value", function () {
             const ms = retryDelay(164);
             assert.ok(ms >= 164 && ms < 265, ms);
-        })
+        });
     })
     describe("retryOn", function () {
         it("connect-error", function () {
@@ -51,7 +51,7 @@ describe("retry", function () {
                 retryInitialDelay: 100,
             });
             assert.ok(retryObj);
-        })
+        });
         it("connect-error-timeout", function () {
             // reached max time on retry
             const startTime = Date.now() - 60000;
@@ -60,7 +60,7 @@ describe("retry", function () {
                 retryMaxDuration: 60000,
                 retryInitialDelay: 100,
             }));
-        })
+        });
         it("response-error-500", function () {
             // retry on >= 500 status with transfer error
             assert.ok(retryOn(new HttpResponseError("GET", "url", 500, "message"), {
@@ -68,7 +68,7 @@ describe("retry", function () {
                 retryMaxDuration: 60000,
                 retryInitialDelay: 100,
             }));
-        })
+        });
         it("response-error-404", function () {
             // do not retry < 500 status errors
             assert.ok(!retryOn(new HttpResponseError("GET", "url", 404, "message"), {
@@ -76,7 +76,7 @@ describe("retry", function () {
                 retryMaxDuration: 60000,
                 retryInitialDelay: 100,
             }));
-        })
+        });
         it("response-error-404-allerror", function () {
             // retry all failures
             assert.ok(retryOn(new HttpResponseError("GET", "url", 404, "message"), {
@@ -85,12 +85,12 @@ describe("retry", function () {
                 retryInitialDelay: 100,
                 retryAllErrors: true
             }));
-        })
-    })
+        });
+    });
     describe("retryInit", function () {
         this.beforeEach( () => {
             delete process.env.__OW_ACTION_DEADLINE;
-        })
+        });
         it("none", function () {
             const options = retryInit();
             assertStartTime(options);
@@ -102,7 +102,7 @@ describe("retry", function () {
                 retryBackoff: 2,
                 timeout: 30000
             });
-        })
+        });
         it("empty", function () {
             const options = retryInit({});
             assertStartTime(options);
@@ -114,13 +114,13 @@ describe("retry", function () {
                 retryBackoff: 2,
                 timeout: 30000
             });
-        })
+        });
         it("disabled", function () {
             const options = retryInit({
                 retryEnabled: false
             });
             assert.ok(!options, options);
-        })
+        });
         it("all-errors", function () {
             const options = retryInit({
                 retryAllErrors: true
@@ -134,7 +134,7 @@ describe("retry", function () {
                 retryBackoff: 2,
                 timeout: 30000
             });
-        })
+        });
         it("retryMaxDuration", function () {
             const options = retryInit({
                 retryMaxDuration: 40000
@@ -148,17 +148,17 @@ describe("retry", function () {
                 retryBackoff: 2,
                 timeout: 30000
             });
-        })
+        });
         it("retryMaxDuration will surpass action timeout", function () {
             process.env.__OW_ACTION_DEADLINE = Date.now() + 2000;
             const options = retryInit();
             assertStartTime(options);
             assert.ok(options.retryMaxDuration < 3000, options.retryMaxDuration > 0);
-            assert.strictEqual(options.retryInitialDelay, 100);
-            assert.strictEqual(options.retryBackoff, 2);
-            assert.strictEqual(options.retryAllErrors, false);
-            assert.strictEqual(options.timeout, options.retryMaxDuration * 0.5);
-        })
+            assert.deepStrictEqual(options.retryInitialDelay, 100);
+            assert.deepStrictEqual(options.retryBackoff, 2);
+            assert.deepStrictEqual(options.retryAllErrors, false);
+            assert.deepStrictEqual(options.timeout, options.retryMaxDuration * 0.5);
+        });
         it("socketTimeout is greater than retryMaxDuration", function () {
             const options = retryInit({
                 socketTimeout: 70000
@@ -172,7 +172,7 @@ describe("retry", function () {
                 retryBackoff: 2,
                 timeout: 30000
             });
-        })
+        });
         it("retryInitialDelay", function () {
             const options = retryInit({
                 retryInitialDelay: 400
@@ -186,17 +186,17 @@ describe("retry", function () {
                 retryBackoff: 2,
                 timeout: 30000
             });
-        })
+        });
     })
     describe("filterOptions", function () {
         it("none", function () {
             const args = filterOptions();
-            assert.strictEqual(args, undefined);
-        })
+            assert.deepStrictEqual(args, undefined);
+        });
         it("empty", function () {
             const args = filterOptions({});
             assert.deepStrictEqual(args, {});
-        })
+        });
         it("filter", function () {
             const args = filterOptions({
                 arg1: "arg1",
@@ -209,13 +209,13 @@ describe("retry", function () {
                 arg1: "arg1",
                 timeout: 60000
             });
-        })
+        });
     })
     describe("retry", function () {
         it("empty", async function () {
             const result = await retry(async () => 1);
-            assert.strictEqual(result, 1);
-        })
+            assert.deepStrictEqual(result, 1);
+        });
         it("options", async function () {
             const result = await retry(async options => options, {
                 myOption: 123,
@@ -226,7 +226,7 @@ describe("retry", function () {
             assert.deepStrictEqual(result, {
                 myOption: 123
             });
-        })
+        });
         it("no-retry-generic-error", async function () {
             try {
                 let attempt = 0;
@@ -239,9 +239,9 @@ describe("retry", function () {
                 });
                 assert.fail("not expected to succeed");
             } catch (e) {
-                assert.strictEqual(e.message, "message");
+                assert.deepStrictEqual(e.message, "message");
             }
-        })
+        });
         it("fail-once-retry-connect", async function () {
             let attempt = 0;
             const result = await retry(async () => {
@@ -251,8 +251,8 @@ describe("retry", function () {
                 }
                 return 1;
             });
-            assert.strictEqual(result, 1);
-        })
+            assert.deepStrictEqual(result, 1);
+        });
         it("fail-second-retry-connect", async function () {
             let attempt = 0;
             const result = await retry(async () => {
@@ -262,8 +262,8 @@ describe("retry", function () {
                 }
                 return 1;
             });
-            assert.strictEqual(result, 1);
-        })
+            assert.deepStrictEqual(result, 1);
+        });
         it("fail-once-noretry-stream", async function () {
             try {
                 let attempt = 0;
@@ -279,9 +279,11 @@ describe("retry", function () {
 
                 assert.fail("not expected to succeed");
             } catch (e) {
-                assert.strictEqual(e.message, "GET 'url' stream 200 response failed: message");
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('response failed'));
+
             }
-        })
+        });
         it("fail-once-retry-stream", async function () {
             let attempt = 0;
             const result = await retry(async () => {
@@ -291,8 +293,8 @@ describe("retry", function () {
                 }
                 return 1;
             });
-            assert.strictEqual(result, 1);
-        })
+            assert.deepStrictEqual(result, 1);
+        });
         it("fail-second-retry-stream", async function () {
             let attempt = 0;
             const result = await retry(async () => {
@@ -302,8 +304,8 @@ describe("retry", function () {
                 }
                 return 1;
             });
-            assert.strictEqual(result, 1);
-        })
+            assert.deepStrictEqual(result, 1);
+        });
         it("fail-once-noretry-response", async function () {
             try {
                 let attempt = 0;
@@ -316,9 +318,10 @@ describe("retry", function () {
                 });
                 assert.fail("not expected to succeed");
             } catch (e) {
-                assert.strictEqual(e.message, "GET 'url' failed with status 404: message");
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it("fail-once-retry-response", async function () {
             try {
                 let attempt = 0;
@@ -331,17 +334,18 @@ describe("retry", function () {
                 });
                 assert.fail("not expected to succeed");
             } catch (e) {
-                assert.strictEqual(e.message, "GET 'url' failed with status 404: message");
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('failed with status 404'));
             }
         }, {
             retryAllErrors: true
-        })
+        });
 
         it("fail-till-max-retry", async function () {
             let attempt = 0;
             const start = Date.now();
             const retryMax = 1500;
-            const buffer = 200; // buffer to finish calls if backoff is too large
+            const buffer = 500; // buffer to finish calls if backoff is too large
 
             try {
                 await retry(async () => {
@@ -357,8 +361,8 @@ describe("retry", function () {
                 console.log(e);
                 const duration = Date.now() - start;
                 assert.ok(attempt === 4); // will always fail at 4th attempt with new rules
-                assert.ok(duration <= retryMax + buffer);
+                assert.ok(duration <= retryMax + buffer, `duration: ${duration}, retryMax: ${retryMax}, buffer: ${buffer}`);
             }
-        })
-    })
-})
+        });
+    });
+});

@@ -40,7 +40,7 @@ describe('stream', function () {
 
             const writeStream = new StringWritable();
             await downloadStream('http://test-status-200/path/to/file.ext', writeStream);
-            assert.strictEqual(writeStream.data, 'hello world');
+            assert.deepStrictEqual(writeStream.data, 'hello world');
         })
         it('status-200-empty', async function () {
             nock('http://test-status-200-empty')
@@ -49,7 +49,7 @@ describe('stream', function () {
 
             const writeStream = new StringWritable();
             await downloadStream('http://test-status-200-empty/path/to/file.ext', writeStream);
-            assert.strictEqual(writeStream.data, '');
+            assert.deepStrictEqual(writeStream.data, '');
         })
         it('status-200-truncate', async function () {
             try {
@@ -63,7 +63,9 @@ describe('stream', function () {
                 await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
                 assert.fail('failure expected');
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-status-200-truncate/path/to/file.ext\' stream 200 response failed: Response truncated at 11 bytes, received 100 bytes');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('truncated'));
             }
         })
         it('status-404-empty', async function () {
@@ -76,7 +78,8 @@ describe('stream', function () {
                 await downloadStream('http://test-status-404-empty/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-status-404-empty/path/to/file.ext\' failed with status 404');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('failed with status 404'));
             }
         })
         it('status-404-octet', async function () {
@@ -91,7 +94,8 @@ describe('stream', function () {
                 await downloadStream('http://test-status-404-octet/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-status-404-octet/path/to/file.ext\' failed with status 404');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('failed with status 404'));
             }
         })
         it('status-404-text', async function () {
@@ -106,7 +110,8 @@ describe('stream', function () {
                 await downloadStream('http://test-status-404-text/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-status-404-text/path/to/file.ext\' failed with status 404: error message');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('failed with status 404'));
             }
         })
         it('host-not-found', async function () {
@@ -129,7 +134,9 @@ describe('stream', function () {
                 await downloadStream('http://test-timeout/path/to/file.ext', writeStream, { timeout: 200 });
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-timeout/path/to/file.ext\' connect failed: network timeout at: http://test-timeout/path/to/file.ext');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('network timeout'));
             }
         })
         it('reply-error', async function () {
@@ -145,7 +152,9 @@ describe('stream', function () {
                 await downloadStream('http://test-reply-error/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-reply-error/path/to/file.ext\' connect failed: request to http://test-reply-error/path/to/file.ext failed, reason: Connection Reset');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('Connection Reset'));
             }
         })
         it('200-stream-error', async function () {
@@ -164,7 +173,9 @@ describe('stream', function () {
                 await downloadStream(`http://test-200-stream-error/path/to/file.ext`, writeStream);
                 assert.fail('failure expected');
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-200-stream-error/path/to/file.ext\' stream 200 response failed: read failure');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('failed'));
+                assert.ok(e.message.includes('read failure'));
             }
         })
         it('404-stream-error', async function () {
@@ -185,7 +196,9 @@ describe('stream', function () {
                 await downloadStream('http://test-404-stream-error/path/to/file.ext', writeStream);
                 assert.fail('failure expected');
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-404-stream-error/path/to/file.ext\' stream 404 response failed: Error: read failure');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('read failure'));
             }
         })
         it('200-stream-write-error', async function () {
@@ -198,7 +211,9 @@ describe('stream', function () {
                 await downloadStream('http://test-200-stream-write-error/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-200-stream-write-error/path/to/file.ext\' stream 200 response failed: write failure');
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('write failure'));
             }
         })
     })
@@ -234,7 +249,8 @@ describe('stream', function () {
                 await uploadStream(readStream, 'http://test-status-404-empty/path/to/file.ext');
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://test-status-404-empty/path/to/file.ext\' failed with status 404');
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
             }
         })
         it('status-404-octet', async function () {
@@ -249,7 +265,8 @@ describe('stream', function () {
                 await uploadStream(readStream, 'http://test-status-404-octet/path/to/file.ext');
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://test-status-404-octet/path/to/file.ext\' failed with status 404');
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
             }
         })
         it('status-404-text', async function () {
@@ -264,7 +281,8 @@ describe('stream', function () {
                 await uploadStream(readStream, 'http://test-status-404-text/path/to/file.ext');
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://test-status-404-text/path/to/file.ext\' failed with status 404: error message');
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
             }
         })
         it('host-not-found', async function () {
@@ -287,7 +305,9 @@ describe('stream', function () {
                 await uploadStream(readStream, 'http://test-timeout/path/to/file.ext', { timeout: 200 });
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://test-timeout/path/to/file.ext\' connect failed: network timeout at: http://test-timeout/path/to/file.ext');
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('network timeout'));
             }
         })
         it('201-stream-error', async function () {
@@ -323,7 +343,9 @@ describe('stream', function () {
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://test-404-stream-error/path/to/file.ext');
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://test-404-stream-error/path/to/file.ext\' stream 404 response failed: Error: read failure');
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('read failure'));
             }
         })
         // node-fetch doesn't handle stream errors well, they are not caught
@@ -338,7 +360,9 @@ describe('stream', function () {
                 await uploadStream(readStream, 'http://test-201-stream-read-error/path/to/file.ext');
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://test-201-stream-read-error/path/to/file.ext\' failed: 201 read failure');
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed'));
+                assert.ok(e.message.includes('read failure'));
             }
         })
     })
