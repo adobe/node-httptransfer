@@ -24,7 +24,7 @@ describe('multipart', function () {
     describe('upload', function () {
         beforeEach(async function () {
             // 15 characters
-            await fs.writeFile('.testfile.dat', 'hello world 123', 'utf8');
+            await fs.writeFile('test-transfer-file.dat', 'hello world 123', 'utf8');
         })
 
         afterEach(async function () {
@@ -32,7 +32,7 @@ describe('multipart', function () {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
             try {
-                await fs.unlink('.testfile.dat');
+                await fs.unlink('test-transfer-file.dat');
             } catch (e) {
                 // don't fail if the file doesn't exist, it's only clean up
                 console.log(e);
@@ -40,21 +40,21 @@ describe('multipart', function () {
         })
         it('no target', async function () {
             try {
-                await uploadAEMMultipartFile('.testfile.dat');
+                await uploadAEMMultipartFile('test-transfer-file.dat');
             } catch (e) {
                 assert.equal(e.message, 'target not provided');
             }
         })
         it('no target urls', async function () {
             try {
-                await uploadAEMMultipartFile('.testfile.dat', {});
+                await uploadAEMMultipartFile('test-transfer-file.dat', {});
             } catch (e) {
                 assert.equal(e.message, 'invalid number of target urls');
             }
         })
         it('min-part-size larger than max-part-size', async function () {
             try {
-                await uploadAEMMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('test-transfer-file.dat', {
                     urls: [
                         'http://test-status-201/path/to/file-1.ext',
                     ],
@@ -71,7 +71,7 @@ describe('multipart', function () {
                 .put('/path/to/file-1.ext', 'hello world 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext'
                 ]
@@ -87,7 +87,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
                     'http://test-status-201/path/to/file-2.ext'
@@ -104,7 +104,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 maxPartSize: 8,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -114,7 +114,7 @@ describe('multipart', function () {
         })
         it('status-201-2urls-maxparttoosmall', async function () {
             try {
-                await uploadAEMMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('test-transfer-file.dat', {
                     maxPartSize: 7,
                     urls: [
                         'http://test-status-201/path/to/file-1.ext',
@@ -123,7 +123,7 @@ describe('multipart', function () {
                 });
                 assert.fail('expected to fail');
             } catch (e) {
-                assert.strictEqual(e.message, 'File \'.testfile.dat\' is too large to upload: 15 bytes, maxPartSize: 7 bytes, numUploadURIs: 2');
+                assert.strictEqual(e.message, 'File \'test-transfer-file.dat\' is too large to upload: 15 bytes, maxPartSize: 7 bytes, numUploadURIs: 2');
             }
         })
         it('status-201-2urls-fitminpart', async function () {
@@ -132,7 +132,7 @@ describe('multipart', function () {
                 .put('/path/to/file-1.ext', 'hello world 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 minPartSize: 15,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -150,7 +150,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 minPartSize: 8,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -177,7 +177,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 minPartSize: 7,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -195,7 +195,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
                     'http://test-status-201/path/to/file-2.ext'
@@ -214,7 +214,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'ld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
                     'http://test-status-201/path/to/file-2.ext'
@@ -234,7 +234,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'ld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 minPartSize: 8,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -256,7 +256,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'ld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 minPartSize: 9,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -277,7 +277,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 maxPartSize: 8,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -299,7 +299,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 maxPartSize: 9,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
@@ -316,7 +316,7 @@ describe('multipart', function () {
                     .put('/path/to/file-1.ext', 'hello wo')
                     .reply(404);
 
-                await uploadAEMMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('test-transfer-file.dat', {
                     urls: [
                         'http://test-status-404/path/to/file-1.ext',
                         'http://test-status-404/path/to/file-2.ext'
@@ -337,7 +337,7 @@ describe('multipart', function () {
                     .put('/path/to/file-2.ext', 'rld 123')
                     .reply(404);
 
-                await uploadAEMMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('test-transfer-file.dat', {
                     urls: [
                         'http://test-status-404/path/to/file-1.ext',
                         'http://test-status-404/path/to/file-2.ext'
@@ -357,7 +357,7 @@ describe('multipart', function () {
                 .post('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 urls: [
                     'http://test-method-post/path/to/file-1.ext',
                     'http://test-method-post/path/to/file-2.ext'
@@ -374,7 +374,7 @@ describe('multipart', function () {
                     .delayConnection(500)
                     .reply(201);
 
-                await uploadAEMMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('test-transfer-file.dat', {
                     urls: [
                         'http://timeout-error/path/to/file-1.ext',
                         'http://timeout-error/path/to/file-2.ext'
@@ -401,7 +401,7 @@ describe('multipart', function () {
                     .delayConnection(500)
                     .reply(201);
 
-                await uploadAEMMultipartFile('.testfile.dat', {
+                await uploadAEMMultipartFile('test-transfer-file.dat', {
                     urls: [
                         'http://timeout-error/path/to/file-1.ext',
                         'http://timeout-error/path/to/file-2.ext'
@@ -428,7 +428,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 urls: [
                     'http://header-override/path/to/file-1.ext',
                     'http://header-override/path/to/file-2.ext'
@@ -457,7 +457,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 urls: [
                     'http://status-404-retry/path/to/file-1.ext',
                     'http://status-404-retry/path/to/file-2.ext'
@@ -484,7 +484,7 @@ describe('multipart', function () {
                 .put('/path/to/file-2.ext', 'rld 123')
                 .reply(201);
 
-            await uploadAEMMultipartFile('.testfile.dat', {
+            await uploadAEMMultipartFile('test-transfer-file.dat', {
                 urls: [
                     'http://status-503-retry/path/to/file-1.ext',
                     'http://status-503-retry/path/to/file-2.ext'

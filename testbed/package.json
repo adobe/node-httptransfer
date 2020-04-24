@@ -1,5 +1,5 @@
 {
-  "name": "@adobe/node-httptransfer-cli",
+  "name": "@adobe/httptransfer-cli",
   "version": "1.0.0",
   "main": "index.js",
   "description": "Efficient File Transfer Module for NodeJS CLI",
