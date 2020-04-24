@@ -33,6 +33,7 @@ describe('stream', function () {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
+
         it('status-200', async function () {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
@@ -115,12 +116,16 @@ describe('stream', function () {
             }
         })
         it('host-not-found', async function () {
+            this.timeout(20000);
             try {
                 const writeStream = new StringWritable();
                 await downloadStream('http://badhost/path/to/file.ext', writeStream);
                 assert.fail('failure expected')
             } catch (e) {
-                assert.ok(e.message.startsWith('GET \'http://badhost/path/to/file.ext\' connect failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost'));
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok(e.message.includes('badhost'));
             }
         })
         it('timeout-error', async function () {
@@ -286,12 +291,16 @@ describe('stream', function () {
             }
         })
         it('host-not-found', async function () {
+            this.timeout(20000);
             try {
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://badhost/path/to/file.ext');
                 assert.fail('failure expected')
             } catch (e) {
-                assert.ok(e.message.startsWith('PUT \'http://badhost/path/to/file.ext\' connect failed: request to http://badhost/path/to/file.ext failed, reason: getaddrinfo ENOTFOUND badhost'));
+                assert.ok(e.message.includes('PUT'), e.message);
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok(e.message.includes('badhost'));
             }
         })
         it('timeout-error', async function () {

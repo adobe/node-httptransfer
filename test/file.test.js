@@ -223,6 +223,8 @@ describe('file', function() {
             }
         });
         it('badhost-retry-failure (1)', async function() {
+            this.timeout(20000);
+            
             const start = Date.now();
             try {
                 await downloadFile('http://badhost/path/to/file.ext', path.resolve('./test-transfer-file-timeout-retry-1.dat'), {
@@ -262,6 +264,12 @@ describe('file', function() {
 
             await fs.writeFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'hello world 123', 'utf8');
             await uploadFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'http://test-status-201/path/to/file.ext');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-201.dat'));
+            } catch (e) {
+                console.log(e);
+            }
         });
         it('status-201-header', async function() {
             nock('http://test-status-201')
@@ -363,10 +371,12 @@ describe('file', function() {
             }
         });
         it('badhost-retry-failure (2)', async function() {
+            this.timeout(20000);
+
             const start = Date.now();
             try {
-                await fs.writeFile(path.resolve('./test-transfer-file-up-badhost-retry-failure.dat'), 'hello world 123', 'utf8');
-                await uploadFile(path.resolve('./test-transfer-file-up-badhost-retry-failure.dat'), 'http://badhost/path/to/file.ext', {
+                await fs.writeFile(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'), 'hello world 123', 'utf8');
+                await uploadFile(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'), 'http://badhost/path/to/file.ext', {
                     retryMaxDuration: 1000
                 });
                 assert.fail('failure expected');
@@ -382,7 +392,7 @@ describe('file', function() {
             }
 
             try {
-                await fs.unlink(path.resolve('./test-transfer-file-up-badhost-retry-failure.dat'));
+                await fs.unlink(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'));
             } catch (e) {
                 console.log(e);
             }
