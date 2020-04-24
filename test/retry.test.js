@@ -154,10 +154,10 @@ describe("retry", function () {
             const options = retryInit();
             assertStartTime(options);
             assert.ok(options.retryMaxDuration < 3000, options.retryMaxDuration > 0);
-            assert.deepStrictEqual(options.retryInitialDelay, 100);
-            assert.deepStrictEqual(options.retryBackoff, 2);
-            assert.deepStrictEqual(options.retryAllErrors, false);
-            assert.deepStrictEqual(options.timeout, options.retryMaxDuration * 0.5);
+            assert.strictEqual(options.retryInitialDelay, 100);
+            assert.strictEqual(options.retryBackoff, 2);
+            assert.strictEqual(options.retryAllErrors, false);
+            assert.strictEqual(options.timeout, options.retryMaxDuration * 0.5);
         });
         it("socketTimeout is greater than retryMaxDuration", function () {
             const options = retryInit({
@@ -191,7 +191,7 @@ describe("retry", function () {
     describe("filterOptions", function () {
         it("none", function () {
             const args = filterOptions();
-            assert.deepStrictEqual(args, undefined);
+            assert.strictEqual(args, undefined);
         });
         it("empty", function () {
             const args = filterOptions({});
@@ -214,7 +214,7 @@ describe("retry", function () {
     describe("retry", function () {
         it("empty", async function () {
             const result = await retry(async () => 1);
-            assert.deepStrictEqual(result, 1);
+            assert.strictEqual(result, 1);
         });
         it("options", async function () {
             const result = await retry(async options => options, {
@@ -239,7 +239,7 @@ describe("retry", function () {
                 });
                 assert.fail("not expected to succeed");
             } catch (e) {
-                assert.deepStrictEqual(e.message, "message");
+                assert.strictEqual(e.message, "message");
             }
         });
         it("fail-once-retry-connect", async function () {
@@ -251,7 +251,7 @@ describe("retry", function () {
                 }
                 return 1;
             });
-            assert.deepStrictEqual(result, 1);
+            assert.strictEqual(result, 1);
         });
         it("fail-second-retry-connect", async function () {
             let attempt = 0;
@@ -262,7 +262,7 @@ describe("retry", function () {
                 }
                 return 1;
             });
-            assert.deepStrictEqual(result, 1);
+            assert.strictEqual(result, 1);
         });
         it("fail-once-noretry-stream", async function () {
             try {
@@ -293,7 +293,7 @@ describe("retry", function () {
                 }
                 return 1;
             });
-            assert.deepStrictEqual(result, 1);
+            assert.strictEqual(result, 1);
         });
         it("fail-second-retry-stream", async function () {
             let attempt = 0;
@@ -304,7 +304,7 @@ describe("retry", function () {
                 }
                 return 1;
             });
-            assert.deepStrictEqual(result, 1);
+            assert.strictEqual(result, 1);
         });
         it("fail-once-noretry-response", async function () {
             try {

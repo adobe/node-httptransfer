@@ -28,63 +28,63 @@ describe('headers', function() {
     describe('parseResourceHeaders', function() {
         it('content-disposition-none', function() {
             const result = parse({});
-            assert.deepStrictEqual(result.filename, undefined);
+            assert.strictEqual(result.filename, undefined);
         });
         it('content-disposition-empty', function() {
             const result = parse({
                 'content-disposition': ''
             });
-            assert.deepStrictEqual(result.filename, undefined);
+            assert.strictEqual(result.filename, undefined);
         });
         it('content-disposition-filename', function() {
             const result = parse({
                 'content-disposition': 'attachment; filename="filename.jpg"'
             });
-            assert.deepStrictEqual(result.filename, 'filename.jpg');
+            assert.strictEqual(result.filename, 'filename.jpg');
         });
         it('content-disposition-unicode', function() {
             const result = parse({
                 'content-disposition': 'attachment; filename*=UTF-8\'\'Na%C3%AFve%20file.txt'
             });
-            assert.deepStrictEqual(result.filename, 'Naïve file.txt');
+            assert.strictEqual(result.filename, 'Naïve file.txt');
         });
         it('content-type-none', function() {
             const result = parse({});
-            assert.deepStrictEqual(result.mimetype, 'application/octet-stream');
+            assert.strictEqual(result.mimetype, 'application/octet-stream');
         });
         it('content-type-empty', function() {
             const result = parse({
                 'content-type': ''
             });
-            assert.deepStrictEqual(result.mimetype, 'application/octet-stream');
+            assert.strictEqual(result.mimetype, 'application/octet-stream');
         });
         it('content-type-jpeg', function() {
             const result = parse({
                 'content-type': 'image/jpeg'
             });
-            assert.deepStrictEqual(result.mimetype, 'image/jpeg');
+            assert.strictEqual(result.mimetype, 'image/jpeg');
         });
         it('content-range-none', function() {
             const result = parse({});
-            assert.deepStrictEqual(result.size, 0);
+            assert.strictEqual(result.size, 0);
         });
         it('content-range-empty', function() {
             const result = parse({
                 'content-range': ''
             });
-            assert.deepStrictEqual(result.size, 0);
+            assert.strictEqual(result.size, 0);
         });
         it('content-range-invalid', function() {
             const result = parse({
                 'content-range': 'abc'
             });
-            assert.deepStrictEqual(result.size, 0);
+            assert.strictEqual(result.size, 0);
         });
         it('content-range-value', function() {
             const result = parse({
                 'content-range': 'bytes 0-0/100'
             });
-            assert.deepStrictEqual(result.size, 100);
+            assert.strictEqual(result.size, 100);
         });
     });
     describe('getResourceHeaders', function() {

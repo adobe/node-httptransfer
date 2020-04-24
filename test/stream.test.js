@@ -41,8 +41,8 @@ describe('stream', function () {
 
             const writeStream = new StringWritable();
             await downloadStream('http://test-status-200/path/to/file.ext', writeStream);
-            assert.deepStrictEqual(writeStream.data, 'hello world');
-        })
+            assert.strictEqual(writeStream.data, 'hello world');
+        });
         it('status-200-empty', async function () {
             nock('http://test-status-200-empty')
                 .get('/path/to/file.ext')
@@ -50,8 +50,8 @@ describe('stream', function () {
 
             const writeStream = new StringWritable();
             await downloadStream('http://test-status-200-empty/path/to/file.ext', writeStream);
-            assert.deepStrictEqual(writeStream.data, '');
-        })
+            assert.strictEqual(writeStream.data, '');
+        });
         it('status-200-truncate', async function () {
             try {
                 nock('http://test-status-200-truncate')
@@ -68,7 +68,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('truncated'));
             }
-        })
+        });
         it('status-404-empty', async function () {
             nock('http://test-status-404-empty')
                 .get('/path/to/file.ext')
@@ -82,7 +82,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('status-404-octet', async function () {
             nock('http://test-status-404-octet')
                 .get('/path/to/file.ext')
@@ -98,7 +98,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('status-404-text', async function () {
             nock('http://test-status-404-text')
                 .get('/path/to/file.ext')
@@ -114,7 +114,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('host-not-found', async function () {
             this.timeout(20000);
             try {
@@ -127,7 +127,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('ENOTFOUND'));
                 assert.ok(e.message.includes('badhost'));
             }
-        })
+        });
         it('timeout-error', async function () {
             try {
                 nock('http://test-timeout')
@@ -143,7 +143,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('network timeout'));
             }
-        })
+        });
         it('reply-error', async function () {
             try {
                 nock('http://test-reply-error')
@@ -161,7 +161,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('Connection Reset'));
             }
-        })
+        });
         it('200-stream-error', async function () {
             try {
                 const replyBody = new stream.PassThrough();
@@ -182,7 +182,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('failed'));
                 assert.ok(e.message.includes('read failure'));
             }
-        })
+        });
         it('404-stream-error', async function () {
             try {
                 const replyBody = new stream.PassThrough();
@@ -205,7 +205,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('read failure'));
             }
-        })
+        });
         it('200-stream-write-error', async function () {
             try {
                 nock('http://test-200-stream-write-error')
@@ -220,14 +220,14 @@ describe('stream', function () {
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('write failure'));
             }
-        })
-    })
+        });
+    });
     describe('upload', function () {
         afterEach(function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
-        })
+        });
         it('status-201', async function () {
             nock('http://test-status-201')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -235,7 +235,7 @@ describe('stream', function () {
 
             const readStream = new StringReadable('hello world 123');
             await uploadStream(readStream, 'http://test-status-201/path/to/file.ext');
-        })
+        });
         it('status-201-empty', async function () {
             nock('http://test-status-201-empty')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -243,7 +243,7 @@ describe('stream', function () {
 
             const readStream = new StringReadable('hello world 123');
             await uploadStream(readStream, 'http://test-status-201-empty/path/to/file.ext');
-        })
+        });
         it('status-404-empty', async function () {
             nock('http://test-status-404-empty')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -257,7 +257,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('status-404-octet', async function () {
             nock('http://test-status-404-octet')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -273,7 +273,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('status-404-text', async function () {
             nock('http://test-status-404-text')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -289,7 +289,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('host-not-found', async function () {
             this.timeout(20000);
             try {
@@ -302,7 +302,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('ENOTFOUND'));
                 assert.ok(e.message.includes('badhost'));
             }
-        })
+        });
         it('timeout-error', async function () {
             try {
                 nock('http://test-timeout')
@@ -318,7 +318,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('network timeout'));
             }
-        })
+        });
         it('201-stream-error', async function () {
             const replyBody = new stream.PassThrough();
             nock('http://test-201-stream-error')
@@ -334,7 +334,7 @@ describe('stream', function () {
             testSetResponseBodyOverride("PUT", createErrorReadable(Error('read failure')));
             const readStream = new StringReadable('hello world 123');
             await uploadStream(readStream, 'http://test-201-stream-error/path/to/file.ext');
-        })
+        });
         it('404-stream-error', async function () {
             try {
                 const replyBody = new stream.PassThrough();
@@ -356,7 +356,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('read failure'));
             }
-        })
+        });
         // node-fetch doesn't handle stream errors well, they are not caught
         // eslint-disable-next-line mocha/no-exclusive-tests
         it.skip('201-stream-read-error', async function () {
@@ -373,14 +373,14 @@ describe('stream', function () {
                 assert.ok(e.message.includes('failed'));
                 assert.ok(e.message.includes('read failure'));
             }
-        })
-    })
+        });
+    });
     describe('transfer', function () {
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
-        })
+        });
         it('transfer-200', async function () {
             nock('http://test-transfer-200')
                 .get('/path/to/source.ext')
@@ -397,7 +397,7 @@ describe('stream', function () {
                 'http://test-transfer-200/path/to/source.ext',
                 'http://test-transfer-200/path/to/target.ext'
             );
-        })
+        });
         it('transfer-503-retry-get', async function () {
             nock('http://test-transfer-503')
                 .get('/path/to/source.ext')
@@ -417,7 +417,7 @@ describe('stream', function () {
                 'http://test-transfer-503/path/to/source.ext',
                 'http://test-transfer-503/path/to/target.ext'
             );
-        })
+        });
         it('transfer-503-retry-put', async function () {
             nock('http://test-transfer-503')
                 .get('/path/to/source.ext')
@@ -443,7 +443,7 @@ describe('stream', function () {
                 'http://test-transfer-503/path/to/source.ext',
                 'http://test-transfer-503/path/to/target.ext'
             );
-        })
+        });
         it('transfer-404-retry-get-put', async function () {
             nock('http://test-transfer-404')
                 .get('/path/to/source.ext')
@@ -474,6 +474,6 @@ describe('stream', function () {
                 retryAllErrors: true
             }
             );
-        })
-    })
-})
+        });
+    });
+});

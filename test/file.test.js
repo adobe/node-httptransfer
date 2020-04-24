@@ -36,7 +36,7 @@ describe('file', function() {
 
             await downloadFile('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file-status-200.dat'));
             const result = await fs.readFile(path.resolve('./test-transfer-file-status-200.dat'), 'utf8');
-            assert.deepStrictEqual(result, 'hello world');
+            assert.strictEqual(result, 'hello world');
 
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
@@ -53,7 +53,7 @@ describe('file', function() {
                 mkdirs: true
             });
             const result = await fs.readFile(path.resolve('./testdir/test-transfer-file-mkdir.dat'), 'utf8');
-            assert.deepStrictEqual(result, 'hello world');
+            assert.strictEqual(result, 'hello world');
 
             try{
                 await fs.unlink(path.resolve('./testdir/test-transfer-file-mkdir.dat'));
@@ -84,7 +84,7 @@ describe('file', function() {
 
             await downloadFile('http://test-status-200-truncate-retry/path/to/file.ext', path.resolve('./test-transfer-file-status-200-truncated.dat'));
             const result = await fs.readFile(path.resolve('./test-transfer-file-status-200-truncated.dat'), 'utf8');
-            assert.deepStrictEqual(result, 'hello world');
+            assert.strictEqual(result, 'hello world');
 
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-200-truncated.dat'));
@@ -104,7 +104,7 @@ describe('file', function() {
             testSetResponseBodyOverride("GET", createErrorReadable(Error('read error')));
             await downloadFile('http://test-status-200-stream-retry/path/to/file.ext', path.resolve('./test-transfer-file-filestream.dat'));
             const result = await fs.readFile(path.resolve('./test-transfer-file-filestream.dat'), 'utf8');
-            assert.deepStrictEqual(result, 'hello world');
+            assert.strictEqual(result, 'hello world');
 
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-filestream.dat'));
@@ -123,7 +123,7 @@ describe('file', function() {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
                 const result = await fs.readFile(path.resolve('./test-transfer-file-status-404.dat'), 'utf8');
-                assert.deepStrictEqual(result, '');
+                assert.strictEqual(result, '');
             }
 
             try {
@@ -145,7 +145,7 @@ describe('file', function() {
                 retryAllErrors: true
             });
             const result = await fs.readFile(path.resolve('./test-transfer-file-status-404-retry.dat'), 'utf8');
-            assert.deepStrictEqual(result, 'hello world');
+            assert.strictEqual(result, 'hello world');
 
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-404-retry.dat'));
@@ -192,7 +192,7 @@ describe('file', function() {
 
             await downloadFile('http://test-status-503/path/to/file.ext', path.resolve('./test-transfer-file-status-503-retry.dat'));
             const result = await fs.readFile(path.resolve('./test-transfer-file-status-503-retry.dat'), 'utf8');
-            assert.deepStrictEqual(result, 'hello world');
+            assert.strictEqual(result, 'hello world');
 
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-status-503-retry.dat'));
@@ -214,7 +214,7 @@ describe('file', function() {
                 timeout: 200
             });
             const result = await fs.readFile(path.resolve('./test-transfer-file-timeout-retry.dat'), 'utf8');
-            assert.deepStrictEqual(result, 'hello world');
+            assert.strictEqual(result, 'hello world');
 
             try {
                 await fs.unlink(path.resolve('./test-transfer-file-timeout-retry.dat'));
