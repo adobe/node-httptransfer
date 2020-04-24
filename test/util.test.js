@@ -30,13 +30,20 @@ describe("util", function() {
     });
 
     it("creates a read stream", async function() {
-        await fs.writeFile(path.resolve('./test-transfer-file.dat'), 'hello world 123', 'utf8');
-        const readStream = await util.createReadStream(path.resolve('./test-transfer-file.dat'));
+        await fs.writeFile(path.resolve('./test-transfer-file-read-1.dat'), 'hello world 123', 'utf8');
+        const readStream = await util.createReadStream(path.resolve('./test-transfer-file-read-1.dat'));
 
         assert.ok(readStream.flags === 'r');
 
         readStream.destroy();
         assert.ok(readStream.destroyed);
+
+        try {
+            await fs.unlink(path.resolve('./test-transfer-file-read-1.dat'));
+        } catch(e){
+            // ignore clean-up error 
+            console.log(e);
+        }
     });
 
     it("createWriteStream-error", async function() {
@@ -50,11 +57,18 @@ describe("util", function() {
 
     it("creates a write stream", async function() {
         //await fs.writeFile(path.resolve('./test-transfer-file.dat'), 'hello world 123', 'utf8');
-        const writeStream = await util.createWriteStream(path.resolve('./test-transfer-file-1.dat'));
+        const writeStream = await util.createWriteStream(path.resolve('./test-transfer-file-write-1.dat'));
 
         assert.ok(writeStream.flags === 'w');
 
         writeStream.destroy();
         assert.ok(writeStream.destroyed);
+
+        try {
+            await fs.unlink(path.resolve('./test-transfer-file-write-1.dat'));
+        } catch(e){
+            // ignore clean-up error 
+            console.log(e);
+        }
     });
 });
