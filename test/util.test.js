@@ -51,7 +51,6 @@ describe("util", function() {
     it("creates a write stream", async function() {
         //await fs.writeFile(path.resolve('./test-transfer-file.dat'), 'hello world 123', 'utf8');
         const writeStream = await util.createWriteStream(path.resolve('./test-transfer-file.dat'));
-        console.log(writeStream);
 
         assert.ok(writeStream.flags === 'w');
 
