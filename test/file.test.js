@@ -42,7 +42,7 @@ describe('file', function() {
 
             await downloadFile('http://test-status-200/path/to/file.ext', 'test-transfer-file.dat');
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
-            assert.strictEqual(result, 'hello world');
+            assert.deepStrictEqual(result, 'hello world');
         })
         it('status-200-mkdir', async function() {
             nock('http://test-status-200')
@@ -53,7 +53,7 @@ describe('file', function() {
                 mkdirs: true
             });
             const result = await fs.readFile('.testdir/test-transfer-file.dat', 'utf8');
-            assert.strictEqual(result, 'hello world');
+            assert.deepStrictEqual(result, 'hello world');
             await fs.unlink('.testdir/test-transfer-file.dat');
             await fs.rmdir('.testdir');
         })
@@ -72,7 +72,7 @@ describe('file', function() {
 
             await downloadFile('http://test-status-200-truncate-retry/path/to/file.ext', 'test-transfer-file.dat');
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
-            assert.strictEqual(result, 'hello world');
+            assert.deepStrictEqual(result, 'hello world');
         })
         it('status-200-stream-retry', async function() {
             nock('http://test-status-200-stream-retry')
@@ -86,7 +86,7 @@ describe('file', function() {
             testSetResponseBodyOverride("GET", createErrorReadable(Error('read error')));
             await downloadFile('http://test-status-200-stream-retry/path/to/file.ext', 'test-transfer-file.dat');
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
-            assert.strictEqual(result, 'hello world');
+            assert.deepStrictEqual(result, 'hello world');
         })
         it('status-404', async function() {
             try {
@@ -96,9 +96,10 @@ describe('file', function() {
 
                 await downloadFile('http://test-status-404/path/to/file.ext', 'test-transfer-file.dat');
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-status-404/path/to/file.ext\' failed with status 404');
+                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('failed with status 404'));
                 const result = await fs.readFile('test-transfer-file.dat', 'utf8');
-                assert.strictEqual(result, '');
+                assert.deepStrictEqual(result, '');
             }
         })
         it('status-404-retry', async function() {
@@ -114,7 +115,7 @@ describe('file', function() {
                 retryAllErrors: true
             });
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
-            assert.strictEqual(result, 'hello world');
+            assert.deepStrictEqual(result, 'hello world');
         })
         it('status-404-stream-retry', async function() {
             try {
@@ -134,7 +135,8 @@ describe('file', function() {
                 await downloadFile('http://test-status-404-stream-retry/path/to/file.ext', 'test-transfer-file.dat');
                 assert.fail('failure expected');
             } catch (e) {
-                assert.strictEqual(e.message, 'GET \'http://test-status-404-stream-retry/path/to/file.ext\' failed with status 404: hello world');
+                assert.ok(e.message.includes('GET'));
+                assert.ok(e.message.includes('failed with status 404'));
             }
         })
         it('status-503-retry', async function() {
@@ -148,7 +150,7 @@ describe('file', function() {
 
             await downloadFile('http://test-status-503/path/to/file.ext', 'test-transfer-file.dat');
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
-            assert.strictEqual(result, 'hello world');
+            assert.deepStrictEqual(result, 'hello world');
         })
         it('timeout-retry', async function() {
             nock('http://test-status-timeout')
@@ -164,7 +166,7 @@ describe('file', function() {
                 timeout: 200
             });
             const result = await fs.readFile('test-transfer-file.dat', 'utf8');
-            assert.strictEqual(result, 'hello world');
+            assert.deepStrictEqual(result, 'hello world');
         })
         it('badhost-retry-failure (1)', async function() {
             const start = Date.now();
@@ -228,7 +230,8 @@ describe('file', function() {
                 await uploadFile('test-transfer-file.dat', 'http://test-status-404/path/to/file.ext');
                 assert.fail('failure expected')
             } catch (e) {
-                assert.strictEqual(e.message, 'PUT \'http://test-status-404/path/to/file.ext\' failed with status 404');
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
             }
         })
         it('status-404-retry', async function() {
