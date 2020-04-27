@@ -152,7 +152,7 @@ describe('file', function() {
             } catch (e) {
                 console.log(e);
             }
-        });
+        }).timeout(20000);
         it('status-404-stream-retry', async function() {
             try {
                 nock('http://test-status-404-stream-retry')
@@ -223,8 +223,6 @@ describe('file', function() {
             }
         });
         it('badhost-retry-failure (1)', async function() {
-            this.timeout(20000);
-            
             const start = Date.now();
             try {
                 await downloadFile('http://badhost/path/to/file.ext', path.resolve('./test-transfer-file-timeout-retry-1.dat'), {
@@ -247,7 +245,7 @@ describe('file', function() {
             } catch (e) {
                 console.log(e);
             }
-        });
+        }).timeout(20000);
     });
     describe('upload', function() {
         afterEach(async function() {
@@ -330,7 +328,7 @@ describe('file', function() {
             } catch (e) {
                 console.log(e);
             }
-        });
+        }).timeout(20000);
         it('status-503-retry', async function() {
             nock('http://test-status-503')
                 .put('/path/to/file.ext', 'hello world 123')
@@ -371,8 +369,6 @@ describe('file', function() {
             }
         });
         it('badhost-retry-failure (2)', async function() {
-            this.timeout(20000);
-
             const start = Date.now();
             try {
                 await fs.writeFile(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'), 'hello world 123', 'utf8');
@@ -396,6 +392,6 @@ describe('file', function() {
             } catch (e) {
                 console.log(e);
             }
-        });
+        }).timeout(20000);
     });
 });
