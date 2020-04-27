@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 "use strict";
 
-const filterObject = require('filter-obj');
+const filterObject = require("filter-obj");
 const fs = require("fs").promises;
 const path = require("path");
 const URL = require("url");
@@ -23,7 +23,7 @@ const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
     transferStream,
     getResourceHeaders
-} = require("@nui/node-httptransfer");
+} = require("../index.js");
 
 function createAzureSAS(auth, containerName, blobName, permissions) {
     if (!auth || !auth.accountName || !auth.accountKey) {
@@ -91,14 +91,14 @@ async function resolveLocation(value, options) {
                 minPartSize: options.minPartSize,
                 maxPartSize: options.maxPartSize,
                 urls
-            }
+            };
         } else {
             return {
                 url: sasUrl,
                 headers: {
                     "x-ms-blob-type": "BlockBlob"
                 }
-            }
+            };
         }
     } else if (url.protocol === "file:" || url.protocol === null) {
         if (url.host) {
@@ -111,7 +111,7 @@ async function resolveLocation(value, options) {
         }
         return {
             file: filePath
-        }
+        };
     } else {
         throw Error(`Unsupported source/target: ${value}`);
     }
@@ -218,8 +218,7 @@ async function main() {
     console.log(`Source: ${source.url || source.file}, ${size} bytes`);
 
     // resolve target
-    const target = await resolveLocation(params.target, { ...params, writable: true,
-        size});
+    const target = await resolveLocation(params.target, { ...params, writable: true, size });
     if (target.urls) {
         console.log(`Target: ${target.urls.length} parts, ${target.urls[0]}`);
     } else {
@@ -253,11 +252,11 @@ async function main() {
         const url = URL.parse(params.target);
         await commitAzureBlocks(params.azureAuth, url.host, url.path.substring(1));
     } else {
-        throw Error("Transfer is not supported")
+        throw Error("Transfer is not supported");
     }
 }
 
 main()
     .catch(err => {
         console.error(err.message || err);
-    })
+    });

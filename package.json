@@ -1,18 +1,15 @@
 {
-  "name": "@nui/node-httptransfer",
-  "version": "7.0.0",
+  "name": "@adobe/httptransfer",
+  "version": "8.0.0",
   "main": "index.js",
   "description": "Efficient File Transfer Module for NodeJS",
   "author": {
-    "name": "Adobe Systems Inc."
+    "name": "Adobe Inc."
   },
   "license": "Apache-2.0",
-  "publishConfig": {
-    "registry": "https://artifactory.corp.adobe.com/artifactory/api/npm/npm-nui-release-local"
-  },
   "repository": {
     "type": "git",
-    "url": "https://git.corp.adobe.com/nui/node-httptransfer.git"
+    "url": "https://github.com/adobe/node-httptransfer.git"
   },
   "dependencies": {
     "content-disposition": "^0.5.3",
@@ -23,7 +20,7 @@
     "node-fetch-npm": "^2.0.4"
   },
   "devDependencies": {
-    "@nui/eslint-config": "^1.0.4",
+    "@adobe/eslint-config-asset-compute": "^1.0.0",
     "mocha": "^7.1.1",
     "nock": "^12.0.3",
     "nyc": "^15.0.1",
@@ -31,6 +28,7 @@
   },
   "scripts": {
     "test": "nyc mocha ./test",
-    "posttest": "eslint ./"
+    "posttest": "eslint ./",
+    "beautify": "eslint ./ --fix"
   }
 }

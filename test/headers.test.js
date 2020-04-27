@@ -29,64 +29,64 @@ describe('headers', function() {
         it('content-disposition-none', function() {
             const result = parse({});
             assert.strictEqual(result.filename, undefined);
-        })
+        });
         it('content-disposition-empty', function() {
             const result = parse({
                 'content-disposition': ''
             });
             assert.strictEqual(result.filename, undefined);
-        })
+        });
         it('content-disposition-filename', function() {
             const result = parse({
                 'content-disposition': 'attachment; filename="filename.jpg"'
             });
             assert.strictEqual(result.filename, 'filename.jpg');
-        })
+        });
         it('content-disposition-unicode', function() {
             const result = parse({
                 'content-disposition': 'attachment; filename*=UTF-8\'\'Na%C3%AFve%20file.txt'
             });
             assert.strictEqual(result.filename, 'Naïve file.txt');
-        })
+        });
         it('content-type-none', function() {
             const result = parse({});
             assert.strictEqual(result.mimetype, 'application/octet-stream');
-        })
+        });
         it('content-type-empty', function() {
             const result = parse({
                 'content-type': ''
             });
             assert.strictEqual(result.mimetype, 'application/octet-stream');
-        })
+        });
         it('content-type-jpeg', function() {
             const result = parse({
                 'content-type': 'image/jpeg'
             });
             assert.strictEqual(result.mimetype, 'image/jpeg');
-        })
+        });
         it('content-range-none', function() {
             const result = parse({});
             assert.strictEqual(result.size, 0);
-        })
+        });
         it('content-range-empty', function() {
             const result = parse({
                 'content-range': ''
             });
             assert.strictEqual(result.size, 0);
-        })
+        });
         it('content-range-invalid', function() {
             const result = parse({
                 'content-range': 'abc'
             });
             assert.strictEqual(result.size, 0);
-        })
+        });
         it('content-range-value', function() {
             const result = parse({
                 'content-range': 'bytes 0-0/100'
             });
             assert.strictEqual(result.size, 100);
-        })
-    })
+        });
+    });
     describe('getResourceHeaders', function() {
         it('head 404 failure', async function() {
             try {
@@ -97,9 +97,10 @@ describe('headers', function() {
                 await getResourceHeaders('http://test-headers/path/to/file.ext');
                 assert.fail('exception expected');
             } catch (e) {
-                assert.strictEqual(e.message, 'HEAD \'http://test-headers/path/to/file.ext\' failed with status 404');
+                assert.ok(e.message.includes('HEAD'));
+                assert.ok(e.message.includes('failed with status 404'));
             }
-        })
+        });
         it('invalid content-disposition', async function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
@@ -112,7 +113,7 @@ describe('headers', function() {
                 mimetype: 'application/octet-stream',
                 size: 0
             });
-        })
+        });
         it('invalid content-type', async function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
@@ -125,7 +126,7 @@ describe('headers', function() {
                 mimetype: 'application/octet-stream',
                 size: 0
             });
-        })
+        });
         it('no headers - head', async function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
@@ -136,7 +137,7 @@ describe('headers', function() {
                 mimetype: 'application/octet-stream',
                 size: 0
             });
-        })
+        });
         it('headers - head', async function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
@@ -152,7 +153,7 @@ describe('headers', function() {
                 size: 200,
                 filename: 'filename.jpg'
             });
-        })
+        });
         it('request headers - head', async function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
@@ -168,7 +169,7 @@ describe('headers', function() {
                 mimetype: 'application/octet-stream',
                 size: 0
             });
-        })
+        });
         it('headers - head - 404 retry', async function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
@@ -189,7 +190,7 @@ describe('headers', function() {
                 size: 200,
                 filename: 'filename.jpg'
             });
-        })
+        });
         it('headers - head - 503 retry', async function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
@@ -208,7 +209,7 @@ describe('headers', function() {
                 size: 200,
                 filename: 'filename.jpg'
             });
-        })
+        });
         it('no headers - get', async function() {
             nock('http://test-headers')
                 .get('/path/to/file.ext')
@@ -222,7 +223,7 @@ describe('headers', function() {
                 mimetype: 'application/octet-stream',
                 size: 0
             });
-        })
+        });
         it('headers - get', async function() {
             nock('http://test-headers')
                 .get('/path/to/file.ext')
@@ -241,7 +242,7 @@ describe('headers', function() {
                 size: 200,
                 filename: 'filename.jpg'
             });
-        })
+        });
         it('request headers - get', async function() {
             nock('http://test-headers')
                 .get('/path/to/file.ext')
@@ -259,7 +260,7 @@ describe('headers', function() {
                 mimetype: 'application/octet-stream',
                 size: 0
             });
-        })
+        });
         it('headers - get - 404 retry', async function() {
             nock('http://test-headers')
                 .get('/path/to/file.ext')
@@ -281,7 +282,7 @@ describe('headers', function() {
                 size: 200,
                 filename: 'filename.jpg'
             });
-        })
+        });
         it('headers - get - 503 retry', async function() {
             nock('http://test-headers')
                 .get('/path/to/file.ext')
@@ -302,6 +303,6 @@ describe('headers', function() {
                 size: 200,
                 filename: 'filename.jpg'
             });
-        })
-    })
-})
+        });
+    });
+});
