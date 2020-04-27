@@ -116,7 +116,6 @@ describe('stream', function () {
             }
         });
         it('host-not-found', async function () {
-            this.timeout(20000);
             try {
                 const writeStream = new StringWritable();
                 await downloadStream('http://badhost/path/to/file.ext', writeStream);
@@ -127,7 +126,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('ENOTFOUND'));
                 assert.ok(e.message.includes('badhost'));
             }
-        });
+        }).timeout(20000);
         it('timeout-error', async function () {
             try {
                 nock('http://test-timeout')
@@ -291,7 +290,6 @@ describe('stream', function () {
             }
         });
         it('host-not-found', async function () {
-            this.timeout(20000);
             try {
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://badhost/path/to/file.ext');
@@ -302,7 +300,7 @@ describe('stream', function () {
                 assert.ok(e.message.includes('ENOTFOUND'));
                 assert.ok(e.message.includes('badhost'));
             }
-        });
+        }).timeout(20000);
         it('timeout-error', async function () {
             try {
                 nock('http://test-timeout')
