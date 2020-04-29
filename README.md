@@ -1,5 +1,7 @@
 # node-httptransfer
 
+[![Version](https://img.shields.io/npm/v/@adobe/httptransfer.svg)](https://npmjs.org/package/@adobe/httptransfer)
+
 ## Introduction
 
 The `node-httptransfer` package is designed to easily and correctly transfer file content from HTTP(S) urls to HTTP(S) urls and between HTTP(S) urls.
