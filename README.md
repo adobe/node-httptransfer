@@ -14,10 +14,8 @@ The `node-httptransfer` package requires the async/await features and is built u
 
 ## Installation
 
-Install `node-httptransfer` in to your NodeJS project using:
-
-```javascript
-npm i node-httptransfer
+```bash
+npm i @adobe/httptransfer
 ```
 
 ## Using streams
@@ -25,7 +23,7 @@ npm i node-httptransfer
 Download a stream:
 
 ```javascript
-const { downloadStream } = require('@nui/node-httptransfer');
+const { downloadStream } = require('@adobe/httptransfer');
 async main() {
     const stream = fs.createWriteStream('test.png');
     await downloadStream('http://my.server.com/test.png', stream);
@@ -35,7 +33,7 @@ async main() {
 Upload a stream using PUT:
 
 ```javascript
-const { uploadStream } = require('@nui/node-httptransfer');
+const { uploadStream } = require('@adobe/httptransfer');
 async main() {
     const stream = fs.createReadStream('test.png');
     await uploadStream(stream, 'http://my.server.com/test.png');
@@ -47,7 +45,7 @@ async main() {
 Download a file:
 
 ```javascript
-const { downloadFile } = require('@nui/node-httptransfer');
+const { downloadFile } = require('@adobe/httptransfer');
 async main() {
     await downloadFile('http://my.server.com/test.png', 'test.png');
 }
@@ -56,7 +54,7 @@ async main() {
 Upload a file using PUT:
 
 ```javascript
-const { uploadFile } = require('@nui/node-httptransfer');
+const { uploadFile } = require('@adobe/httptransfer');
 async main() {
     await uploadFile('test.png', 'http://my.server.com/test.png');
 }
@@ -65,7 +63,7 @@ async main() {
 Upload a file to multiple URLs using PUT (used by AEM multi-part upload):
 
 ```javascript
-const { uploadAEMMultipartFile } = require('@nui/node-httptransfer');
+const { uploadAEMMultipartFile } = require('@adobe/httptransfer');
 async main() {
     await uploadAEMMultipartFile('test.png', {
         urls: [ "http://my.server.com/test.png.1", "http://my.server.com/test.png.2" ],
