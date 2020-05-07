@@ -199,7 +199,7 @@ describe('file', function() {
             } catch (e) {
                 console.log(e);
             }
-        });
+        }).timeout(10000);
         it('timeout-retry', async function() {
             nock('http://test-status-timeout')
                 .get('/path/to/file.ext')

@@ -710,6 +710,6 @@ describe('multipart', function () {
             } catch (e) { // ignore cleanup failures
                 console.log(e);
             }
-        });
+        }).timeout(10000);
     });
 });
