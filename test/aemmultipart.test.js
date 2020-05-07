@@ -17,6 +17,7 @@ governing permissions and limitations under the License.
 const assert = require('assert');
 const fs = require('fs').promises;
 const nock = require('nock');
+const crypto = require('crypto');
 const { uploadAEMMultipartFile } = require('../lib/aemmultipart');
 const { testHasResponseBodyOverrides } = require('../lib/fetch');
 
@@ -123,6 +124,38 @@ describe('multipart', function () {
                 console.log(e);
             }
         });
+
+        it('status-201-2urls binary', async function () {
+            // also test with a binary file (see NUI-489)
+            const data = crypto.randomBytes(100);
+
+            await fs.writeFile('test-binary.dat', data);
+
+            nock('http://test-status-201')
+                .matchHeader('content-length', 50)
+                .put('/path/to/file-1.ext', data.slice(0, 50))
+                .reply(201);
+            nock('http://test-status-201')
+                .matchHeader('content-length', 50)
+                .put('/path/to/file-2.ext', data.slice(50))
+                .reply(201);
+
+            await uploadAEMMultipartFile('test-binary.dat', {
+                urls: [
+                    'http://test-status-201/path/to/file-1.ext',
+                    'http://test-status-201/path/to/file-2.ext'
+                ],
+                minPartSize: 50,
+                maxPartSize: 50
+            });
+
+            try {
+                await fs.unlink('test-binary.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
         it('status-201-2urls-maxpartjustenough', async function () {
             await fs.writeFile('test-transfer-file-6.dat', 'hello world 123', 'utf8');
 
