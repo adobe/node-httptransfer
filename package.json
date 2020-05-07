@@ -20,7 +20,7 @@
     "node-fetch-npm": "^2.0.4"
   },
   "devDependencies": {
-    "@adobe/eslint-config-asset-compute": "^1.1.0",
+    "@adobe/eslint-config-asset-compute": "^1.2.0",
     "mocha": "^7.1.2",
     "nock": "^12.0.3",
     "nyc": "^15.0.1",
