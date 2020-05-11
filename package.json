@@ -36,6 +36,8 @@
   "scripts": {
     "test": "nyc mocha ./test",
     "posttest": "eslint ./",
-    "beautify": "eslint ./ --fix"
+    "beautify": "eslint ./ --fix",
+    "dep-license-details": "license-checker -unknown --out dependencies-licenses.log",
+    "dep-license-list": "license-checker --summary -unknown"
   }
 }
