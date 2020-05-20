@@ -2,7 +2,7 @@
   "name": "@adobe/httptransfer",
   "version": "1.0.1",
   "main": "index.js",
-  "description": "Efficient File Transfer Module for NodeJS",
+  "description": "Efficient File Transfer Module for NodeJS cicd debug",
   "author": {
     "name": "Adobe Inc."
   },
