@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@adobe/eslint-config-asset-compute": "^1.2.0",
+    "codecov": "^3.7.0",
     "mocha": "^7.1.2",
     "nock": "^12.0.3",
     "nyc": "^15.0.1",
@@ -34,7 +35,7 @@
     "file"
   ],
   "scripts": {
-    "test": "nyc mocha ./test",
+    "test": "nyc mocha --recursive --exit",
     "posttest": "eslint ./",
     "beautify": "eslint ./ --fix"
   }

@@ -1,14 +1,14 @@
 /*
-Copyright 2019 Adobe. All rights reserved.
-This file is licensed to you under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License. You may obtain a copy
-of the License at http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
-OF ANY KIND, either express or implied. See the License for the specific language
-governing permissions and limitations under the License.
-*/
+ * Copyright 2020 Adobe. All rights reserved.
+ * This file is licensed to you under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
 
 /* eslint-env mocha */
 
@@ -21,7 +21,7 @@ const nock = require('nock');
 function parse(headers) {
     return parseResourceHeaders({
         get: name => headers[name]
-    })
+    });
 }
 
 describe('headers', function() {
@@ -145,7 +145,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-length': 200,
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext');
             assert.deepStrictEqual(result, {
@@ -158,7 +158,7 @@ describe('headers', function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
                 .matchHeader('accept', 'application/json')
-                .reply(200)
+                .reply(200);
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 headers: {
@@ -180,7 +180,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-length': 200,
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 retryAllErrors: true
@@ -201,7 +201,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-length': 200,
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext');
             assert.deepStrictEqual(result, {
@@ -232,7 +232,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-range': 'bytes 0-0/200',
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 doGet: true
@@ -248,7 +248,7 @@ describe('headers', function() {
                 .get('/path/to/file.ext')
                 .matchHeader('range', 'bytes=0-0')
                 .matchHeader('accept', 'application/json')
-                .reply(200)
+                .reply(200);
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 doGet: true,
@@ -271,7 +271,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-range': 'bytes 0-0/200',
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 doGet: true,
@@ -293,7 +293,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-range': 'bytes 0-0/200',
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 doGet: true
