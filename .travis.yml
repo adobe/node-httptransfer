@@ -9,10 +9,6 @@
 # governing permissions and limitations under the License.
 
 language: node_js
-os:
-  - windows
-  - linux
-  - osx
 
 node_js:
   - "10"
@@ -24,5 +20,9 @@ node_js:
 install:
   - npm version
   - npm install
+
 script:
   - npm test
+
+after_success:
+  - npm run report-coverage
