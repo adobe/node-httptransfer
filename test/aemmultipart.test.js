@@ -444,13 +444,13 @@ describe('multipart', function () {
                 .reply(201);
 
             await uploadAEMMultipartFile('test-transfer-file-16.dat', {
-                maxPartSize: 9,
+                maxPartSize: 8,
                 urls: [
                     'http://test-status-201/path/to/file-1.ext',
                     'http://test-status-201/path/to/file-2.ext'
                 ]
             }, {
-                partSize: 8,
+                partSize: 7,
             });
 
             try {
@@ -711,5 +711,37 @@ describe('multipart', function () {
                 console.log(e);
             }
         }).timeout(10000);
+    });
+
+
+    it('favor max-part-size when min and max-part-size both defined', async function () {
+        await fs.writeFile('test-transfer-file-16.dat', 'hello world 123', 'utf8');
+
+        // preferred is limited on the lower-bound by minPartSize, so
+        // the picked part size is the minPartSize
+        nock('http://test-status-201')
+            .matchHeader('content-length', 8)
+            .put('/path/to/file-1.ext', 'hello wo')
+            .reply(201);
+        nock('http://test-status-201')
+            .matchHeader('content-length', 7)
+            .put('/path/to/file-2.ext', 'rld 123')
+            .reply(201);
+
+        await uploadAEMMultipartFile('test-transfer-file-16.dat', {
+            maxPartSize: 8,
+            minPartSize: 7,
+            urls: [
+                'http://test-status-201/path/to/file-1.ext',
+                'http://test-status-201/path/to/file-2.ext'
+            ]
+        }, {
+        });
+
+        try {
+            await fs.unlink('test-transfer-file-16.dat');
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
     });
 });
