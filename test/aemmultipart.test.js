@@ -598,8 +598,8 @@ describe('multipart', function () {
         await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
 
         nock('http://status-503-retry')
-        .matchHeader('content-length', 8)
-        .put('/path/to/file-1.ext', 'hello wo')
+            .matchHeader('content-length', 8)
+            .put('/path/to/file-1.ext', 'hello wo')
             .replyWithError({
                 code: 'ECONNRESET',
                 message: 'Connection Reset'
