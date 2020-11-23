@@ -230,6 +230,12 @@ describe('file', function() {
                 });
                 assert.fail('failure expected');
             } catch (e) {
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(e)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                
                 // expect elapsed to be at least 500ms, since less than that a 3rd
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
@@ -377,6 +383,11 @@ describe('file', function() {
                 });
                 assert.fail('failure expected');
             } catch (e) {
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(e)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
                 // expect elapsed to be at least 500ms, since less than that a 3rd
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;

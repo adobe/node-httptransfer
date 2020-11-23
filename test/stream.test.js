@@ -121,6 +121,11 @@ describe('stream', function () {
                 await downloadStream('http://badhost/path/to/file.ext', writeStream);
                 assert.fail('failure expected');
             } catch (e) {
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(e)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('ENOTFOUND'));
@@ -295,6 +300,11 @@ describe('stream', function () {
                 await uploadStream(readStream, 'http://badhost/path/to/file.ext');
                 assert.fail('failure expected');
             } catch (e) {
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(e)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
+                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
                 assert.ok(e.message.includes('PUT'), e.message);
                 assert.ok(e.message.includes('connect failed'));
                 assert.ok(e.message.includes('ENOTFOUND'));
