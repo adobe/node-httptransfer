@@ -230,19 +230,13 @@ describe('file', function() {
                 });
                 assert.fail('failure expected');
             } catch (e) {
-                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
-                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
-                console.log(e)
-                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
-                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
-                
                 // expect elapsed to be at least 500ms, since less than that a 3rd
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.includes('GET'));
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
 
@@ -383,18 +377,13 @@ describe('file', function() {
                 });
                 assert.fail('failure expected');
             } catch (e) {
-                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
-                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
-                console.log(e)
-                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
-                console.log(`!!!!!!!!~~~~~~~~~~~~~~~~~~~~~~~~~~~`)
                 // expect elapsed to be at least 500ms, since less than that a 3rd
                 // retry would fit (400ms-500ms wait).
                 const elapsed = Date.now() - start;
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
 
