@@ -123,7 +123,7 @@ describe('stream', function () {
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
         }).timeout(20000);
@@ -297,7 +297,7 @@ describe('stream', function () {
             } catch (e) {
                 assert.ok(e.message.includes('PUT'), e.message);
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
         }).timeout(20000);
