@@ -21,12 +21,15 @@
   },
   "devDependencies": {
     "@adobe/eslint-config-asset-compute": "^1.3.0",
+    "@semantic-release/git": "^9.0.0",
     "codecov": "^3.7.0",
+    "conventional-changelog-eslint": "^3.0.9",
     "license-checker": "^25.0.1",
     "mocha": "^7.2.0",
     "nock": "^12.0.3",
     "nyc": "^15.1.0",
-    "rewire": "^5.0.0"
+    "rewire": "^5.0.0",
+    "semantic-release": "^17.3.0"
   },
   "keywords": [
     "cloud",
@@ -39,6 +42,7 @@
     "test": "nyc mocha --recursive --exit",
     "posttest": "eslint ./ && license-checker --summary",
     "beautify": "eslint ./ --fix",
-    "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
+    "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "semantic-release": "semantic-release"
   }
 }
