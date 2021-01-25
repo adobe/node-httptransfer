@@ -66,7 +66,7 @@ describe('stream', function () {
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('response failed'));
-                assert.ok(e.message.includes('truncated'));
+                assert.ok(e.message.includes('Unexpected stream-size'));
             }
         });
         it('status-404-empty', async function () {
