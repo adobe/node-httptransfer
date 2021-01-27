@@ -33,6 +33,13 @@ describe('stream', function () {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
+        it('status-200 not nocked, disable encoding', async function () {
+            const fs = require('fs');
+            const stream = fs.createWriteStream('test-file-12244.jpg');
+            const url = 'https://github.githubassets.com/assets/diffs-021875bc.js';
+            await downloadStream(url, stream);
+            fs.rmSync('test-file-12244.jpg');
+        });
 
         it('status-200', async function () {
             nock('http://test-status-200')
