@@ -38,7 +38,7 @@ describe('stream', function () {
             const stream = fs.createWriteStream('test-file-12244.jpg');
             const url = 'https://github.githubassets.com/assets/diffs-021875bc.js';
             await downloadStream(url, stream);
-            fs.rmSync('test-file-12244.jpg');
+            fs.unlinkSync('test-file-12244.jpg');
         });
 
         it('status-200', async function () {
