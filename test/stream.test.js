@@ -33,7 +33,7 @@ describe('stream', function () {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
-        it('status-200 not nocked, disable encoding', async function () {
+        it.skip('status-200 not nocked, disable encoding', async function () {
             const fs = require('fs');
             const stream = fs.createWriteStream('test-file-12244.txt');
             const url = 'https://github.githubassets.com/assets/diffs-021875bc.js';
@@ -101,24 +101,34 @@ describe('stream', function () {
             }
         });
 
-        it('status-200-truncate-gzip-2', async function () {
-            const { gzipSync} = require('zlib');
-            const gzipped = gzipSync(Buffer.from('Hello World', 'utf8'));
-            console.log('actual size', gzipped.length);
+        it.skip('status-200-stream-throws', async function () {
+
             try {
+                const { Readable } = require("stream");
+                let firstRead;
+                const readableStream = new Readable({
+                    read() {
+                        if (firstRead) {
+                            this.push(Buffer.from('Hello World!'));
+                            firstRead = false;
+                        } else {
+                            // throw new Error('Stream Error!');
+                            this.destroy(new Error('Stream Error!'));
+                        }
+                    }
+                });
                 nock('http://test-status-200-truncate')
                     .get('/path/to/file.ext')
-                    .reply(200, gzipped, {
-                        'Content-Length': 31,
-                        'Content-Encoding': 'gzip'
+                    .reply(200, readableStream, {
+                        'Content-Length': 6
                     });
 
                 const writeStream = new StringWritable();
                 await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
+
             } catch (e) {
-                assert.ok(e.message.includes('GET'), e.message);
-                assert.ok(e.message.includes('response failed'));
-                assert.ok(e.message.includes('Unexpected stream-size'));
+                console.log(e);
+                // assert.ok(e.message.includes('Stream Error!'));
             }
         });
         it('status-404-empty', async function () {
