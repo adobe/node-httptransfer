@@ -101,32 +101,24 @@ describe('stream', function () {
             }
         });
 
-        it.skip('status-200-stream-throws', async function () {
+        it('status-200-gzipped-stream-read-error', async function () {
+            const { gzipSync} = require('zlib');
+            const gzipped = gzipSync(Buffer.from('Hello World', 'utf8'));
             try {
-                const { Readable } = require("stream");
-                let firstRead;
-                const readableStream = new Readable({
-                    read() {
-                        if (firstRead) {
-                            this.push(Buffer.from('Hello World!'));
-                            firstRead = false;
-                        } else {
-                            this.destroy(new Error('Stream Error!'));
-                            // this.emit('error', new Error('OOPS'));
-                        }
-                    }
-                });
                 nock('http://test-status-200-truncate')
                     .get('/path/to/file.ext')
-                    .reply(200, readableStream, {
-                        'Content-Length': 6
+                    .reply(200, gzipped, {
+                        'Content-Length': 11,
+                        'Content-Encoding': 'gzip'
                     });
+                
+                testSetResponseBodyOverride("GET", createErrorReadable(Error('read failure')));
                 const writeStream = new StringWritable();
                 await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
-
             } catch (e) {
-                console.log(e);
-                // assert.ok(e.message.includes('Stream Error!'));
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('read failure'));
             }
         });
         it('status-404-empty', async function () {
