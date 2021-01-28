@@ -25,6 +25,7 @@ const {
     createErrorReadable,
     createErrorWritable
 } = require('./streams');
+const fs = require('fs');
 
 describe('stream', function () {
     describe('download', function () {
@@ -33,14 +34,13 @@ describe('stream', function () {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
-        it.skip('status-200 not nocked, disable encoding', async function () {
-            const fs = require('fs');
+        it('status-200 not nocked, disable encoding', async function () {
             const stream = fs.createWriteStream('test-file-12244.txt');
             const url = 'https://github.githubassets.com/assets/diffs-021875bc.js';
             await downloadStream(url, stream);
-            const util = require('util');
-            const exec = util.promisify(require('child_process').exec);
-            await exec('diff ./test/diffs-021875bc.txt test-file-12244.txt');
+            const recieved = fs.readFileSync('test-file-12244.txt');
+            const expected = fs.readFileSync('./test/expected-file.txt');
+            assert.ok(recieved.equals(expected));
             fs.unlinkSync('test-file-12244.txt');
         });
 
@@ -102,7 +102,6 @@ describe('stream', function () {
         });
 
         it.skip('status-200-stream-throws', async function () {
-
             try {
                 const { Readable } = require("stream");
                 let firstRead;
@@ -112,8 +111,8 @@ describe('stream', function () {
                             this.push(Buffer.from('Hello World!'));
                             firstRead = false;
                         } else {
-                            // throw new Error('Stream Error!');
                             this.destroy(new Error('Stream Error!'));
+                            // this.emit('error', new Error('OOPS'));
                         }
                     }
                 });
@@ -122,7 +121,6 @@ describe('stream', function () {
                     .reply(200, readableStream, {
                         'Content-Length': 6
                     });
-
                 const writeStream = new StringWritable();
                 await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
 
