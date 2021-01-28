@@ -25,7 +25,7 @@ const {
     createErrorReadable,
     createErrorWritable
 } = require('./streams');
-const fs = require('fs');
+const { gzipSync } = require('zlib');
 
 describe('stream', function () {
     describe('download', function () {
@@ -34,16 +34,6 @@ describe('stream', function () {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
-        it('status-200 not nocked, disable encoding', async function () {
-            const stream = fs.createWriteStream('test-file-12244.txt');
-            const url = 'https://github.githubassets.com/assets/diffs-021875bc.js';
-            await downloadStream(url, stream);
-            const recieved = fs.readFileSync('test-file-12244.txt');
-            const expected = fs.readFileSync('./test/expected-file.txt');
-            assert.ok(recieved.equals(expected));
-            fs.unlinkSync('test-file-12244.txt');
-        });
-
         it('status-200', async function () {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
@@ -79,47 +69,27 @@ describe('stream', function () {
                 assert.ok(e.message.includes('Unexpected stream-size'));
             }
         });
+        it('status-200-gzip', async function () {
+            const stringData = 'Hello World';
+            const gzipped = gzipSync(Buffer.from(stringData, 'utf8'));
 
-        it('status-200-truncate-gzip', async function () {
-            const { gzipSync} = require('zlib');
-            const gzipped = gzipSync(Buffer.from('Hello World', 'utf8'));
-            console.log('actual size', gzipped.length);
-            try {
-                nock('http://test-status-200-truncate')
-                    .get('/path/to/file.ext')
-                    .reply(200, gzipped.slice(0,5), {
-                        'Content-Length': 11,
-                        'Content-Encoding': 'gzip'
-                    });
+            nock('http://test-status-200-truncate')
+                .get('/path/to/file.ext')
+                .matchHeader('Accept-Encoding', /gzip/)
+                .reply(200, gzipped, {
+                    'Content-Length': gzipped.length,
+                    'Content-Encoding': 'gzip'
+                });
+            nock('http://test-status-200-truncate')
+                .get('/path/to/file.ext')
+                .reply(200, stringData, {
+                    'Content-Length': stringData.length
+                });
 
-                const writeStream = new StringWritable();
-                await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
-            } catch (e) {
-                assert.ok(e.message.includes('GET'), e.message);
-                assert.ok(e.message.includes('response failed'));
-                assert.ok(e.message.includes('Unexpected stream-size'));
-            }
-        });
-
-        it('status-200-gzipped-stream-read-error', async function () {
-            const { gzipSync} = require('zlib');
-            const gzipped = gzipSync(Buffer.from('Hello World', 'utf8'));
-            try {
-                nock('http://test-status-200-truncate')
-                    .get('/path/to/file.ext')
-                    .reply(200, gzipped, {
-                        'Content-Length': 11,
-                        'Content-Encoding': 'gzip'
-                    });
-                
-                testSetResponseBodyOverride("GET", createErrorReadable(Error('read failure')));
-                const writeStream = new StringWritable();
-                await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
-            } catch (e) {
-                assert.ok(e.message.includes('GET'), e.message);
-                assert.ok(e.message.includes('response failed'));
-                assert.ok(e.message.includes('read failure'));
-            }
+            const writeStream = new StringWritable();
+            await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
+            assert.ok(writeStream.data, stringData);
+            nock.cleanAll();
         });
         it('status-404-empty', async function () {
             nock('http://test-status-404-empty')
