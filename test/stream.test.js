@@ -35,10 +35,13 @@ describe('stream', function () {
         });
         it('status-200 not nocked, disable encoding', async function () {
             const fs = require('fs');
-            const stream = fs.createWriteStream('test-file-12244.jpg');
+            const stream = fs.createWriteStream('test-file-12244.txt');
             const url = 'https://github.githubassets.com/assets/diffs-021875bc.js';
             await downloadStream(url, stream);
-            fs.unlinkSync('test-file-12244.jpg');
+            const util = require('util');
+            const exec = util.promisify(require('child_process').exec);
+            await exec('diff ./test/diffs-021875bc.txt test-file-12244.txt');
+            fs.unlinkSync('test-file-12244.txt');
         });
 
         it('status-200', async function () {
