@@ -76,6 +76,48 @@ describe('stream', function () {
                 assert.ok(e.message.includes('Unexpected stream-size'));
             }
         });
+
+        it('status-200-truncate-gzip', async function () {
+            const { gzipSync} = require('zlib');
+            const gzipped = gzipSync(Buffer.from('Hello World', 'utf8'));
+            console.log('actual size', gzipped.length);
+            try {
+                nock('http://test-status-200-truncate')
+                    .get('/path/to/file.ext')
+                    .reply(200, gzipped.slice(0,5), {
+                        'Content-Length': 11,
+                        'Content-Encoding': 'gzip'
+                    });
+
+                const writeStream = new StringWritable();
+                await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
+            } catch (e) {
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('Unexpected stream-size'));
+            }
+        });
+
+        it('status-200-truncate-gzip-2', async function () {
+            const { gzipSync} = require('zlib');
+            const gzipped = gzipSync(Buffer.from('Hello World', 'utf8'));
+            console.log('actual size', gzipped.length);
+            try {
+                nock('http://test-status-200-truncate')
+                    .get('/path/to/file.ext')
+                    .reply(200, gzipped, {
+                        'Content-Length': 31,
+                        'Content-Encoding': 'gzip'
+                    });
+
+                const writeStream = new StringWritable();
+                await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
+            } catch (e) {
+                assert.ok(e.message.includes('GET'), e.message);
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('Unexpected stream-size'));
+            }
+        });
         it('status-404-empty', async function () {
             nock('http://test-status-404-empty')
                 .get('/path/to/file.ext')
