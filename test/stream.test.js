@@ -25,6 +25,7 @@ const {
     createErrorReadable,
     createErrorWritable
 } = require('./streams');
+const { gzipSync } = require('zlib');
 
 describe('stream', function () {
     describe('download', function () {
@@ -33,7 +34,6 @@ describe('stream', function () {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
-
         it('status-200', async function () {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
@@ -68,6 +68,28 @@ describe('stream', function () {
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('Unexpected stream-size'));
             }
+        });
+        it('status-200-gzip', async function () {
+            const stringData = 'Hello World';
+            const gzipped = gzipSync(Buffer.from(stringData, 'utf8'));
+
+            nock('http://test-status-200-truncate')
+                .get('/path/to/file.ext')
+                .matchHeader('Accept-Encoding', /gzip/)
+                .reply(200, gzipped, {
+                    'Content-Length': gzipped.length,
+                    'Content-Encoding': 'gzip'
+                });
+            nock('http://test-status-200-truncate')
+                .get('/path/to/file.ext')
+                .reply(200, stringData, {
+                    'Content-Length': stringData.length
+                });
+
+            const writeStream = new StringWritable();
+            await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
+            assert.ok(writeStream.data, stringData);
+            nock.cleanAll();
         });
         it('status-404-empty', async function () {
             nock('http://test-status-404-empty')
