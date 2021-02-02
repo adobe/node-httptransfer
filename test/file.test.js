@@ -236,7 +236,7 @@ describe('file', function() {
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.includes('GET'));
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
 
@@ -383,7 +383,7 @@ describe('file', function() {
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
 
