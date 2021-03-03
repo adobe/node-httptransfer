@@ -92,6 +92,32 @@ describe('file', function() {
                 console.log(e);
             }
         });
+
+        it('bad-writestream', async function() {
+            try {
+                await downloadFile('http://test-status-200-truncate-retry/path/to/file.ext', "badfolder/badfile");
+                assert.fail("failure expected");
+            } catch (e) {
+                assert.ok(e.message.includes("ENOENT: no such file or directory"), e.message);
+            }
+        });
+
+        it.skip('bad-writestream-after-open', async function() {
+            nock('http://test-status-200-truncate-retry')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world', {
+                    'content-length': 11
+                });
+
+            try {
+                await downloadFile('http://test-status-200-truncate-retry/path/to/file.ext', "./file-deleted");
+                await fs.unlink("./file-deleted");
+
+                assert.fail("failure expected");
+            } catch (e) {
+                assert.ok(e.message.includes("ENOENT: no such file or directory"), e.message);
+            }
+        });
         it('status-200-stream-retry', async function() {
             nock('http://test-status-200-stream-retry')
                 .get('/path/to/file.ext')
