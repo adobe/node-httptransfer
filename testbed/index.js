@@ -14,35 +14,68 @@
 
 const filterObject = require("filter-obj");
 const fs = require("fs").promises;
+const { R_OK } = require("fs").constants;
 const path = require("path");
 const URL = require("url");
 const yargs = require("yargs");
-const azureStorageBlob = require("@azure/storage-blob");
-const leftPad = require("left-pad");
+const {
+    BlobServiceClient,
+    StorageSharedKeyCredential,
+    generateBlobSASQueryParameters,
+    SASProtocol,
+    BlobSASPermissions
+} = require("@azure/storage-blob");
+const { downloadAzureBlock } = require("../lib/blockio/http");
 const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
     transferStream,
     getResourceHeaders
 } = require("../index.js");
 
-function createAzureSAS(auth, containerName, blobName, permissions) {
+function createAzureSAS(auth, containerName, blobName, perm="r") {
     if (!auth || !auth.accountName || !auth.accountKey) {
         throw Error("Azure Storage credentials not provided");
     }
-    const credential = new azureStorageBlob.SharedKeyCredential(
-        auth.accountName,
-        auth.accountKey
+
+    const sharedKeyCredential = new StorageSharedKeyCredential(auth.accountName, auth.accountKey);
+    const blobServiceClient = new BlobServiceClient(
+        `https://${auth.accountName}.blob.core.windows.net`,
+        sharedKeyCredential
     );
+
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+
+    const permissions = new BlobSASPermissions();
+    permissions.read = (perm.indexOf("r") >= 0);
+    permissions.write = (perm.indexOf("w") >= 0);
+    permissions.delete = (perm.indexOf("d") >= 0);
+
     const ONE_HOUR_MS = 60 * 60 * 1000;
-    const query = azureStorageBlob.generateBlobSASQueryParameters({
-        protocol: azureStorageBlob.SASProtocol.HTTPS,
-        expiryTime: new Date(Date.now() + ONE_HOUR_MS),
+    const blobClient = containerClient.getBlockBlobClient(blobName);
+    const query = generateBlobSASQueryParameters({
+        protocol: SASProtocol.Https,
+        expiresOn: new Date(Date.now() + ONE_HOUR_MS),
         containerName,
         blobName,
         permissions
-    }, credential).toString();
-    const path = encodeURIComponent(`${containerName}/${blobName}`);
-    return `https://${auth.accountName}.blob.core.windows.net/${path}?${query}`;
+    }, sharedKeyCredential).toString();
+
+    return `${blobClient.url}?${query}`;
+
+    // const credential = new azureStorageBlob.SharedKeyCredential(
+    //     auth.accountName,
+    //     auth.accountKey
+    // );
+    // const ONE_HOUR_MS = 60 * 60 * 1000;
+    // const query = azureStorageBlob.generateBlobSASQueryParameters({
+    //     protocol: azureStorageBlob.SASProtocol.HTTPS,
+    //     expiryTime: new Date(Date.now() + ONE_HOUR_MS),
+    //     containerName,
+    //     blobName,
+    //     permissions
+    // }, credential).toString();
+    // const path = encodeURIComponent(`${containerName}/${blobName}`);
+    // return `https://${auth.accountName}.blob.core.windows.net/${path}?${query}`;
 }
 
 async function commitAzureBlocks(auth, containerName, blobName) {
@@ -84,7 +117,7 @@ async function resolveLocation(value, options) {
             const urls = [];
             for (let i = 0; i < numParts; ++i) {
                 // each block id must be the same size
-                const blockId = Buffer.from(leftPad(i, 10, 0)).toString("base64");
+                const blockId = Buffer.from(String(i).padStart(10, "0")).toString("base64");
                 urls.push(`${sasUrl}&comp=block&blockid=${blockId}`);
             }
             return {
@@ -107,7 +140,7 @@ async function resolveLocation(value, options) {
         const urlPath = decodeURIComponent(url.path);
         const filePath = path.resolve(process.cwd(), urlPath);
         if (!options.writable) {
-            await fs.access(filePath, fs.constants.R_OK);
+            await fs.access(filePath, R_OK);
         }
         return {
             file: filePath
@@ -121,7 +154,8 @@ async function main() {
     // parse command line
     const params = yargs
         .strict()
-        .command("* <source> <target>", "Testbed for node-httptransfer", yargs =>
+        .scriptName("npm run testbed --")
+        .command("$0 <source> <target>", "Testbed for node-httptransfer", yargs =>
             yargs
                 .positional("source", {
                     describe: "File, URL, or azure://container/path/to/blob to retrieve content from",
@@ -186,6 +220,15 @@ async function main() {
         )
         .wrap(yargs.terminalWidth())
         .help()
+        .fail((msg, err, yargs) => {
+            if (err) {
+                throw err;
+            }
+            console.error(yargs.help());
+            console.error();
+            console.error(msg);
+            process.exit(0);
+        })
         .argv;
 
     // capture azure storage credentials
@@ -223,6 +266,11 @@ async function main() {
         console.log(`Target: ${target.urls.length} parts, ${target.urls[0]}`);
     } else {
         console.log(`Target: ${target.url || target.file}`);
+    }
+
+    if (source.url) {
+        await downloadAzureBlock(source.url, 0, 100*1024*1024);
+        return;
     }
 
     // transfer
