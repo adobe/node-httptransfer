@@ -287,6 +287,7 @@ async function main() {
     } else if (source.url && target.file) {
         if (params.blockio) {
             await blockio.downloadFile(source.url, target.file, {
+                maxConcurrent: params.concurrency || 1,
                 mkdirs: true,
                 ...retryOptions
             });
