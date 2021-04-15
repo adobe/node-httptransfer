@@ -25,7 +25,7 @@ const {
     SASProtocol,
     BlobSASPermissions
 } = require("@azure/storage-blob");
-const { downloadAzureBlock } = require("../lib/blockio/http");
+const blockio = require("../lib/blockio");
 const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
     transferStream,
@@ -214,6 +214,16 @@ async function main() {
                     type: "number",
                     default: 100
                 })
+                .option("blockio", {
+                    describe: "Enable Block I/O, allows for concurrent upload and downloads",
+                    type: "boolean",
+                    default: false
+                })
+                .option("concurrency", {
+                    describe: "Maximum concurrency for upload and download",
+                    type: "number",
+                    default: 1
+                })
                 .example("$0 azure://container/source.txt blob.txt", "Download path/to/source.txt in container to blob.txt")
                 .example("$0 blob.txt azure://container/target.txt", "Upload blob.txt to path/to/target.txt in container")
                 .example("$0 azure://container/source.txt azure://container/target.txt", "Transfer source.txt to target.txt in container")
@@ -268,11 +278,6 @@ async function main() {
         console.log(`Target: ${target.url || target.file}`);
     }
 
-    if (source.url) {
-        await downloadAzureBlock(source.url, 0, 100*1024*1024);
-        return;
-    }
-
     // transfer
     if (source.file && target.url) {
         await uploadFile(source.file, target.url, {
@@ -280,10 +285,17 @@ async function main() {
             ...retryOptions
         });
     } else if (source.url && target.file) {
-        await downloadFile(source.url, target.file, {
-            mkdirs: true,
-            ...retryOptions
-        });
+        if (params.blockio) {
+            await blockio.downloadFile(source.url, target.file, {
+                mkdirs: true,
+                ...retryOptions
+            });
+        } else {
+            await downloadFile(source.url, target.file, {
+                mkdirs: true,
+                ...retryOptions
+            });
+        }
     } else if (source.url && target.url) {
         await transferStream(source.url, target.url, {
             target: {
@@ -306,5 +318,5 @@ async function main() {
 
 main()
     .catch(err => {
-        console.error(err.message || err);
+        console.error(err);
     });
