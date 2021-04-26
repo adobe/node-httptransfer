@@ -16,7 +16,7 @@ const filterObject = require("filter-obj");
 const fs = require("fs").promises;
 const { R_OK } = require("fs").constants;
 const path = require("path");
-const URL = require("url");
+const { pathToFileURL } = require("url");
 const yargs = require("yargs");
 const {
     BlobServiceClient,
@@ -25,7 +25,7 @@ const {
     SASProtocol,
     BlobSASPermissions
 } = require("@azure/storage-blob");
-const blockio = require("../lib/blockio");
+const { bulkUpload, bulkDownload } = require("../lib/aembulk");
 const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
     transferStream,
@@ -61,21 +61,6 @@ function createAzureSAS(auth, containerName, blobName, perm="r") {
     }, sharedKeyCredential).toString();
 
     return `${blobClient.url}?${query}`;
-
-    // const credential = new azureStorageBlob.SharedKeyCredential(
-    //     auth.accountName,
-    //     auth.accountKey
-    // );
-    // const ONE_HOUR_MS = 60 * 60 * 1000;
-    // const query = azureStorageBlob.generateBlobSASQueryParameters({
-    //     protocol: azureStorageBlob.SASProtocol.HTTPS,
-    //     expiryTime: new Date(Date.now() + ONE_HOUR_MS),
-    //     containerName,
-    //     blobName,
-    //     permissions
-    // }, credential).toString();
-    // const path = encodeURIComponent(`${containerName}/${blobName}`);
-    // return `https://${auth.accountName}.blob.core.windows.net/${path}?${query}`;
 }
 
 async function commitAzureBlocks(auth, containerName, blobName) {
@@ -100,13 +85,13 @@ async function commitAzureBlocks(auth, containerName, blobName) {
 }
 
 async function resolveLocation(value, options) {
-    const url = URL.parse(value);
-    if (url.protocol === "https:" || url.protocol === "http:") {
+    if (value.startsWith("https:") || value.startsWith("http:")) {
         return {
-            url: value
+            url: new URL(value)
         };
-    } else if (url.protocol === "azure:") {
+    } else if (value.startsWith("azure:")) {
         const numParts = options.numParts || Math.ceil(options.size / options.maxPartSize);
+        const url = new URL(value);
         const sasUrl = createAzureSAS(
             options.azureAuth,
             url.host,
@@ -133,20 +118,18 @@ async function resolveLocation(value, options) {
                 }
             };
         }
-    } else if (url.protocol === "file:" || url.protocol === null) {
+    } else {
+        const url = pathToFileURL(value);
         if (url.host) {
             throw Error(`File URIs with a host component are not supported: ${value}`);
         }
-        const urlPath = decodeURIComponent(url.path);
-        const filePath = path.resolve(process.cwd(), urlPath);
+        const filePath = decodeURIComponent(url.pathname);
         if (!options.writable) {
             await fs.access(filePath, R_OK);
         }
         return {
             file: filePath
         };
-    } else {
-        throw Error(`Unsupported source/target: ${value}`);
     }
 }
 
@@ -214,8 +197,16 @@ async function main() {
                     type: "number",
                     default: 100
                 })
-                .option("blockio", {
-                    describe: "Enable Block I/O, allows for concurrent upload and downloads",
+                .option("aem-username", {
+                    describe: "AEM Username. Environment variable: AEM_USERNAME",
+                    type: "string"
+                })
+                .option("aem-password", {
+                    describe: "AEM Password. Environment variable: AEM_PASSWORD",
+                    type: "string"
+                })
+                .option("bulk", {
+                    describe: "Bulk transfer directory transfer",
                     type: "boolean",
                     default: false
                 })
@@ -245,6 +236,12 @@ async function main() {
     params.azureAuth = {
         accountKey: params["account-key"] || process.env.AZURE_STORAGE_KEY,
         accountName: params["account-name"] || process.env.AZURE_STORAGE_ACCOUNT
+    };
+
+    // capture aem credentials
+    params.aemAuth = {
+        username: params["aem-username"] || process.env.AEM_USERNAME,
+        password: params["aem-password"] || process.env.AEM_PASSWORD
     };
 
     // capture retry options
@@ -279,41 +276,47 @@ async function main() {
     }
 
     // transfer
-    if (source.file && target.url) {
-        await uploadFile(source.file, target.url, {
-            headers: target.headers,
-            ...retryOptions
-        });
-    } else if (source.url && target.file) {
-        if (params.blockio) {
-            await blockio.downloadFile(source.url, target.file, {
-                maxConcurrent: params.concurrency || 1,
-                mkdirs: true,
+    if (params.bulk) {
+        if (source.file && target.url) {
+            await bulkUpload(source.file, target.url, {
+                ...retryOptions
+            });
+        } else if (source.url && target.file) {
+            await bulkDownload(source.url, target.file, {
                 ...retryOptions
             });
         } else {
+            throw Error("Transfer is not supported");
+        }
+    } else {
+        if (source.file && target.url) {
+            await uploadFile(source.file, target.url, {
+                headers: target.headers,
+                ...retryOptions
+            });
+        } else if (source.url && target.file) {
             await downloadFile(source.url, target.file, {
                 mkdirs: true,
                 ...retryOptions
             });
-        }
-    } else if (source.url && target.url) {
-        await transferStream(source.url, target.url, {
-            target: {
-                headers: target.headers
-            },
-            ...retryOptions
-        });
-    } else if (source.file && target.urls) {
-        await uploadAEMMultipartFile(source.file, target, {
-            ...retryOptions
-        });
+        } else if (source.url && target.url) {
+            await transferStream(source.url, target.url, {
+                target: {
+                    headers: target.headers
+                },
+                ...retryOptions
+            });
+        } else if (source.file && target.urls) {
+            await uploadAEMMultipartFile(source.file, target, {
+                ...retryOptions
+            });
 
-        console.log("Commit uncommitted blocks");
-        const url = URL.parse(params.target);
-        await commitAzureBlocks(params.azureAuth, url.host, url.path.substring(1));
-    } else {
-        throw Error("Transfer is not supported");
+            console.log("Commit uncommitted blocks");
+            const url = new URL(params.target);
+            await commitAzureBlocks(params.azureAuth, url.host, url.path.substring(1));
+        } else {
+            throw Error("Transfer is not supported");
+        }
     }
 }
 
