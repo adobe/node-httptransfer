@@ -31,18 +31,24 @@ const {
     getResourceHeaders
 } = require("../index.js");
 
-function createAzureSAS(auth, containerName, blobName, perm="r") {
+function createAzureCredential(auth) {
     if (!auth || !auth.accountName || !auth.accountKey) {
         throw Error("Azure Storage credentials not provided");
     }
+    return new StorageSharedKeyCredential(auth.accountName, auth.accountKey);
+}
 
-    const sharedKeyCredential = new StorageSharedKeyCredential(auth.accountName, auth.accountKey);
+function createAzureContainerClient(auth, containerName) {
+    const sharedKeyCredential = createAzureCredential(auth);
     const blobServiceClient = new BlobServiceClient(
         `https://${auth.accountName}.blob.core.windows.net`,
         sharedKeyCredential
     );
+    return blobServiceClient.getContainerClient(containerName);
+}
 
-    const containerClient = blobServiceClient.getContainerClient(containerName);
+function createAzureSAS(auth, containerName, blobName, perm="r") {
+    const containerClient = createAzureContainerClient(auth, containerName);
 
     const permissions = new BlobSASPermissions();
     permissions.read = (perm.indexOf("r") >= 0);
@@ -50,6 +56,7 @@ function createAzureSAS(auth, containerName, blobName, perm="r") {
     permissions.delete = (perm.indexOf("d") >= 0);
 
     const ONE_HOUR_MS = 60 * 60 * 1000;
+    const sharedKeyCredential = createAzureCredential(auth);
     const blobClient = containerClient.getBlockBlobClient(blobName);
     const query = generateBlobSASQueryParameters({
         protocol: SASProtocol.Https,
@@ -63,24 +70,10 @@ function createAzureSAS(auth, containerName, blobName, perm="r") {
 }
 
 async function commitAzureBlocks(auth, containerName, blobName) {
-    const credential = new azureStorageBlob.SharedKeyCredential(
-        auth.accountName,
-        auth.accountKey
-    );
-    const path = encodeURIComponent(`${containerName}/${blobName}`);
-    const url = `https://${auth.accountName}.blob.core.windows.net/${path}`;
-    const blobURL = new azureStorageBlob.BlockBlobURL(
-        url,
-        azureStorageBlob.BlockBlobURL.newPipeline(credential)
-    );
-    const blockList = await blobURL.getBlockList(
-        azureStorageBlob.Aborter.none,
-        "uncommitted"
-    );
-    await blobURL.commitBlockList(
-        azureStorageBlob.Aborter.none,
-        blockList.uncommittedBlocks.map(x => x.name)
-    );
+    const containerClient = createAzureContainerClient(auth, containerName);
+    const blobClient = containerClient.getBlockBlobClient(blobName);
+    const blockList = await blobClient.getBlockList("uncommitted");
+    await blobClient.commitBlockList(blockList.uncommittedBlocks.map(x => x.name));
 }
 
 async function resolveLocation(value, options) {
@@ -94,7 +87,7 @@ async function resolveLocation(value, options) {
         const sasUrl = createAzureSAS(
             options.azureAuth,
             url.host,
-            url.path.substring(1), // skip the "/" prefix
+            url.pathname.substring(1), // skip the "/" prefix
             options.writable ? "cw" : "r"
         );
         if (numParts > 1) {
@@ -312,7 +305,7 @@ async function main() {
 
             console.log("Commit uncommitted blocks");
             const url = new URL(params.target);
-            await commitAzureBlocks(params.azureAuth, url.host, url.path.substring(1));
+            await commitAzureBlocks(params.azureAuth, url.host, url.pathname.substring(1));
         } else {
             throw Error("Transfer is not supported");
         }
