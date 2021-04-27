@@ -15,7 +15,6 @@
 const filterObject = require("filter-obj");
 const fs = require("fs").promises;
 const { R_OK } = require("fs").constants;
-const path = require("path");
 const { pathToFileURL } = require("url");
 const yargs = require("yargs");
 const {
