@@ -140,11 +140,15 @@ async function main() {
                     describe: "File, URL, or azure://container/path/to/blob to send content to",
                     type: "string"
                 })
+                .option("partSize", {
+                    describe: "Preferred part size",
+                    type: "number"
+                })
                 .option("minPartSize", {
                     alias: "min",
                     describe: "Minimum part size",
                     type: "number",
-                    default: 0
+                    default: 1
                 })
                 .option("maxPartSize", {
                     alias: "max",
@@ -202,7 +206,7 @@ async function main() {
                     type: "boolean",
                     default: false
                 })
-                .option("concurrency", {
+                .option("maxConcurrent", {
                     describe: "Maximum concurrency for upload and download",
                     type: "number",
                     default: 1
@@ -300,7 +304,9 @@ async function main() {
             });
         } else if (source.file && target.urls) {
             await uploadAEMMultipartFile(source.file, target, {
-                ...retryOptions
+                ...retryOptions,
+                partSize: params.partSize,
+                maxConcurrent: params.maxConcurrent || 1
             });
 
             console.log("Commit uncommitted blocks");

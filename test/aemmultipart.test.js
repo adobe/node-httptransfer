@@ -34,7 +34,7 @@ describe('multipart', function () {
             try {
                 await uploadAEMMultipartFile('test-transfer-file-1.dat');
             } catch (e) {
-                assert.equal(e.message, 'target not provided');
+                assert.strictEqual(e.message, 'target not provided');
             }
 
             try {
@@ -49,7 +49,7 @@ describe('multipart', function () {
             try {
                 await uploadAEMMultipartFile('test-transfer-file-2.dat', {});
             } catch (e) {
-                assert.equal(e.message, 'invalid number of target urls');
+                assert.strictEqual(e.message, 'invalid number of target urls');
             }
 
             try {
@@ -68,7 +68,7 @@ describe('multipart', function () {
                     ]
                 });
             } catch (e) {
-                assert.equal(e.message, 'maxPartSize not provided');
+                assert.strictEqual(e.message, 'maxPartSize not provided');
             }
 
             try {
@@ -194,7 +194,7 @@ describe('multipart', function () {
                 });
                 assert.fail('expected to fail');
             } catch (e) {
-                assert.ok(e.message.includes('too large to upload'));
+                assert.ok(e.message.includes('Too large to upload'));
             }
 
             try {
@@ -351,34 +351,6 @@ describe('multipart', function () {
 
             try {
                 await fs.unlink('test-transfer-file-18.dat');
-            } catch (e) { // ignore cleanup failures
-                console.log(e);
-            }
-        });
-        it('method-post', async function () {
-            await fs.writeFile('test-transfer-file-19.dat', 'hello world 123', 'utf8');
-
-            nock('http://test-method-post')
-                .matchHeader('content-length', 8)
-                .post('/path/to/file-1.ext', 'hello wo')
-                .reply(201);
-            nock('http://test-method-post')
-                .matchHeader('content-length', 7)
-                .post('/path/to/file-2.ext', 'rld 123')
-                .reply(201);
-
-            await uploadAEMMultipartFile('test-transfer-file-19.dat', {
-                urls: [
-                    'http://test-method-post/path/to/file-1.ext',
-                    'http://test-method-post/path/to/file-2.ext'
-                ],
-                maxPartSize: 8,
-            }, {
-                method: 'POST'
-            });
-
-            try {
-                await fs.unlink('test-transfer-file-19.dat');
             } catch (e) { // ignore cleanup failures
                 console.log(e);
             }
