@@ -20,21 +20,20 @@ async function main() {
     aemUpload.on("fileprogress", ({ fileName, fileSize, transferred }) => console.log(`Progress ${fileName}, ${transferred}/${fileSize} bytes`));
     aemUpload.on("fileend", ({ fileName, fileSize }) => console.log(`Completed ${fileName}, ${fileSize} bytes`));
     await aemUpload.uploadFiles({
-        url: "http://localhost:4502/content/dam/bulkupload4",
         uploadFiles: [{
-            fileName: "simon-fitall-tvleqH3p1os-unsplash.jpg",
+            fileUrl: "http://localhost:4502/content/dam/bulkupload4/simon-fitall-tvleqH3p1os-unsplash.jpg",
             fileSize: 11806152,
             filePath: "/Users/bmanen/Pictures/unsplash/simon-fitall-tvleqH3p1os-unsplash.jpg"
         }, {
-            fileName: "sid-ramirez-xF2HkuitGDY-unsplash.jpg",
+            fileUrl: "http://localhost:4502/content/dam/bulkupload4/sid-ramirez-xF2HkuitGDY-unsplash.jpg",
             fileSize: 3253102,
             filePath: "/Users/bmanen/Pictures/unsplash/sid-ramirez-xF2HkuitGDY-unsplash.jpg"
         }, {
-            fileName: "shawnn-tan-9ZidPkO9qv0-unsplash.jpg",
+            fileUrl: "http://localhost:4502/content/dam/bulkupload4/shawnn-tan-9ZidPkO9qv0-unsplash.jpg",
             fileSize: 1892021,
             filePath: "/Users/bmanen/Pictures/unsplash/shawnn-tan-9ZidPkO9qv0-unsplash.jpg"
         }, {
-            fileName: "alexunder-hess-fXaruvd6Oio-unsplash.jpg",
+            fileUrl: "http://localhost:4502/content/dam/bulkupload4/alexunder-hess-fXaruvd6Oio-unsplash.jpg",
             fileSize: 683019,
             filePath: "/Users/bmanen/Pictures/unsplash/alexunder-hess-fXaruvd6Oio-unsplash.jpg"
         }], 
