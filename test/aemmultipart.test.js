@@ -229,6 +229,8 @@ describe('multipart', function () {
                     'http://test-status-201/path/to/file-9.ext',
                     'http://test-status-201/path/to/file-10.ext',
                 ]
+            }, {
+                partSize: 8
             });
 
             try {
