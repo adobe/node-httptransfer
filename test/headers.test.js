@@ -15,16 +15,91 @@
 'use strict';
 
 const assert = require('assert');
-const { parseResourceHeaders, getResourceHeaders } = require('../lib/headers');
+const { 
+    parseResourceHeaders, getResourceHeaders, 
+    getLastModified, getETag, getContentRange, 
+    getContentLength 
+} = require('../lib/headers');
 const nock = require('nock');
 
-function parse(headers) {
-    return parseResourceHeaders({
+function createHeadersMock(headers) {
+    return {
         get: name => headers[name]
-    });
+    };
+}
+
+function parse(headers) {
+    return parseResourceHeaders(createHeadersMock(headers));
 }
 
 describe('headers', function() {
+    describe('parsers', function() {
+        it("last-modified-none", function() {
+            const actual = getLastModified(createHeadersMock({}));
+            assert.strictEqual(actual, undefined);
+        });
+        it("last-modified", function() {
+            const actual = getLastModified(createHeadersMock({
+                "last-modified": "Wed, 21 Oct 2015 07:28:00 GMT"
+            }));
+            assert.strictEqual(actual, 1445412480000);
+        });
+        it("last-modified-invalid", function() {
+            const actual = getLastModified(createHeadersMock({
+                "last-modified": "invalid date time"
+            }));
+            assert.strictEqual(actual, undefined);
+        });
+        it("etag-none", function() {
+            const actual = getETag(createHeadersMock({}));
+            assert.strictEqual(actual, undefined);
+        });
+        it("etag", function() {
+            const actual = getETag(createHeadersMock({
+                "etag": "\"33a64df551425fcc55e4d42a148795d9f25f89d4\""
+            }));
+            assert.strictEqual(actual, "\"33a64df551425fcc55e4d42a148795d9f25f89d4\"");
+        });
+        it("weak-etag", function() {
+            const actual = getETag(createHeadersMock({
+                "etag": "W/\"0815\""
+            }));
+            assert.strictEqual(actual, undefined);
+        });
+        it("content-range-none", function() {
+            const actual = getETag(createHeadersMock({}));
+            assert.strictEqual(actual, undefined);
+        });
+        it("content-range", function() {
+            const actual = getContentRange(createHeadersMock({
+                "content-range": "bytes 200-1000/67589"
+            }));
+            assert.deepStrictEqual(actual, {
+                unit: "bytes",
+                start: 200,
+                end: 1000,
+                size: 67589
+            });
+        });
+        it("content-range-invalid", function() {
+            const actual = getContentRange(createHeadersMock({
+                "content-range": "invalid-range"
+            }));
+            assert.strictEqual(actual, null);
+        });
+        it("content-length", function() {
+            const actual = getContentLength(createHeadersMock({
+                "content-length": "200"
+            }));
+            assert.strictEqual(actual, 200);
+        });
+        it("content-length-invalid", function() {
+            const actual = getContentLength(createHeadersMock({
+                "content-length": "invalid-length"
+            }));
+            assert.strictEqual(actual, undefined);
+        });
+    });
     describe('parseResourceHeaders', function() {
         it('content-disposition-none', function() {
             const result = parse({});
