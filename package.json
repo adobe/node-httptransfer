@@ -14,7 +14,7 @@
   "dependencies": {
     "axios": "^0.21.1",
     "content-disposition": "^0.5.3",
-    "content-range": "^1.1.0",
+    "content-range": "^2.0.0",
     "content-type": "^1.0.4",
     "deep-equal": "^2.0.5",
     "drange": "^2.0.1",
