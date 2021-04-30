@@ -14,77 +14,86 @@
 
 const filterObject = require("filter-obj");
 const fs = require("fs").promises;
-const path = require("path");
-const URL = require("url");
+const { R_OK } = require("fs").constants;
+const { pathToFileURL } = require("url");
 const yargs = require("yargs");
-const azureStorageBlob = require("@azure/storage-blob");
-const leftPad = require("left-pad");
+const {
+    BlobServiceClient,
+    StorageSharedKeyCredential,
+    generateBlobSASQueryParameters,
+    SASProtocol,
+    BlobSASPermissions
+} = require("@azure/storage-blob");
 const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
     transferStream,
     getResourceHeaders
 } = require("../index.js");
 
-function createAzureSAS(auth, containerName, blobName, permissions) {
+function createAzureCredential(auth) {
     if (!auth || !auth.accountName || !auth.accountKey) {
         throw Error("Azure Storage credentials not provided");
     }
-    const credential = new azureStorageBlob.SharedKeyCredential(
-        auth.accountName,
-        auth.accountKey
+    return new StorageSharedKeyCredential(auth.accountName, auth.accountKey);
+}
+
+function createAzureContainerClient(auth, containerName) {
+    const sharedKeyCredential = createAzureCredential(auth);
+    const blobServiceClient = new BlobServiceClient(
+        `https://${auth.accountName}.blob.core.windows.net`,
+        sharedKeyCredential
     );
+    return blobServiceClient.getContainerClient(containerName);
+}
+
+function createAzureSAS(auth, containerName, blobName, perm="r") {
+    const containerClient = createAzureContainerClient(auth, containerName);
+
+    const permissions = new BlobSASPermissions();
+    permissions.read = (perm.indexOf("r") >= 0);
+    permissions.write = (perm.indexOf("w") >= 0);
+    permissions.delete = (perm.indexOf("d") >= 0);
+
     const ONE_HOUR_MS = 60 * 60 * 1000;
-    const query = azureStorageBlob.generateBlobSASQueryParameters({
-        protocol: azureStorageBlob.SASProtocol.HTTPS,
-        expiryTime: new Date(Date.now() + ONE_HOUR_MS),
+    const sharedKeyCredential = createAzureCredential(auth);
+    const blobClient = containerClient.getBlockBlobClient(blobName);
+    const query = generateBlobSASQueryParameters({
+        protocol: SASProtocol.Https,
+        expiresOn: new Date(Date.now() + ONE_HOUR_MS),
         containerName,
         blobName,
         permissions
-    }, credential).toString();
-    const path = encodeURIComponent(`${containerName}/${blobName}`);
-    return `https://${auth.accountName}.blob.core.windows.net/${path}?${query}`;
+    }, sharedKeyCredential).toString();
+
+    return `${blobClient.url}?${query}`;
 }
 
 async function commitAzureBlocks(auth, containerName, blobName) {
-    const credential = new azureStorageBlob.SharedKeyCredential(
-        auth.accountName,
-        auth.accountKey
-    );
-    const path = encodeURIComponent(`${containerName}/${blobName}`);
-    const url = `https://${auth.accountName}.blob.core.windows.net/${path}`;
-    const blobURL = new azureStorageBlob.BlockBlobURL(
-        url,
-        azureStorageBlob.BlockBlobURL.newPipeline(credential)
-    );
-    const blockList = await blobURL.getBlockList(
-        azureStorageBlob.Aborter.none,
-        "uncommitted"
-    );
-    await blobURL.commitBlockList(
-        azureStorageBlob.Aborter.none,
-        blockList.uncommittedBlocks.map(x => x.name)
-    );
+    const containerClient = createAzureContainerClient(auth, containerName);
+    const blobClient = containerClient.getBlockBlobClient(blobName);
+    const blockList = await blobClient.getBlockList("uncommitted");
+    await blobClient.commitBlockList(blockList.uncommittedBlocks.map(x => x.name));
 }
 
 async function resolveLocation(value, options) {
-    const url = URL.parse(value);
-    if (url.protocol === "https:" || url.protocol === "http:") {
+    if (value.startsWith("https:") || value.startsWith("http:")) {
         return {
-            url: value
+            url: new URL(value)
         };
-    } else if (url.protocol === "azure:") {
+    } else if (value.startsWith("azure:")) {
         const numParts = options.numParts || Math.ceil(options.size / options.maxPartSize);
+        const url = new URL(value);
         const sasUrl = createAzureSAS(
             options.azureAuth,
             url.host,
-            url.path.substring(1), // skip the "/" prefix
+            url.pathname.substring(1), // skip the "/" prefix
             options.writable ? "cw" : "r"
         );
         if (numParts > 1) {
             const urls = [];
             for (let i = 0; i < numParts; ++i) {
                 // each block id must be the same size
-                const blockId = Buffer.from(leftPad(i, 10, 0)).toString("base64");
+                const blockId = Buffer.from(String(i).padStart(10, "0")).toString("base64");
                 urls.push(`${sasUrl}&comp=block&blockid=${blockId}`);
             }
             return {
@@ -100,20 +109,18 @@ async function resolveLocation(value, options) {
                 }
             };
         }
-    } else if (url.protocol === "file:" || url.protocol === null) {
+    } else {
+        const url = pathToFileURL(value);
         if (url.host) {
             throw Error(`File URIs with a host component are not supported: ${value}`);
         }
-        const urlPath = decodeURIComponent(url.path);
-        const filePath = path.resolve(process.cwd(), urlPath);
+        const filePath = decodeURIComponent(url.pathname);
         if (!options.writable) {
-            await fs.access(filePath, fs.constants.R_OK);
+            await fs.access(filePath, R_OK);
         }
         return {
             file: filePath
         };
-    } else {
-        throw Error(`Unsupported source/target: ${value}`);
     }
 }
 
@@ -121,7 +128,8 @@ async function main() {
     // parse command line
     const params = yargs
         .strict()
-        .command("* <source> <target>", "Testbed for node-httptransfer", yargs =>
+        .scriptName("npm run testbed --")
+        .command("$0 <source> <target>", "Testbed for node-httptransfer", yargs =>
             yargs
                 .positional("source", {
                     describe: "File, URL, or azure://container/path/to/blob to retrieve content from",
@@ -131,11 +139,15 @@ async function main() {
                     describe: "File, URL, or azure://container/path/to/blob to send content to",
                     type: "string"
                 })
+                .option("partSize", {
+                    describe: "Preferred part size",
+                    type: "number"
+                })
                 .option("minPartSize", {
                     alias: "min",
                     describe: "Minimum part size",
                     type: "number",
-                    default: 0
+                    default: 1
                 })
                 .option("maxPartSize", {
                     alias: "max",
@@ -180,12 +192,26 @@ async function main() {
                     type: "number",
                     default: 100
                 })
+                .option("maxConcurrent", {
+                    describe: "Maximum concurrency for upload and download",
+                    type: "number",
+                    default: 1
+                })
                 .example("$0 azure://container/source.txt blob.txt", "Download path/to/source.txt in container to blob.txt")
                 .example("$0 blob.txt azure://container/target.txt", "Upload blob.txt to path/to/target.txt in container")
                 .example("$0 azure://container/source.txt azure://container/target.txt", "Transfer source.txt to target.txt in container")
         )
         .wrap(yargs.terminalWidth())
         .help()
+        .fail((msg, err, yargs) => {
+            if (err) {
+                throw err;
+            }
+            console.error(yargs.help());
+            console.error();
+            console.error(msg);
+            process.exit(0);
+        })
         .argv;
 
     // capture azure storage credentials
@@ -245,12 +271,14 @@ async function main() {
         });
     } else if (source.file && target.urls) {
         await uploadAEMMultipartFile(source.file, target, {
-            ...retryOptions
+            ...retryOptions,
+            partSize: params.partSize,
+            maxConcurrent: params.maxConcurrent || 1
         });
 
         console.log("Commit uncommitted blocks");
-        const url = URL.parse(params.target);
-        await commitAzureBlocks(params.azureAuth, url.host, url.path.substring(1));
+        const url = new URL(params.target);
+        await commitAzureBlocks(params.azureAuth, url.host, url.pathname.substring(1));
     } else {
         throw Error("Transfer is not supported");
     }
@@ -258,5 +286,5 @@ async function main() {
 
 main()
     .catch(err => {
-        console.error(err.message || err);
+        console.error(err);
     });
