@@ -15,7 +15,8 @@
 const filterObject = require("filter-obj");
 const fs = require("fs").promises;
 const { R_OK } = require("fs").constants;
-const { pathToFileURL } = require("url");
+const { resolve: localPathResolve } = require("path");
+const { resolve: urlPathResolve } = require("path").posix;
 const yargs = require("yargs");
 const {
     BlobServiceClient,
@@ -27,7 +28,8 @@ const {
 const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
     transferStream,
-    getResourceHeaders
+    getResourceHeaders,
+    AEMUpload
 } = require("../index.js");
 
 function createAzureCredential(auth) {
@@ -110,18 +112,44 @@ async function resolveLocation(value, options) {
             };
         }
     } else {
-        const url = pathToFileURL(value);
-        if (url.host) {
-            throw Error(`File URIs with a host component are not supported: ${value}`);
-        }
-        const filePath = decodeURIComponent(url.pathname);
         if (!options.writable) {
-            await fs.access(filePath, R_OK);
+            await fs.access(value, R_OK);
         }
         return {
-            file: filePath
+            file: value
         };
     }
+}
+
+/**
+ * Create bulk AEM upload options
+ * 
+ * @param {*} params Command line parameters
+ * @returns {AEMUploadOptions} AEM upload options
+ */
+async function createAEMUploadOptions(localFolder, aemFolderUrl, params) {
+    const uploadFiles = [];
+
+    const dir = await fs.opendir(localFolder);
+    for await (const dirent of dir) {
+        if (dirent.isFile()) {
+            const filePath = localPathResolve(localFolder, dirent.name);
+            const { size: fileSize } = await fs.stat(filePath); 
+            const fileUrl = new URL(urlPathResolve(aemFolderUrl.pathname, dirent.name), aemFolderUrl);
+            uploadFiles.push({ fileUrl, fileSize, filePath });
+        }
+    }
+
+    const authorization = "Basic " + Buffer.from(`${params.aemAuth.username}:${params.aemAuth.password}`).toString("base64");
+    return {
+        uploadFiles,
+        headers: {
+            authorization
+        },
+        concurrent: true,
+        maxConcurrent: params.maxConcurrent,
+        preferredPartSize: params.partSize
+    };
 }
 
 async function main() {
@@ -172,6 +200,18 @@ async function main() {
                     describe: "Azure storage account name. Environment variable: AZURE_STORAGE_ACCOUNT",
                     type: "string"
                 })
+                .option("aem", {
+                    describe: "Flag to indicate that the source or target URL is an AEM server",
+                    type: "boolean"
+                })
+                .option("aem-username", {
+                    describe: "AEM Username. Environment variable: AEM_USERNAME",
+                    type: "string"
+                })
+                .option("aem-password", {
+                    describe: "AEM Password. Environment variable: AEM_PASSWORD",
+                    type: "string"
+                })
                 .option("retryEnabled", {
                     describe: "Enable or disable retry on failure",
                     type: "boolean",
@@ -200,6 +240,7 @@ async function main() {
                 .example("$0 azure://container/source.txt blob.txt", "Download path/to/source.txt in container to blob.txt")
                 .example("$0 blob.txt azure://container/target.txt", "Upload blob.txt to path/to/target.txt in container")
                 .example("$0 azure://container/source.txt azure://container/target.txt", "Transfer source.txt to target.txt in container")
+                .example("$0 --aem ./folder https://localhost:4502/content/dam/folder", "Upload the contents of ./folder to AEM")
         )
         .wrap(yargs.terminalWidth())
         .help()
@@ -218,6 +259,12 @@ async function main() {
     params.azureAuth = {
         accountKey: params["account-key"] || process.env.AZURE_STORAGE_KEY,
         accountName: params["account-name"] || process.env.AZURE_STORAGE_ACCOUNT
+    };
+
+    // capture aem credentials
+    params.aemAuth = {
+        username: params["aem-username"] || process.env.AEM_USERNAME,
+        password: params["aem-password"] || process.env.AEM_PASSWORD
     };
 
     // capture retry options
@@ -241,18 +288,33 @@ async function main() {
         size = stats.size;
     }
 
-    console.log(`Source: ${source.url || source.file}, ${size} bytes`);
+    console.log(`Source: ${source.aem || source.url || source.file}, ${size} bytes`);
 
     // resolve target
     const target = await resolveLocation(params.target, { ...params, writable: true, size });
     if (target.urls) {
         console.log(`Target: ${target.urls.length} parts, ${target.urls[0]}`);
     } else {
-        console.log(`Target: ${target.url || target.file}`);
+        console.log(`Target: ${target.aem || target.url || target.file}`);
     }
 
     // transfer
-    if (source.file && target.url) {
+    if (params.aem && source.file && target.url) {
+        const options = await createAEMUploadOptions(source.file, target.url, params);
+        const upload = new AEMUpload();
+        upload.on("filestart", ({ fileName, fileSize }) => {
+            console.log(`${fileName}: Start transfer ${fileSize} bytes`)
+        });
+        upload.on("fileprogress", ({ fileName, fileSize, transferred }) => {
+            console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
+        });
+        upload.on("fileend", ({ fileName, fileSize }) => {
+            console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
+        });
+        await upload.uploadFiles(options);
+    } else if (params.aem) {
+        throw Error("Transfer not supported");
+    } else if (source.file && target.url) {
         await uploadFile(source.file, target.url, {
             headers: target.headers,
             ...retryOptions

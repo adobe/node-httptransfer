@@ -16,10 +16,12 @@ const { downloadStream, uploadStream, transferStream } = require('./lib/stream')
 const { downloadFile, uploadFile } = require('./lib/file');
 const { uploadAEMMultipartFile } = require('./lib/aemmultipart');
 const { getResourceHeaders } = require('./lib/headers');
+const { AEMUpload } = require("./lib/aemupload");
 
 module.exports = {
     downloadStream, uploadStream, transferStream,
     downloadFile, uploadFile,
     uploadAEMMultipartFile,
-    getResourceHeaders
+    getResourceHeaders,
+    AEMUpload
 };
