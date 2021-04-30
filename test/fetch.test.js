@@ -86,6 +86,20 @@ describe('fetch', function() {
             });
             assert.deepStrictEqual(result, expectedResponse);
         });
+        it('empty-form', async function() {
+            const expectedResponse = {
+                ok: 123
+            };
     
+            nock('http://post-form-test')
+                .post('/path', '')
+                .reply(200, JSON.stringify(expectedResponse), {
+                    'content-type': 'application/json'
+                });
+    
+            const form = new URLSearchParams();    
+            const result = await postForm("http://post-form-test/path", form);
+            assert.deepStrictEqual(result, expectedResponse);
+        });
     });
 });
