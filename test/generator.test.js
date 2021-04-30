@@ -148,6 +148,24 @@ describe('generator', function() {
             });
         });
         describe('waitResult', function() {
+            it('empty-ordered', async function() {
+                try {
+                    const pending = [];
+                    await waitResult(pending, true);  
+                    assert.ok(false, 'waitResult expected to reject empty pending');
+                } catch (e) {
+                    assert.strictEqual(e.message, 'Invalid state: pending is empty');
+                }
+            });
+            it('empty-unordered', async function() {
+                try {
+                    const pending = [];
+                    await waitResult(pending, false);  
+                    assert.ok(false, 'waitResult expected to reject empty pending');
+                } catch (e) {
+                    assert.strictEqual(e.message, 'Invalid state: pending is empty');
+                }
+            });
             it('ordered', async function() {
                 const pending = [
                     sleepReturnValue(200, 1),
