@@ -303,7 +303,7 @@ async function main() {
         const options = await createAEMUploadOptions(source.file, target.url, params);
         const upload = new AEMUpload();
         upload.on("filestart", ({ fileName, fileSize }) => {
-            console.log(`${fileName}: Start transfer ${fileSize} bytes`)
+            console.log(`${fileName}: Start transfer ${fileSize} bytes`);
         });
         upload.on("fileprogress", ({ fileName, fileSize, transferred }) => {
             console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
