@@ -50,9 +50,9 @@ function createAzureSAS(auth, containerName, blobName, perm="r") {
     const containerClient = createAzureContainerClient(auth, containerName);
 
     const permissions = new BlobSASPermissions();
-    permissions.read = (perm.indexOf("r") >= 0);
-    permissions.write = (perm.indexOf("w") >= 0);
-    permissions.delete = (perm.indexOf("d") >= 0);
+    permissions.read = perm.includes("r");
+    permissions.write = perm.includes("w");
+    permissions.delete = perm.includes("d");
 
     const ONE_HOUR_MS = 60 * 60 * 1000;
     const sharedKeyCredential = createAzureCredential(auth);
