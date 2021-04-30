@@ -71,4 +71,20 @@ describe("util", function() {
             console.log(e);
         }
     });
+
+    it('file-protocol-string', function() {
+        assert.ok(util.isFileProtocol('file:///path/to/file'));
+    });
+    it('file-protocol-url', function() {
+        assert.ok(util.isFileProtocol(new URL('file:///path/to/file')));
+    });
+    it('file-protocol-undefined', function() {
+        assert.ok(!util.isFileProtocol());
+    });
+    it('file-protocol-string-http', function() {
+        assert.ok(!util.isFileProtocol('http://www.host.com'));
+    });
+    it('file-protocol-url-http', function() {
+        assert.ok(!util.isFileProtocol(new URL('http://www.host.com')));
+    });
 });
