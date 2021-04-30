@@ -396,7 +396,7 @@ describe('generator', function() {
             assert.deepStrictEqual(result, [ 1, 2, 3 ]);
         });
     });
-    describe.only('pipeline', function() {
+    describe('pipeline', function() {
         it('empty-pipeline', async function() {
             const pipeline = new Pipeline();
             const result = await toArray(pipeline.execute([ 1, 2, 3, 4, 5 ]));
