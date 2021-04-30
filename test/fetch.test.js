@@ -17,6 +17,7 @@
 const assert = require('assert');
 const nock = require('nock');
 const { postForm } = require('../lib/fetch');
+const tough = require('tough-cookie');
 
 describe('fetch', function() {
     afterEach(async function() {
@@ -38,7 +39,8 @@ describe('fetch', function() {
             const form = new URLSearchParams();
             form.append("name", "value");
     
-            const result = await postForm("http://post-form-test/path", form);
+            const cookieJar = new tough.CookieJar();
+            const result = await postForm("http://post-form-test/path", form, cookieJar);
             assert.deepStrictEqual(result, expectedResponse);
         });
         it('timeout-option', async function() {
@@ -53,7 +55,8 @@ describe('fetch', function() {
             form.append("name", "value");
   
             try {
-                await postForm("http://post-form-test/path", form, {
+                const cookieJar = new tough.CookieJar();
+                await postForm("http://post-form-test/path", form, cookieJar, {
                     timeout: 100
                 });
                 assert.ok(false, 'Post form expected to fail with timeout error');
@@ -79,12 +82,93 @@ describe('fetch', function() {
             const form = new URLSearchParams();
             form.append("name", "value");
     
-            const result = await postForm("http://post-form-test/path", form, {
+            const cookieJar = new tough.CookieJar();
+            const result = await postForm("http://post-form-test/path", form, cookieJar, {
                 headers: {
                     authorization: 'Basic 123'
                 }
             });
             assert.deepStrictEqual(result, expectedResponse);
+        });
+        it('cookie-test', async function() {
+            const cookieJar = new tough.CookieJar();
+            const form = new URLSearchParams();
+            form.append("name", "value");
+
+            // invoke first post, make sure the cookie is set
+            nock('http://post-form-test')
+                .post('/path', 'name=value')
+                .reply(200, JSON.stringify({}), {
+                    'content-type': 'application/json',
+                    'set-cookie': 'id=a3fWa; Max-Age=2592000'
+                });
+            const result1 = await postForm("http://post-form-test/path", form, cookieJar);
+            assert.deepStrictEqual(result1, {});
+            for (const cookie of await cookieJar.getCookies('http://post-form-test')) {
+                assert.strictEqual(cookie.domain, 'post-form-test');
+                assert.strictEqual(cookie.key, 'id');
+                assert.strictEqual(cookie.value, 'a3fWa');
+            }
+
+            // invoke second post, make sure the cookie is returned to the server
+            nock('http://post-form-test', {
+                reqheaders: {
+                    cookie: 'id=a3fWa'
+                }
+            })
+                .post('/path', 'name=value')
+                .reply(200, JSON.stringify({}), {
+                    'content-type': 'application/json'
+                });
+            const result2 = await postForm("http://post-form-test/path", form, cookieJar);
+            assert.deepStrictEqual(result2, {});
+        });
+        it('cookie-auth-test', async function() {
+            // make sure the authorization header is passed through together with the cookie
+            const cookieJar = new tough.CookieJar();
+            const form = new URLSearchParams();
+            form.append("name", "value");
+
+            // invoke first post, make sure the cookie is set
+            nock('http://post-form-test', {
+                reqheaders: {
+                    authorization: 'Basic 123',
+                }
+            })
+                .post('/path', 'name=value')
+                .reply(200, JSON.stringify({}), {
+                    'content-type': 'application/json',
+                    'set-cookie': 'id=a3fWa; Max-Age=2592000'
+                });
+            const result1 = await postForm("http://post-form-test/path", form, cookieJar, {
+                headers: {
+                    authorization: 'Basic 123'
+                }
+            });
+            assert.deepStrictEqual(result1, {});
+            for (const cookie of await cookieJar.getCookies('http://post-form-test')) {
+                assert.strictEqual(cookie.domain, 'post-form-test');
+                assert.strictEqual(cookie.key, 'id');
+                assert.strictEqual(cookie.value, 'a3fWa');
+            }
+
+            // invoke second post, make sure the cookie is returned to the server
+            nock('http://post-form-test', {
+                reqheaders: {
+                    authorization: 'Basic 123',
+                    cookie: 'id=a3fWa'
+                }
+            })
+                .post('/path', 'name=value')
+                .reply(200, JSON.stringify({}), {
+                    'content-type': 'application/json'
+                });
+            const result2 = await postForm("http://post-form-test/path", form, cookieJar, {
+                headers: {
+                    authorization: 'Basic 123'
+                }
+            });
+            assert.deepStrictEqual(result2, {});
         });
     
     });
