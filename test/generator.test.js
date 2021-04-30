@@ -22,7 +22,7 @@ const mapconcurrent_rewire = rewire('../lib/generator/mapconcurrent');
 const checkAddBatch = mapconcurrent_rewire.__get__('checkAddBatch');
 const executeBatch = mapconcurrent_rewire.__get__('executeBatch');
 const waitResult = mapconcurrent_rewire.__get__('waitResult');
-const { Pipeline } = require('../lib/generator/pipeline');
+const { Pipeline, executePipeline } = require('../lib/generator/pipeline');
 const { promisify } = require('util');
 
 const sleep = promisify(setTimeout);
@@ -396,7 +396,7 @@ describe('generator', function() {
             assert.deepStrictEqual(result, [ 1, 2, 3 ]);
         });
     });
-    describe('pipeline', function() {
+    describe.only('pipeline', function() {
         it('empty-pipeline', async function() {
             const pipeline = new Pipeline();
             const result = await toArray(pipeline.execute([ 1, 2, 3, 4, 5 ]));
@@ -446,6 +446,81 @@ describe('generator', function() {
             );
             const result = await toArray(pipeline.execute([ 1, 2, 3, 4, 5 ]));
             assert.deepStrictEqual(result, [ 3, 2, 1, 5, 4 ]);    
+        });
+        describe('execute', function() {
+            it('accumulate-empty', async function() {
+                const pipeline = new Pipeline({
+                    execute: async function*(items) {
+                        for await (const item of items) {
+                            yield item;
+                        }
+                    }
+                });
+    
+                const result = await executePipeline(pipeline, [ ]);
+                assert.strictEqual(result, undefined);
+            });
+            it('accumulate-empty-initialvalue', async function() {
+                const pipeline = new Pipeline({
+                    execute: async function*(items) {
+                        for await (const item of items) {
+                            yield item;
+                        }
+                    }
+                });
+    
+                const result = await executePipeline(pipeline, [ ], undefined, 100);
+                assert.strictEqual(result, 100);
+            });
+            it('accumulate-multi', async function() {
+                const pipeline = new Pipeline({
+                    execute: async function*(items) {
+                        for await (const item of items) {
+                            yield item;
+                        }
+                    }
+                });
+    
+                const result = await executePipeline(pipeline, [ 1, 2, 3 ]);
+                assert.strictEqual(result, 1);
+            });
+            it('accumulate-multi-initialvalue', async function() {
+                const pipeline = new Pipeline({
+                    execute: async function*(items) {
+                        for await (const item of items) {
+                            yield item;
+                        }
+                    }
+                });
+    
+                const result = await executePipeline(pipeline, [ 1, 2, 3 ], undefined, 100);
+                assert.strictEqual(result, 100);
+            });
+            it('accumulate-multi-func', async function() {
+                const pipeline = new Pipeline({
+                    execute: async function*(items) {
+                        for await (const item of items) {
+                            yield item;
+                        }
+                    }
+                });
+    
+                const result = await executePipeline(pipeline, [ 1, 2, 3 ], (accum, value) => accum + value);
+                assert.strictEqual(result, 6);
+            });
+            it('accumulate-multi-func-initialvalue', async function() {
+                const pipeline = new Pipeline({
+                    execute: async function*(items) {
+                        for await (const item of items) {
+                            yield item;
+                        }
+                    }
+                });
+    
+                const result = await executePipeline(pipeline, [ 1, 2, 3 ], (accum, value) => accum + value, 100);
+                assert.strictEqual(result, 106);
+            });
+    
         });
     });
 });
