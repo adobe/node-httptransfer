@@ -53,6 +53,7 @@
     "build": "./node_modules/.bin/rimraf dist && ./node_modules/.bin/babel ./lib --out-dir dist",
     "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "semantic-release": "semantic-release",
-    "testbed": "node testbed/index.js"
+    "testbed": "node testbed/index.js",
+    "prepublishOnly": "npm run build"
   }
 }
