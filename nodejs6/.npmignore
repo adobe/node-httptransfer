@@ -1,0 +1,25 @@
+.vscode
+.serverless
+coverage
+.nyc_output
+test/
+.circleci
+.travis.yml
+Jenkinsfile
+.eslintrc.js
+.eslintignore
+.babelrc
+.github/
+stryker.conf.js
+build/
+
+# npm pack leftovers
+*.tgz
+
+# git stuff              
+.github/CONTRIBUTING.md         
+.github/ISSUE_TEMPLATE.md       
+.github/PULL_REQUEST_TEMPLATE.md
+
+# pipeline release config
+.releaserc.json
