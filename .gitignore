@@ -65,7 +65,9 @@ typings/
 
 # AIO
 .aio
-dist/
+
+# ECMAScript 2015 generated code
+es2015/
 
 # Important Documentation
 !.github/**

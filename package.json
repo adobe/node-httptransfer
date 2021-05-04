@@ -2,7 +2,7 @@
   "name": "@adobe/httptransfer",
   "version": "2.1.1",
   "main": "index.js",
-  "browser": "./dist/exports.js",
+  "browser": "./dist/es2015/exports.js",
   "description": "Efficient File Transfer Module for NodeJS",
   "author": {
     "name": "Adobe Inc."
@@ -50,7 +50,7 @@
     "test": "nyc mocha --recursive --exit",
     "posttest": "eslint ./ && license-checker --summary",
     "beautify": "eslint ./ --fix",
-    "build": "./node_modules/.bin/rimraf dist && ./node_modules/.bin/babel ./lib --out-dir dist",
+    "build-es2015": "./node_modules/.bin/rimraf es2015 && ./node_modules/.bin/babel ./lib --out-dir es2015",
     "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "semantic-release": "semantic-release",
     "testbed": "node testbed/index.js",
