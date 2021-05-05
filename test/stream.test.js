@@ -340,20 +340,25 @@ describe('stream', function () {
             }
         });
         it('201-stream-error', async function () {
-            const replyBody = new stream.PassThrough();
-            nock('http://test-201-stream-error')
-                .put('/path/to/file.ext', 'hello world 123')
-                .reply(201, replyBody);
+            try {
+                const replyBody = new stream.PassThrough();
+                nock('http://test-201-stream-error')
+                    .put('/path/to/file.ext', 'hello world 123')
+                    .reply(201, replyBody);
 
-            // replyBody.end(() => {
-            //     replyBody.emit('error', Error('read failure'));
-            // })
+                // replyBody.end(() => {
+                //     replyBody.emit('error', Error('read failure'));
+                // })
 
-            // successful response is ignored, which means no error is thrown by uploadStream
-            // but the overridden response body is still retrieved
-            testSetResponseBodyOverride("PUT", createErrorReadable(Error('read failure')));
-            const readStream = new StringReadable('hello world 123');
-            await uploadStream(readStream, 'http://test-201-stream-error/path/to/file.ext');
+                testSetResponseBodyOverride("PUT", createErrorReadable(Error('read failure')));
+                const readStream = new StringReadable('hello world 123');
+                await uploadStream(readStream, 'http://test-201-stream-error/path/to/file.ext');
+            } catch (e) {
+                console.log(e.message);
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('read failure'));
+            }
         });
         it('404-stream-error', async function () {
             try {
