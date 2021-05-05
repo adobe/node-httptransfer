@@ -8,6 +8,8 @@ test/
 Jenkinsfile
 .eslintrc.js
 .eslintignore
+.babelrc
+.github/
 stryker.conf.js
 build/
 
