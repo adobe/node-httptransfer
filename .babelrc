@@ -2,13 +2,14 @@
   "presets": [
     ["@babel/env", {
       "targets": {
-        "ie": "9"
-      }
+        "node": "6.10.3"
+      },
+      "useBuiltIns": "entry",
+      "corejs": "3",
+      "modules": false
     }]
   ],
   "plugins": [
-    ["@babel/plugin-transform-runtime", {
-      "regenerator": true
-    }]
+    ["@babel/plugin-transform-modules-commonjs"]
   ]
 }
