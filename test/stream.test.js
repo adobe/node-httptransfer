@@ -353,8 +353,8 @@ describe('stream', function () {
                 testSetResponseBodyOverride("PUT", createErrorReadable(Error('read failure')));
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://test-201-stream-error/path/to/file.ext');
+                assert.fail('failure expected');
             } catch (e) {
-                console.log(e.message);
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('response failed'));
                 assert.ok(e.message.includes('read failure'));

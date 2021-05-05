@@ -20,6 +20,13 @@ const {
     getLastModified, getETag, getContentRange, 
     getContentLength 
 } = require('../lib/headers');
+const { 
+    testSetResponseBodyOverride, 
+    testHasResponseBodyOverrides
+} = require('../lib/fetch');
+const {
+    createErrorReadable
+} = require('./streams');
 const nock = require('nock');
 
 function createHeadersMock(headers) {
@@ -163,6 +170,11 @@ describe('headers', function() {
         });
     });
     describe('getResourceHeaders', function() {
+        afterEach(async function () {
+            assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
+        });
         it('head 404 failure', async function() {
             try {
                 nock('http://test-headers')
@@ -378,6 +390,27 @@ describe('headers', function() {
                 size: 200,
                 filename: 'filename.jpg'
             });
+        });
+        it('headers - stream failure', async function() {
+            try {
+                nock('http://test-headers')
+                    .head('/path/to/file.ext')
+                    .reply(200, '', {
+                        'content-disposition': 'attachment; filename="filename.jpg"',
+                        'content-range': 'bytes 0-0/200',
+                        'content-type': 'image/jpeg'
+                    });
+
+                testSetResponseBodyOverride("HEAD", createErrorReadable(Error('read failure')));
+                await getResourceHeaders('http://test-headers/path/to/file.ext', {
+                    retryEnabled: false
+                });
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('HEAD'));
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('read failure'));
+            }
         });
     });
 });
