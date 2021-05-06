@@ -87,4 +87,9 @@ describe("util", function() {
     it('file-protocol-url-http', function() {
         assert.ok(!util.isFileProtocol(new URL('http://www.host.com')));
     });
+    it('file url to file path', function() {
+        assert.equal(util.fileUrlToFilePath('/test/path'), '/test/path');
+        assert.equal(util.fileUrlToFilePath('file:///test/path'), '/test/path');
+        assert.equal(util.fileUrlToFilePath('file:///C:/test/path'), 'C:/test/path');
+    });
 });
