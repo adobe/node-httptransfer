@@ -29,12 +29,12 @@ describe('AEM Download', function() {
     it('AEM download smoke test', async function() {
         const testFile = Path.join(__dirname, 'file-1.jpg');
         nock('http://test-aem-download-200')
-            .matchHeader('content-range', 'bytes 0-6/12')
+            .matchHeader('range', 'bytes=0-6')
             .get('/path/to/file-1.jpg')
             .reply(200, 'Hello W');
 
         nock('http://test-aem-download-200')
-            .matchHeader('content-range', 'bytes 7-11/12')
+            .matchHeader('range', 'bytes=7-11')
             .get('/path/to/file-1.jpg')
             .reply(200, 'orld!');
 
@@ -79,8 +79,8 @@ describe('AEM Download', function() {
         const fileEventData = {
             fileName: 'file-1.jpg',
             fileSize: 12,
-            targetFolder: '/Users/frisbey/projects/node-httptransfer/test',
-            targetFile: '/Users/frisbey/projects/node-httptransfer/test/file-1.jpg'
+            targetFolder: __dirname,
+            targetFile: testFile
         };
 
         assert.deepEqual(events.filestart[0], fileEventData);
