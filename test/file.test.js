@@ -69,6 +69,16 @@ describe('file', function() {
                 console.log(e);
             }
         });
+        it('status-200-mkdir-failure', async function() {
+            try {
+                await downloadFile('http://test-status-200/path/to/file.ext', path.resolve('./index.js/hello.dat'), {
+                    mkdirs: true
+                });  
+                assert.fail('test is supposed to fail');
+            } catch (e) {
+                assert.ok(e.message.includes('index.js is not a directory'));
+            }
+        });
         it('status-200-truncate-retry', async function() {
             nock('http://test-status-200-truncate-retry')
                 .get('/path/to/file.ext')
