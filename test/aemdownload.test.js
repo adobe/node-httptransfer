@@ -31,12 +31,16 @@ describe('AEM Download', function() {
         nock('http://test-aem-download-200')
             .matchHeader('range', 'bytes=0-6')
             .get('/path/to/file-1.jpg')
-            .reply(200, 'Hello W');
+            .reply(200, 'Hello W', {
+                'Content-Length': 7
+            });
 
         nock('http://test-aem-download-200')
             .matchHeader('range', 'bytes=7-11')
             .get('/path/to/file-1.jpg')
-            .reply(200, 'orld!');
+            .reply(200, 'orld!', {
+                'Content-Length': '5'
+            });
 
         const aemDownload = new AEMDownload();
         const events = {
@@ -71,10 +75,10 @@ describe('AEM Download', function() {
         } catch (e) { // ignore cleanup failures
             console.log(e);
         }
-        assert.equal(fileData.toString(), 'Hello World!');
-        assert.equal(events.filestart.length, 1);
-        assert.equal(events.fileprogress.length, 2);
-        assert.equal(events.fileend.length, 1);
+        assert.strictEqual(fileData.toString(), 'Hello World!');
+        assert.strictEqual(events.filestart.length, 1);
+        assert.strictEqual(events.fileprogress.length, 2);
+        assert.strictEqual(events.fileend.length, 1);
 
         const fileEventData = {
             fileName: 'file-1.jpg',
@@ -83,15 +87,23 @@ describe('AEM Download', function() {
             targetFile: testFile
         };
 
-        assert.deepEqual(events.filestart[0], fileEventData);
-        assert.deepEqual(events.fileprogress[0], {
+        // concurrency might switch the progress events around, so make sure
+        // to use the correct index
+        let transferEventIndex1 = 0;
+        let transferEventIndex2 = 1;
+        if (events.fileprogress[transferEventIndex1].transferred !== 7) {
+            transferEventIndex1 = 1;
+            transferEventIndex2 = 0;
+        }
+        assert.deepStrictEqual(events.filestart[0], fileEventData);
+        assert.deepStrictEqual(events.fileprogress[transferEventIndex1], {
             ...fileEventData,
             transferred: 7
         });
-        assert.deepEqual(events.fileprogress[1], {
+        assert.deepStrictEqual(events.fileprogress[transferEventIndex2], {
             ...fileEventData,
             transferred: 12
         });
-        assert.deepEqual(events.fileend[0], fileEventData);
+        assert.deepStrictEqual(events.fileend[0], fileEventData);
     });
 });
