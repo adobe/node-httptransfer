@@ -84,7 +84,9 @@ describe('AEM Download', function() {
             fileName: 'file-1.jpg',
             fileSize: 12,
             targetFolder: __dirname,
-            targetFile: testFile
+            targetFile: testFile,
+            sourceFolder: '/path/to',
+            sourceFile: '/path/to/file-1.jpg'
         };
 
         // concurrency might switch the progress events around, so make sure
