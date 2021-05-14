@@ -1,30 +1,112 @@
 /*
-Copyright 2019 Adobe. All rights reserved.
-This file is licensed to you under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License. You may obtain a copy
-of the License at http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
-OF ANY KIND, either express or implied. See the License for the specific language
-governing permissions and limitations under the License.
-*/
+ * Copyright 2020 Adobe. All rights reserved.
+ * This file is licensed to you under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
 
 /* eslint-env mocha */
 
 'use strict';
 
 const assert = require('assert');
-const { parseResourceHeaders, getResourceHeaders } = require('../lib/headers');
+const { 
+    parseResourceHeaders, getResourceHeaders, 
+    getLastModified, getETag, getContentRange, 
+    getContentLength 
+} = require('../lib/headers');
+const { 
+    testSetResponseBodyOverride, 
+    testHasResponseBodyOverrides
+} = require('../lib/fetch');
+const {
+    createErrorReadable
+} = require('./streams');
 const nock = require('nock');
 
-function parse(headers) {
-    return parseResourceHeaders({
+function createHeadersMock(headers) {
+    return {
         get: name => headers[name]
-    })
+    };
+}
+
+function parse(headers) {
+    return parseResourceHeaders(createHeadersMock(headers));
 }
 
 describe('headers', function() {
+    describe('parsers', function() {
+        it("last-modified-none", function() {
+            const actual = getLastModified(createHeadersMock({}));
+            assert.strictEqual(actual, undefined);
+        });
+        it("last-modified", function() {
+            const actual = getLastModified(createHeadersMock({
+                "last-modified": "Wed, 21 Oct 2015 07:28:00 GMT"
+            }));
+            assert.strictEqual(actual, 1445412480000);
+        });
+        it("last-modified-invalid", function() {
+            const actual = getLastModified(createHeadersMock({
+                "last-modified": "invalid date time"
+            }));
+            assert.strictEqual(actual, undefined);
+        });
+        it("etag-none", function() {
+            const actual = getETag(createHeadersMock({}));
+            assert.strictEqual(actual, undefined);
+        });
+        it("etag", function() {
+            const actual = getETag(createHeadersMock({
+                "etag": "\"33a64df551425fcc55e4d42a148795d9f25f89d4\""
+            }));
+            assert.strictEqual(actual, "\"33a64df551425fcc55e4d42a148795d9f25f89d4\"");
+        });
+        it("weak-etag", function() {
+            const actual = getETag(createHeadersMock({
+                "etag": "W/\"0815\""
+            }));
+            assert.strictEqual(actual, undefined);
+        });
+        it("content-range-none", function() {
+            const actual = getETag(createHeadersMock({}));
+            assert.strictEqual(actual, undefined);
+        });
+        it("content-range", function() {
+            const actual = getContentRange(createHeadersMock({
+                "content-range": "bytes 200-1000/67589"
+            }));
+            assert.deepStrictEqual(actual, {
+                unit: "bytes",
+                start: 200,
+                end: 1000,
+                size: 67589
+            });
+        });
+        it("content-range-invalid", function() {
+            const actual = getContentRange(createHeadersMock({
+                "content-range": "invalid-range"
+            }));
+            assert.strictEqual(actual, null);
+        });
+        it("content-length", function() {
+            const actual = getContentLength(createHeadersMock({
+                "content-length": "200"
+            }));
+            assert.strictEqual(actual, 200);
+        });
+        it("content-length-invalid", function() {
+            const actual = getContentLength(createHeadersMock({
+                "content-length": "invalid-length"
+            }));
+            assert.strictEqual(actual, undefined);
+        });
+    });
     describe('parseResourceHeaders', function() {
         it('content-disposition-none', function() {
             const result = parse({});
@@ -88,6 +170,11 @@ describe('headers', function() {
         });
     });
     describe('getResourceHeaders', function() {
+        afterEach(async function () {
+            assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
+        });
         it('head 404 failure', async function() {
             try {
                 nock('http://test-headers')
@@ -145,7 +232,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-length': 200,
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext');
             assert.deepStrictEqual(result, {
@@ -158,7 +245,7 @@ describe('headers', function() {
             nock('http://test-headers')
                 .head('/path/to/file.ext')
                 .matchHeader('accept', 'application/json')
-                .reply(200)
+                .reply(200);
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 headers: {
@@ -180,7 +267,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-length': 200,
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 retryAllErrors: true
@@ -201,7 +288,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-length': 200,
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext');
             assert.deepStrictEqual(result, {
@@ -232,7 +319,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-range': 'bytes 0-0/200',
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 doGet: true
@@ -248,7 +335,7 @@ describe('headers', function() {
                 .get('/path/to/file.ext')
                 .matchHeader('range', 'bytes=0-0')
                 .matchHeader('accept', 'application/json')
-                .reply(200)
+                .reply(200);
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 doGet: true,
@@ -271,7 +358,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-range': 'bytes 0-0/200',
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 doGet: true,
@@ -293,7 +380,7 @@ describe('headers', function() {
                     'content-disposition': 'attachment; filename="filename.jpg"',
                     'content-range': 'bytes 0-0/200',
                     'content-type': 'image/jpeg'
-                })
+                });
 
             const result = await getResourceHeaders('http://test-headers/path/to/file.ext', {
                 doGet: true
@@ -303,6 +390,27 @@ describe('headers', function() {
                 size: 200,
                 filename: 'filename.jpg'
             });
+        });
+        it('headers - stream failure', async function() {
+            try {
+                nock('http://test-headers')
+                    .head('/path/to/file.ext')
+                    .reply(200, '', {
+                        'content-disposition': 'attachment; filename="filename.jpg"',
+                        'content-range': 'bytes 0-0/200',
+                        'content-type': 'image/jpeg'
+                    });
+
+                testSetResponseBodyOverride("HEAD", createErrorReadable(Error('read failure')));
+                await getResourceHeaders('http://test-headers/path/to/file.ext', {
+                    retryEnabled: false
+                });
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('HEAD'));
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('read failure'));
+            }
         });
     });
 });

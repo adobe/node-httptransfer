@@ -1,14 +1,14 @@
 /*
-Copyright 2019 Adobe. All rights reserved.
-This file is licensed to you under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License. You may obtain a copy
-of the License at http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
-OF ANY KIND, either express or implied. See the License for the specific language
-governing permissions and limitations under the License.
-*/
+ * Copyright 2020 Adobe. All rights reserved.
+ * This file is licensed to you under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
 
 /* eslint-env mocha */
 
@@ -67,6 +67,16 @@ describe('file', function() {
             } catch(e){
                 // don't fail if it doesn't exist, it's only clean up
                 console.log(e);
+            }
+        });
+        it('status-200-mkdir-failure', async function() {
+            try {
+                await downloadFile('http://test-status-200/path/to/file.ext', path.resolve('./index.js/hello.dat'), {
+                    mkdirs: true
+                });  
+                assert.fail('test is supposed to fail');
+            } catch (e) {
+                assert.ok(e.message.includes('index.js is not a directory'));
             }
         });
         it('status-200-truncate-retry', async function() {
@@ -236,7 +246,7 @@ describe('file', function() {
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.includes('GET'));
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
 
@@ -383,7 +393,7 @@ describe('file', function() {
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
 

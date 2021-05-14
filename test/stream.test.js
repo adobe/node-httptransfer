@@ -1,14 +1,14 @@
 /*
-Copyright 2019 Adobe. All rights reserved.
-This file is licensed to you under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License. You may obtain a copy
-of the License at http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
-OF ANY KIND, either express or implied. See the License for the specific language
-governing permissions and limitations under the License.
-*/
+ * Copyright 2020 Adobe. All rights reserved.
+ * This file is licensed to you under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
 
 /* eslint-env mocha */
 
@@ -25,6 +25,7 @@ const {
     createErrorReadable,
     createErrorWritable
 } = require('./streams');
+const { gzipSync } = require('zlib');
 
 describe('stream', function () {
     describe('download', function () {
@@ -33,7 +34,6 @@ describe('stream', function () {
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
-
         it('status-200', async function () {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
@@ -66,8 +66,30 @@ describe('stream', function () {
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('response failed'));
-                assert.ok(e.message.includes('truncated'));
+                assert.ok(e.message.includes('Unexpected stream-size'));
             }
+        });
+        it('status-200-gzip', async function () {
+            const stringData = 'Hello World';
+            const gzipped = gzipSync(Buffer.from(stringData, 'utf8'));
+
+            nock('http://test-status-200-truncate')
+                .get('/path/to/file.ext')
+                .matchHeader('Accept-Encoding', /gzip/)
+                .reply(200, gzipped, {
+                    'Content-Length': gzipped.length,
+                    'Content-Encoding': 'gzip'
+                });
+            nock('http://test-status-200-truncate')
+                .get('/path/to/file.ext')
+                .reply(200, stringData, {
+                    'Content-Length': stringData.length
+                });
+
+            const writeStream = new StringWritable();
+            await downloadStream('http://test-status-200-truncate/path/to/file.ext', writeStream);
+            assert.ok(writeStream.data, stringData);
+            nock.cleanAll();
         });
         it('status-404-empty', async function () {
             nock('http://test-status-404-empty')
@@ -77,7 +99,7 @@ describe('stream', function () {
             try {
                 const writeStream = new StringWritable();
                 await downloadStream('http://test-status-404-empty/path/to/file.ext', writeStream);
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
@@ -93,7 +115,7 @@ describe('stream', function () {
             try {
                 const writeStream = new StringWritable();
                 await downloadStream('http://test-status-404-octet/path/to/file.ext', writeStream);
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
@@ -109,7 +131,7 @@ describe('stream', function () {
             try {
                 const writeStream = new StringWritable();
                 await downloadStream('http://test-status-404-text/path/to/file.ext', writeStream);
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('failed with status 404'));
@@ -119,11 +141,11 @@ describe('stream', function () {
             try {
                 const writeStream = new StringWritable();
                 await downloadStream('http://badhost/path/to/file.ext', writeStream);
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
         }).timeout(20000);
@@ -136,7 +158,7 @@ describe('stream', function () {
 
                 const writeStream = new StringWritable();
                 await downloadStream('http://test-timeout/path/to/file.ext', writeStream, { timeout: 200 });
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('connect failed'));
@@ -154,7 +176,7 @@ describe('stream', function () {
 
                 const writeStream = new StringWritable();
                 await downloadStream('http://test-reply-error/path/to/file.ext', writeStream);
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('connect failed'));
@@ -211,9 +233,9 @@ describe('stream', function () {
                     .get('/path/to/file.ext')
                     .reply(200, 'hello world');
 
-                const writeStream = createErrorWritable(Error('write failure'))
+                const writeStream = createErrorWritable(Error('write failure'));
                 await downloadStream('http://test-200-stream-write-error/path/to/file.ext', writeStream);
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('response failed'));
@@ -251,7 +273,7 @@ describe('stream', function () {
             try {
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://test-status-404-empty/path/to/file.ext');
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
@@ -267,7 +289,7 @@ describe('stream', function () {
             try {
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://test-status-404-octet/path/to/file.ext');
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
@@ -283,7 +305,7 @@ describe('stream', function () {
             try {
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://test-status-404-text/path/to/file.ext');
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed with status 404'));
@@ -293,11 +315,11 @@ describe('stream', function () {
             try {
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://badhost/path/to/file.ext');
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'), e.message);
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok(e.message.includes('ENOTFOUND'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
                 assert.ok(e.message.includes('badhost'));
             }
         }).timeout(20000);
@@ -310,7 +332,7 @@ describe('stream', function () {
 
                 const readStream = new StringReadable('hello world 123');
                 await uploadStream(readStream, 'http://test-timeout/path/to/file.ext', { timeout: 200 });
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('connect failed'));
@@ -318,20 +340,25 @@ describe('stream', function () {
             }
         });
         it('201-stream-error', async function () {
-            const replyBody = new stream.PassThrough();
-            nock('http://test-201-stream-error')
-                .put('/path/to/file.ext', 'hello world 123')
-                .reply(201, replyBody);
+            try {
+                const replyBody = new stream.PassThrough();
+                nock('http://test-201-stream-error')
+                    .put('/path/to/file.ext', 'hello world 123')
+                    .reply(201, replyBody);
 
-            // replyBody.end(() => {
-            //     replyBody.emit('error', Error('read failure'));
-            // })
+                // replyBody.end(() => {
+                //     replyBody.emit('error', Error('read failure'));
+                // })
 
-            // successful response is ignored, which means no error is thrown by uploadStream
-            // but the overridden response body is still retrieved
-            testSetResponseBodyOverride("PUT", createErrorReadable(Error('read failure')));
-            const readStream = new StringReadable('hello world 123');
-            await uploadStream(readStream, 'http://test-201-stream-error/path/to/file.ext');
+                testSetResponseBodyOverride("PUT", createErrorReadable(Error('read failure')));
+                const readStream = new StringReadable('hello world 123');
+                await uploadStream(readStream, 'http://test-201-stream-error/path/to/file.ext');
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('response failed'));
+                assert.ok(e.message.includes('read failure'));
+            }
         });
         it('404-stream-error', async function () {
             try {
@@ -365,7 +392,7 @@ describe('stream', function () {
 
                 const readStream = createErrorReadable(Error('201 read failure'));
                 await uploadStream(readStream, 'http://test-201-stream-read-error/path/to/file.ext');
-                assert.fail('failure expected')
+                assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('failed'));
@@ -469,8 +496,8 @@ describe('stream', function () {
             await transferStream(
                 'http://test-transfer-404/path/to/source.ext',
                 'http://test-transfer-404/path/to/target.ext', {
-                retryAllErrors: true
-            }
+                    retryAllErrors: true
+                }
             );
         });
     });
