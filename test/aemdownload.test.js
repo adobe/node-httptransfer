@@ -26,6 +26,22 @@ describe('AEM Download', function() {
         nock.cleanAll();
     });
 
+    function verifyProgressEvent(event, fileEventData) {
+        if (event.transferred === 7) {
+            assert.deepStrictEqual(event, {
+                ...fileEventData,
+                transferred: 7
+            });
+        } else if (event.transferred === 12) {
+            assert.deepStrictEqual(event, {
+                ...fileEventData,
+                transferred: 12
+            });
+        } else {
+            assert(false, `unexpected transferred amount [${event.transferred}]`);
+        }
+    }
+
     it('AEM download smoke test', async function() {
         const testFile = Path.join(__dirname, 'file-1.jpg');
         nock('http://test-aem-download-200')
@@ -89,23 +105,9 @@ describe('AEM Download', function() {
             sourceFile: '/path/to/file-1.jpg'
         };
 
-        // concurrency might switch the progress events around, so make sure
-        // to use the correct index
-        let transferEventIndex1 = 0;
-        let transferEventIndex2 = 1;
-        if (events.fileprogress[transferEventIndex1].transferred !== 7) {
-            transferEventIndex1 = 1;
-            transferEventIndex2 = 0;
-        }
         assert.deepStrictEqual(events.filestart[0], fileEventData);
-        assert.deepStrictEqual(events.fileprogress[transferEventIndex1], {
-            ...fileEventData,
-            transferred: 7
-        });
-        assert.deepStrictEqual(events.fileprogress[transferEventIndex2], {
-            ...fileEventData,
-            transferred: 12
-        });
+        verifyProgressEvent(events.fileprogress[0], fileEventData);
+        verifyProgressEvent(events.fileprogress[1], fileEventData);
         assert.deepStrictEqual(events.fileend[0], fileEventData);
     });
 });
