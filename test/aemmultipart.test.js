@@ -126,7 +126,6 @@ describe('multipart', function () {
         });
 
         it('status-201-2urls binary', async function () {
-            // also test with a binary file (see NUI-489)
             const data = crypto.randomBytes(100);
 
             await fs.writeFile('test-binary.dat', data);
