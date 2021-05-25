@@ -17,6 +17,7 @@
 const assert = require('assert');
 const { Asset } = require('../../lib/asset/asset');
 const { AssetMetadata } = require('../../lib/asset/assetmetadata');
+const { AssetMultipart } = require('../../lib/asset/assetmultipart');
 const { AssetVersion } = require('../../lib/asset/assetversion');
 const { TransferAsset } = require('../../lib/asset/transferasset');
 
@@ -57,6 +58,8 @@ describe.only("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -75,6 +78,8 @@ describe.only("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -99,6 +104,8 @@ describe.only("TransferAsset", function() {
                 fileName: "target.png",
                 fileSize: 9876,
                 mimeType: "image/png",
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -131,6 +138,8 @@ describe.only("TransferAsset", function() {
                 fileName: "target.png",
                 fileSize: 9876,
                 mimeType: "image/png",
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -161,6 +170,8 @@ describe.only("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -181,6 +192,8 @@ describe.only("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -201,6 +214,8 @@ describe.only("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -221,6 +236,8 @@ describe.only("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -244,6 +261,8 @@ describe.only("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -255,7 +274,7 @@ describe.only("TransferAsset", function() {
                     new Asset("http://host/path/to/target.png"), {
                         version: 123
                     });    
-            }, Error("version is required to be of type AssetMetadata: 123"));
+            }, Error("version is required to be of type AssetVersion: 123"));
         });
         it("version setter", () => {
             const source = new Asset("file:///path/to/source.png");
@@ -275,6 +294,8 @@ describe.only("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -286,6 +307,72 @@ describe.only("TransferAsset", function() {
                 const transferAsset = new TransferAsset(source, target);
                 transferAsset.version = 123;    
             }, Error("version is required to be of type AssetVersion: 123"));
+        });
+    });
+    describe("multipartTarget", () => {
+        it("multipartTarget c-tor", () => {
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+            const multipartTarget = new AssetMultipart(["http://host/path/to/target.png-1"], 100, 1000);
+            const transferAsset = new TransferAsset(source, target, {
+                multipartTarget
+            });
+            assert.deepStrictEqual(transferAsset.source, source);
+            assert.deepStrictEqual(transferAsset.target, target);
+            assert.deepStrictEqual(transferAsset.metadata, undefined);
+            assert.strictEqual(transferAsset.acceptRanges, false);
+            assert.deepStrictEqual(transferAsset.version, undefined);
+            assert.deepStrictEqual(transferAsset.multipartTarget, multipartTarget);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.eventData, {
+                fileName: "target.png",
+                fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
+                targetFile: "/path/to/target.png",
+                targetFolder: "/path/to"
+            });
+        });
+        it("multipartTarget c-tor invalid", () => {
+            assert.strict.throws(() => {
+                new TransferAsset(
+                    new Asset("file:///path/to/source.png"), 
+                    new Asset("http://host/path/to/target.png"), {
+                        multipartTarget: 123
+                    });    
+            }, Error("multipartTarget is required to be of type AssetMultipart: 123"));
+        });
+        it("multipartTarget setter", () => {
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+            const transferAsset = new TransferAsset(source, target);
+    
+            const multipartTarget = new AssetMultipart(["http://host/path/to/target.png-1"], 100, 1000);
+            transferAsset.multipartTarget = multipartTarget;
+    
+            assert.deepStrictEqual(transferAsset.source, source);
+            assert.deepStrictEqual(transferAsset.target, target);
+            assert.deepStrictEqual(transferAsset.metadata, undefined);
+            assert.strictEqual(transferAsset.acceptRanges, false);
+            assert.deepStrictEqual(transferAsset.version, undefined);
+            assert.deepStrictEqual(transferAsset.multipartTarget, multipartTarget);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.eventData, {
+                fileName: "target.png",
+                fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
+                targetFile: "/path/to/target.png",
+                targetFolder: "/path/to"
+            });
+        });
+        it("multipartTarget setter invalid", () => {
+            assert.strict.throws(() => {
+                const source = new Asset("file:///path/to/source.png");
+                const target = new Asset("http://host/path/to/target.png");
+                const transferAsset = new TransferAsset(source, target);
+                transferAsset.multipartTarget = 123;    
+            }, Error("multipartTarget is required to be of type AssetMultipart: 123"));
         });
     });
 });
