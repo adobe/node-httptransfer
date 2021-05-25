@@ -19,6 +19,7 @@ const { Asset } = require('../../lib/asset/asset');
 const { AssetMetadata } = require('../../lib/asset/assetmetadata');
 const { AssetMultipart } = require('../../lib/asset/assetmultipart');
 const { AssetVersion } = require('../../lib/asset/assetversion');
+const { NameConflictPolicy } = require('../../lib/asset/nameconflictpolicy');
 const { TransferAsset } = require('../../lib/asset/transferasset');
 
 // eslint-disable-next-line mocha/no-exclusive-tests
@@ -373,6 +374,72 @@ describe.only("TransferAsset", function() {
                 const transferAsset = new TransferAsset(source, target);
                 transferAsset.multipartTarget = 123;    
             }, Error("multipartTarget is required to be of type AssetMultipart: 123"));
+        });
+    });
+    describe("nameConflictPolicy", () => {
+        it("nameConflictPolicy c-tor", () => {
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+            const nameConflictPolicy = NameConflictPolicy.createVersionPolicy("label", "comment");
+            const transferAsset = new TransferAsset(source, target, {
+                nameConflictPolicy
+            });
+            assert.deepStrictEqual(transferAsset.source, source);
+            assert.deepStrictEqual(transferAsset.target, target);
+            assert.deepStrictEqual(transferAsset.metadata, undefined);
+            assert.strictEqual(transferAsset.acceptRanges, false);
+            assert.deepStrictEqual(transferAsset.version, undefined);
+            assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, nameConflictPolicy);
+            assert.deepStrictEqual(transferAsset.eventData, {
+                fileName: "target.png",
+                fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
+                targetFile: "/path/to/target.png",
+                targetFolder: "/path/to"
+            });
+        });
+        it("nameConflictPolicy c-tor invalid", () => {
+            assert.strict.throws(() => {
+                new TransferAsset(
+                    new Asset("file:///path/to/source.png"), 
+                    new Asset("http://host/path/to/target.png"), {
+                        nameConflictPolicy: 123
+                    });    
+            }, Error("nameConflictPolicy is required to be of type NameConflictPolicy: 123"));
+        });
+        it("nameConflictPolicy setter", () => {
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+            const transferAsset = new TransferAsset(source, target);
+    
+            const nameConflictPolicy = NameConflictPolicy.createVersionPolicy("label", "comment");
+            transferAsset.nameConflictPolicy = nameConflictPolicy;
+    
+            assert.deepStrictEqual(transferAsset.source, source);
+            assert.deepStrictEqual(transferAsset.target, target);
+            assert.deepStrictEqual(transferAsset.metadata, undefined);
+            assert.strictEqual(transferAsset.acceptRanges, false);
+            assert.deepStrictEqual(transferAsset.version, undefined);
+            assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, nameConflictPolicy);
+            assert.deepStrictEqual(transferAsset.eventData, {
+                fileName: "target.png",
+                fileSize: undefined,
+                sourceFile: '/path/to/source.png',
+                sourceFolder: '/path/to',
+                targetFile: "/path/to/target.png",
+                targetFolder: "/path/to"
+            });
+        });
+        it("nameConflictPolicy setter invalid", () => {
+            assert.strict.throws(() => {
+                const source = new Asset("file:///path/to/source.png");
+                const target = new Asset("http://host/path/to/target.png");
+                const transferAsset = new TransferAsset(source, target);
+                transferAsset.nameConflictPolicy = 123;    
+            }, Error("nameConflictPolicy is required to be of type NameConflictPolicy: 123"));
         });
     });
 });
