@@ -46,17 +46,17 @@ describe('AEM Upload', function() {
         };
         const initRaw = JSON.stringify(initResponse);
         nock(HOST)
-            .post('/path/to.initiateUpload.json')
+            .post('/path/to.initiateUpload.json', 'fileName=file-1.jpg&fileSize=15')
             .reply(201, initRaw, {
                 'Content-Length': initRaw.length
             });
 
         nock(HOST)
-            .put('/part')
+            .put('/part', 'hello world 123')
             .reply(201);
 
         nock(HOST)
-            .post('/path/to.completeUpload.json')
+            .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=undefined&createVersion=true&versionLabel=versionLabel&versionComment=versionComment&replace=false&uploadToken=upload-token')
             .reply(200, '{}');
 
         const aemUpload = new AEMUpload();
@@ -78,7 +78,10 @@ describe('AEM Upload', function() {
             uploadFiles: [{
                 fileUrl: 'http://test-aem-upload-201/path/to/file-1.jpg',
                 filePath: testFile,
-                fileSize: 12
+                fileSize: 15,
+                createVersion: true,
+                versionLabel: 'versionLabel',
+                versionComment: 'versionComment'
             }],
             headers: {},
             concurrent: true,
@@ -94,7 +97,7 @@ describe('AEM Upload', function() {
 
         const fileEventData = {
             fileName: 'file-1.jpg',
-            fileSize: 12,
+            fileSize: 15,
             targetFolder: '/path/to',
             targetFile: '/path/to/file-1.jpg',
             sourceFolder: __dirname,
@@ -104,7 +107,7 @@ describe('AEM Upload', function() {
         assert.deepStrictEqual(events.filestart[0], fileEventData);
         assert.deepStrictEqual(events.fileprogress[0], {
             ...fileEventData,
-            transferred: 12
+            transferred: 15
         });
         assert.deepStrictEqual(events.fileend[0], fileEventData);
     });
