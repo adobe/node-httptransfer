@@ -22,8 +22,7 @@ const { AssetVersion } = require('../../lib/asset/assetversion');
 const { NameConflictPolicy } = require('../../lib/asset/nameconflictpolicy');
 const { TransferAsset } = require('../../lib/asset/transferasset');
 
-// eslint-disable-next-line mocha/no-exclusive-tests
-describe.only("TransferAsset", function() {
+describe("TransferAsset", function() {
     describe("constructor", () => {
         it("no-source no-target fail", () => {
             assert.strict.throws(() => {
@@ -55,7 +54,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, false);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -75,7 +74,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, false);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -100,7 +99,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, false);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: 9876,
@@ -134,7 +133,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, false);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: 9876,
@@ -167,7 +166,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, true);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -189,7 +188,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, true);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -211,7 +210,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, true);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -233,7 +232,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, true);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -258,7 +257,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, false);
             assert.deepStrictEqual(transferAsset.version, version);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -291,7 +290,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, false);
             assert.deepStrictEqual(transferAsset.version, version);
             assert.deepStrictEqual(transferAsset.multipartTarget, undefined);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -324,7 +323,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, false);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, multipartTarget);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
@@ -357,7 +356,7 @@ describe.only("TransferAsset", function() {
             assert.strictEqual(transferAsset.acceptRanges, false);
             assert.deepStrictEqual(transferAsset.version, undefined);
             assert.deepStrictEqual(transferAsset.multipartTarget, multipartTarget);
-            assert.deepStrictEqual(transferAsset.nameConflictPolicy, undefined);
+            assert.deepStrictEqual(transferAsset.nameConflictPolicy, NameConflictPolicy.defaultPolicy());
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
