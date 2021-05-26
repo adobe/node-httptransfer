@@ -129,6 +129,7 @@ async function resolveLocation(value, options) {
  */
 async function createAEMUploadOptions(localFolder, aemFolderUrl, params) {
     const uploadFiles = [];
+    const nameConflictPolicy = params.nameConflictPolicy || {};
 
     const dir = await fs.opendir(localFolder);
     for await (const dirent of dir) {
@@ -136,7 +137,7 @@ async function createAEMUploadOptions(localFolder, aemFolderUrl, params) {
             const filePath = localPathResolve(localFolder, dirent.name);
             const { size: fileSize } = await fs.stat(filePath); 
             const fileUrl = new URL(urlPathResolve(aemFolderUrl.pathname, dirent.name), aemFolderUrl);
-            uploadFiles.push({ fileUrl, fileSize, filePath });
+            uploadFiles.push({ fileUrl, fileSize, filePath, ...nameConflictPolicy });
         }
     }
 
@@ -236,6 +237,28 @@ async function main() {
                     describe: "Maximum concurrency for upload and download",
                     type: "number",
                     default: 1
+                })
+                .option("nameConflictPolicy", {
+                    describe: "Name conflict policy: \"replace\", \"version[,label[,comment]]\"",
+                    type: "string",
+                    coerce: arg => {
+                        if (arg === "replace") {
+                            return {
+                                replace: true
+                            };
+                        } else if (arg.startsWith("version")) {
+                            const values = arg.split(",");
+                            const versionLabel = values.length >= 2 && values[1];
+                            const versionComment = values.length >= 3 && values[2];
+                            return {
+                                createVersion: true,
+                                versionLabel,
+                                versionComment
+                            };
+                        } else {
+                            throw Error(`Unsupported name conflict policy: ${arg}`);
+                        }
+                    },
                 })
                 .example("$0 azure://container/source.txt blob.txt", "Download path/to/source.txt in container to blob.txt")
                 .example("$0 blob.txt azure://container/target.txt", "Upload blob.txt to path/to/target.txt in container")
