@@ -49,7 +49,7 @@ describe('multipart', function () {
             try {
                 await uploadAEMMultipartFile('test-transfer-file-2.dat', {});
             } catch (e) {
-                assert.strictEqual(e.message, 'invalid number of target urls: undefined');
+                assert.strictEqual(e.message, '\'target.urls\' but be a non-empty array: undefined');
             }
 
             try {
@@ -68,7 +68,7 @@ describe('multipart', function () {
                     ]
                 });
             } catch (e) {
-                assert.strictEqual(e.message, 'maxPartSize not provided: undefined');
+                assert.strictEqual(e.message, '\'target.maxPartSize\' must be a positive number: undefined');
             }
 
             try {

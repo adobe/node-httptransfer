@@ -80,12 +80,12 @@ describe("NameConflictPolicy", function() {
     it("createVersionPolicy invalid versionLabel", () => {
         assert.strict.throws(() => {
             NameConflictPolicy.createVersionPolicy(123);
-        }, Error("versionLabel is expected to be a string: 123 (number)"));
+        }, Error("versionLabel must be a string: 123 (number)"));
     });
     it("createVersionPolicy invalid versionComment", () => {
         assert.strict.throws(() => {
             NameConflictPolicy.createVersionPolicy(undefined, 123);
-        }, Error("versionComment is expected to be a string: 123 (number)"));
+        }, Error("versionComment must be a string: 123 (number)"));
     });
     it("replaceAssetPolicy no-arg", () => {
         const conflictPolicy = NameConflictPolicy.replaceAssetPolicy();

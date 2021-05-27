@@ -27,22 +27,22 @@ describe("TransferAsset", function() {
         it("no-source no-target fail", () => {
             assert.strict.throws(() => {
                 new TransferAsset;
-            }, Error("source is required to be of type Asset: undefined"));
+            }, Error("'source' must be of type Asset: undefined"));
         });
         it("invalid source", () => {
             assert.strict.throws(() => {
                 new TransferAsset(123);
-            }, Error("source is required to be of type Asset: 123 (number)"));
+            }, Error("'source' must be of type Asset: 123 (number)"));
         });
         it("no-target fail", () => {
             assert.strict.throws(() => {
                 new TransferAsset(new Asset("http://host/path/to/source.png"));
-            }, Error("target is required to be of type Asset: undefined"));
+            }, Error("'target' must be of type Asset: undefined"));
         });
         it("invalid target", () => {
             assert.strict.throws(() => {
                 new TransferAsset(new Asset("http://host/path/to/source.png"), 123);
-            }, Error("target is required to be of type Asset: 123 (number)"));
+            }, Error("'target' must be of type Asset: 123 (number)"));
         });
         it("download", () => {
             const source = new Asset("http://host/path/to/source.png");
@@ -117,7 +117,7 @@ describe("TransferAsset", function() {
                     new Asset("http://host/path/to/target.png"), {
                         metadata: 123
                     });    
-            }, Error("metadata is required to be of type AssetMetadata: 123 (number)"));
+            }, Error("'metadata' must be of type AssetMetadata: 123 (number)"));
         });
         it("metadata setter", () => {
             const source = new Asset("file:///path/to/source.png");
@@ -150,7 +150,7 @@ describe("TransferAsset", function() {
                 const target = new Asset("http://host/path/to/target.png");
                 const transferAsset = new TransferAsset(source, target);
                 transferAsset.metadata = 123;    
-            }, Error("metadata is required to be of type AssetMetadata: 123 (number)"));
+            }, Error("'metadata' must be of type AssetMetadata: 123 (number)"));
         });
     });
     describe("acceptRanges", () => {
@@ -274,7 +274,7 @@ describe("TransferAsset", function() {
                     new Asset("http://host/path/to/target.png"), {
                         version: 123
                     });    
-            }, Error("version is required to be of type AssetVersion: 123 (number)"));
+            }, Error("'version' must be of type AssetVersion: 123 (number)"));
         });
         it("version setter", () => {
             const source = new Asset("file:///path/to/source.png");
@@ -306,7 +306,7 @@ describe("TransferAsset", function() {
                 const target = new Asset("http://host/path/to/target.png");
                 const transferAsset = new TransferAsset(source, target);
                 transferAsset.version = 123;    
-            }, Error("version is required to be of type AssetVersion: 123 (number)"));
+            }, Error("'version' must be of type AssetVersion: 123 (number)"));
         });
     });
     describe("multipartTarget", () => {
@@ -340,7 +340,7 @@ describe("TransferAsset", function() {
                     new Asset("http://host/path/to/target.png"), {
                         multipartTarget: 123
                     });    
-            }, Error("multipartTarget is required to be of type AssetMultipart: 123 (number)"));
+            }, Error("'multipartTarget' must be of type AssetMultipart: 123 (number)"));
         });
         it("multipartTarget setter", () => {
             const source = new Asset("file:///path/to/source.png");
@@ -372,7 +372,7 @@ describe("TransferAsset", function() {
                 const target = new Asset("http://host/path/to/target.png");
                 const transferAsset = new TransferAsset(source, target);
                 transferAsset.multipartTarget = 123;    
-            }, Error("multipartTarget is required to be of type AssetMultipart: 123 (number)"));
+            }, Error("'multipartTarget' must be of type AssetMultipart: 123 (number)"));
         });
     });
     describe("nameConflictPolicy", () => {
@@ -406,7 +406,7 @@ describe("TransferAsset", function() {
                     new Asset("http://host/path/to/target.png"), {
                         nameConflictPolicy: 123
                     });    
-            }, Error("nameConflictPolicy is required to be of type NameConflictPolicy: 123 (number)"));
+            }, Error("'nameConflictPolicy' must be of type NameConflictPolicy: 123 (number)"));
         });
         it("nameConflictPolicy setter", () => {
             const source = new Asset("file:///path/to/source.png");
@@ -438,7 +438,7 @@ describe("TransferAsset", function() {
                 const target = new Asset("http://host/path/to/target.png");
                 const transferAsset = new TransferAsset(source, target);
                 transferAsset.nameConflictPolicy = 123;    
-            }, Error("nameConflictPolicy is required to be of type NameConflictPolicy: 123 (number)"));
+            }, Error("'nameConflictPolicy' must be of type NameConflictPolicy: 123 (number)"));
         });
     });
 });
