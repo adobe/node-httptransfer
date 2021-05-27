@@ -64,7 +64,6 @@ function createTransferAsset(options) {
     });
 }
 
-// eslint-disable-next-line mocha/no-exclusive-tests
 describe("AEMCompleteUpload", () => {
     afterEach(async function () {
         assert.ok(nock.isDone(), 'check if all nocks have been used');
