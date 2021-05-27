@@ -52,7 +52,7 @@
     "file"
   ],
   "scripts": {
-    "test": "nyc mocha --recursive --exit",
+    "test": "DEBUG=httptransfer:* nyc mocha --recursive --exit",
     "posttest": "eslint ./ && license-checker --summary",
     "beautify": "eslint ./ --fix",
     "build-es2015": "./node_modules/.bin/rimraf es2015 && ./node_modules/.bin/babel ./lib --out-dir es2015",
