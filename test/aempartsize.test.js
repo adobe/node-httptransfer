@@ -17,7 +17,7 @@
 const assert = require("assert");
 const { calculatePartSize } = require("../lib/aempartsize");
 
-describe.only("aempartsize", () => {
+describe("aempartsize", () => {
     describe("calculatePartSize", () => {
         it("num-urls wrong type", () => {
             assert.strict.throws(() => {
@@ -65,9 +65,14 @@ describe.only("aempartsize", () => {
             }, Error("'preferredPartSize' must be a positive number: 5 (string)"));
         });
         it("preferredPartSize 0", () => {
+            // preferredPartSize of 0 is defined as no preferredPartSize provided
+            const partSize = calculatePartSize(1, 1000, 10, 10000, 0);
+            assert.strictEqual(partSize, 1000);
+        });
+        it("preferredPartSize -1", () => {
             assert.strict.throws(() => {
                 calculatePartSize(1, 1000, 10, 10000, -1);
-            }, Error("'minPartSize' must be a positive number: -1 (number)"));
+            }, Error("'preferredPartSize' must be a positive number: -1 (number)"));
         });
     });
 });
