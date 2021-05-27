@@ -34,7 +34,7 @@ describe('multipart', function () {
             try {
                 await uploadAEMMultipartFile('test-transfer-file-1.dat');
             } catch (e) {
-                assert.equal(e.message, 'target not provided: undefined');
+                assert.strictEqual(e.message, 'target not provided: undefined');
             }
 
             try {
@@ -49,7 +49,7 @@ describe('multipart', function () {
             try {
                 await uploadAEMMultipartFile('test-transfer-file-2.dat', {});
             } catch (e) {
-                assert.equal(e.message, 'invalid number of target urls: undefined');
+                assert.strictEqual(e.message, 'invalid number of target urls: undefined');
             }
 
             try {
