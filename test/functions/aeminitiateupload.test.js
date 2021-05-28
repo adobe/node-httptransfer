@@ -244,7 +244,7 @@ describe("AEMInitiateUpload", () => {
                 });
                 assert.fail("exception should be thrown");
             } catch (e) {
-                assert.strictEqual(e.message, "files field missing in initiateUpload response: {\"completeURI\":\"/path/to.completeUpload.json\"}");
+                assert.strictEqual(e.message, "'files' field missing in initiateUpload response: {\"completeURI\":\"/path/to.completeUpload.json\"}");
             }
         });
         it("files mismatch in response", async () => {
@@ -255,7 +255,7 @@ describe("AEMInitiateUpload", () => {
                 });
                 assert.fail("exception should be thrown");
             } catch (e) {
-                assert.strictEqual(e.message, "files field incomplete in initiateUpload response (expected files: 1): {\"files\":[],\"completeURI\":\"/path/to.completeUpload.json\"}");
+                assert.strictEqual(e.message, "'files' field incomplete in initiateUpload response (expected files: 1): {\"files\":[],\"completeURI\":\"/path/to.completeUpload.json\"}");
             }
         });
         it("completeURI missing in response", async () => {
@@ -272,7 +272,7 @@ describe("AEMInitiateUpload", () => {
                 });
                 assert.fail("exception should be thrown");
             } catch (e) {
-                assert.strictEqual(e.message, "completeURI field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}]}");
+                assert.strictEqual(e.message, "'completeURI' field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}]}");
             }
         });
         it("minPartSize missing", async () => {
