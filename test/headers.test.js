@@ -39,7 +39,7 @@ function parse(headers) {
     return parseResourceHeaders(createHeadersMock(headers));
 }
 
-describe.skip('headers', function() {
+describe('headers', function() {
     describe('parsers', function() {
         it("last-modified-none", function() {
             const actual = getLastModified(createHeadersMock({}));

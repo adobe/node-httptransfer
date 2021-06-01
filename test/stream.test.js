@@ -27,7 +27,7 @@ const {
 } = require('./streams');
 const { gzipSync } = require('zlib');
 
-describe.skip('stream', function () {
+describe('stream', function () {
     describe('download', function () {
         afterEach(function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');

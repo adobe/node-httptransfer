@@ -46,7 +46,7 @@ async function sleepReturnValue(sleepMs, value) {
     return value;
 }
 
-describe.skip('generator', function() {
+describe('generator', function() {
     describe('mapconcurrent', function() {
         describe('checkAddBatch', function() {
             it('empty', function() {
