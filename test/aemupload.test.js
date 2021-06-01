@@ -20,7 +20,7 @@ const nock = require('nock');
 const Path = require('path');
 const { AEMUpload } = require('../lib/aemupload');
 
-describe.skip('AEM Upload', function() {
+describe('AEM Upload', function() {
     afterEach(async function () {
         assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
