@@ -113,7 +113,7 @@ describe('generator', function() {
                             yield value + 1;
                         }
                     }
-                }, [ ]);
+                }, [ ], [ ]);
                 assert.deepStrictEqual(result, [ ]);
             });
             it('array', async function() {
@@ -123,7 +123,7 @@ describe('generator', function() {
                             yield value + 1;
                         }
                     }
-                }, [ 1 ]);
+                }, [ 1 ], [ ]);
                 assert.deepStrictEqual(result, [ 2 ]);
             });
             it('empty-generator', async function() {
@@ -133,7 +133,7 @@ describe('generator', function() {
                             yield value + 1;
                         }
                     }
-                }, toGenerator([ ]));
+                }, toGenerator([ ]),  [ ]);
                 assert.deepStrictEqual(result, [ ]);
             });
             it('generator', async function() {
@@ -143,7 +143,7 @@ describe('generator', function() {
                             yield value + 1;
                         }
                     }
-                }, toGenerator([ 1 ]));
+                }, toGenerator([ 1 ]), [ ]);
                 assert.deepStrictEqual(result, [ 2 ]);
             });
         });

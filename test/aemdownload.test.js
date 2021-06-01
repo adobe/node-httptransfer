@@ -20,7 +20,7 @@ const nock = require('nock');
 const Path = require('path');
 const { AEMDownload } = require('../lib/aemdownload');
 
-describe('AEM Download', function() {
+describe.only('AEM Download', function() {
     afterEach(async function () {
         assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
