@@ -24,12 +24,39 @@ const { AEMInitiateUpload } = require("../../lib/functions/aeminitiateupload");
 
 class ControllerMock {
     constructor() {
-        this.emittedEvents = [];
+        this.notifications = [];
     }
-    emit(event, ...args) {
-        this.emittedEvents.push({
-            event,
-            args
+    notifyBefore(functionName, transferItem, props) {
+        this.notifications.push({
+            event: "before",
+            functionName,
+            transferItem,
+            props
+        });
+    }
+    notifyAfter(functionName, transferItem, props) {
+        this.notifications.push({
+            event: "after",
+            functionName,
+            transferItem,
+            props
+        });
+    }
+    notifyYield(functionName, transferItem, props) {
+        this.notifications.push({
+            event: "yield",
+            functionName,
+            transferItem,
+            props
+        });
+    }
+    notifyFailure(functionName, error, transferItem, props) {
+        this.notifications.push({
+            event: "failure",
+            functionName,
+            error,
+            transferItem,
+            props
         });
     }
 }
@@ -48,17 +75,17 @@ async function tryInvalidInitiateUploadResponse(response) {
         });
         
     const controller = new ControllerMock();
-    const initiateUpload = new AEMInitiateUpload(controller, {
+    const initiateUpload = new AEMInitiateUpload({
         retryEnabled: false
     });
     const generator = initiateUpload.execute([new TransferAsset(source, target, {
         metadata: new AssetMetadata(undefined, "image/png", 1234)
-    })]);
+    })], controller);
 
     await generator.next();
 }
 
-describe("AEMInitiateUpload", () => {
+describe.only("AEMInitiateUpload", () => {
     afterEach(async function () {
         assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
@@ -74,8 +101,7 @@ describe("AEMInitiateUpload", () => {
                 new Asset("http://host/path/to/target2.png")
             );
 
-            const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
 
@@ -92,8 +118,7 @@ describe("AEMInitiateUpload", () => {
                 new Asset("http://host/path/to/subfolder/target2.png")
             );
 
-            const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
 
@@ -104,10 +129,10 @@ describe("AEMInitiateUpload", () => {
     describe("execute", () => {
         it("no assets", async () => {
             const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
-            const generator = initiateUpload.execute([]);
+            const generator = initiateUpload.execute([], controller);
             const { value, done } = await generator.next();
             assert.strictEqual(value, undefined);
             assert.strictEqual(done, true);
@@ -136,12 +161,12 @@ describe("AEMInitiateUpload", () => {
                 });
                 
             const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
             const generator = initiateUpload.execute([new TransferAsset(source, target, {
                 metadata: new AssetMetadata(undefined, "image/png", 1234)
-            })]);
+            })], controller);
             
             // check the first file response
             {
@@ -195,14 +220,14 @@ describe("AEMInitiateUpload", () => {
                 });           
      
             const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
             const generator = initiateUpload.execute([new TransferAsset(source1, target1, {
                 metadata: new AssetMetadata(undefined, "image/png", 1234)
             }), new TransferAsset(source2, target2, {
                 metadata: new AssetMetadata(undefined, "image/png", 1234)
-            })]);
+            })], controller);
             
             // check the first file response
             {
