@@ -28,7 +28,6 @@ const {
 } = require("@azure/storage-blob");
 const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
-    downloadStream,
     transferStream,
     getResourceHeaders,
     AEMUpload,
@@ -156,11 +155,6 @@ async function createAEMUploadOptions(localFolder, aemFolderUrl, params) {
         maxConcurrent: params.maxConcurrent,
         preferredPartSize: params.partSize
     };
-}
-
-async function getAEMDownloadFiles(aemFolderUrl, localFolder, params) {
-
-
 }
 
 /**
