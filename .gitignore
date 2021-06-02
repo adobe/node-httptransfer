@@ -71,3 +71,6 @@ es2015/
 
 # Important Documentation
 !.github/**
+
+# Local test files
+testfiles
