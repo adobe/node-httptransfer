@@ -18,7 +18,7 @@ const assert = require('assert');
 const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
-const { AEMDownload } = require('../lib/aemdownload');
+const { AEMDownload } = require('../../lib/aem/aemdownload');
 
 describe('AEM Download', function() {
     afterEach(async function () {
