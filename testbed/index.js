@@ -334,6 +334,9 @@ async function main() {
         upload.on("fileend", ({ fileName, fileSize }) => {
             console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
         });
+        upload.on("fileerror", ({ fileName, errors }) => {
+            console.log(`${fileName}: FAILED --> ${errors[0].message}`);
+        });
         await upload.uploadFiles(options);
     } else if (params.aem) {
         throw Error("Transfer not supported");
