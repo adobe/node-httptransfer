@@ -14,6 +14,7 @@
 
 const filterObject = require("filter-obj");
 const fs = require("fs").promises;
+const path = require("path");
 const { R_OK } = require("fs").constants;
 const { resolve: localPathResolve } = require("path");
 const { resolve: urlPathResolve } = require("path").posix;
@@ -27,9 +28,11 @@ const {
 } = require("@azure/storage-blob");
 const {
     downloadFile, uploadFile, uploadAEMMultipartFile,
+    downloadStream,
     transferStream,
     getResourceHeaders,
-    AEMUpload
+    AEMUpload,
+    AEMDownload
 } = require("../index.js");
 
 function createAzureCredential(auth) {
@@ -124,6 +127,8 @@ async function resolveLocation(value, options) {
 /**
  * Create bulk AEM upload options
  * 
+ * @param {String} localFolder Local folder
+ * @param {String} aemFolderUrl AEM folder url
  * @param {*} params Command line parameters
  * @returns {AEMUploadOptions} AEM upload options
  */
@@ -144,6 +149,57 @@ async function createAEMUploadOptions(localFolder, aemFolderUrl, params) {
     const authorization = "Basic " + Buffer.from(`${params.aemAuth.username}:${params.aemAuth.password}`).toString("base64");
     return {
         uploadFiles,
+        headers: {
+            authorization
+        },
+        concurrent: true,
+        maxConcurrent: params.maxConcurrent,
+        preferredPartSize: params.partSize
+    };
+}
+
+async function getAEMDownloadFiles(aemFolderUrl, localFolder, params) {
+
+
+}
+
+/**
+ * Create bulk AEM download options
+ * 
+ * @param {String} aemFolderUrl AEM folder url
+ * @param {String} localFolder Local folder url
+ * @param {*} params 
+ */
+async function createAEMDownloadOptions(aemFolderUrl, localFolder, params) {
+    const authorization = "Basic " + Buffer.from(`${params.aemAuth.username}:${params.aemAuth.password}`).toString("base64");
+    const fetch = require("node-fetch-npm");
+    const response = await fetch(`${aemFolderUrl}.3.json`, {
+        headers: {
+            authorization
+        }
+    });
+
+    const downloadFiles = [];
+    if (response.ok) {
+        const json = await response.json();
+        for (const [ name, value ] of Object.entries(json)) {
+            if (value["jcr:primaryType"] === "dam:Asset") {
+                const jcrContent = value["jcr:content"];
+                const metadata = jcrContent && jcrContent["metadata"];
+                const fileSize = metadata && metadata["dam:size"];
+                downloadFiles.push({
+                    fileUrl: new URL(path.join(aemFolderUrl.pathname, name), aemFolderUrl),
+                    filePath: path.join(localFolder, name),
+                    fileSize
+                });
+            }
+        }
+    } else {
+        throw Error(`Failed to request folder contents from '${aemFolderUrl}': ${response.status}`);
+    }
+
+    return {
+        downloadFiles,
         headers: {
             authorization
         },
@@ -263,7 +319,8 @@ async function main() {
                 .example("$0 azure://container/source.txt blob.txt", "Download path/to/source.txt in container to blob.txt")
                 .example("$0 blob.txt azure://container/target.txt", "Upload blob.txt to path/to/target.txt in container")
                 .example("$0 azure://container/source.txt azure://container/target.txt", "Transfer source.txt to target.txt in container")
-                .example("$0 --aem ./folder https://localhost:4502/content/dam/folder", "Upload the contents of ./folder to AEM")
+                .example("$0 --maxConcurrent 4 --aem ./folder https://localhost:4502/content/dam/folder", "Upload the contents of ./folder to AEM")
+                .example("$0 --maxConcurrent 4 --aem https://localhost:4502/content/dam/folder ./folder", "Download the contents of /content/dam/folder from AEM")
         )
         .wrap(yargs.terminalWidth())
         .help()
@@ -300,7 +357,9 @@ async function main() {
     const source = await resolveLocation(params.source, { ...params, writable: false});
 
     let size;
-    if (source.url) {
+    if (source.url && params.aem) {
+        // skip since the source references a folder
+    } else if (source.url) {
         const headers = await getResourceHeaders(source.url, {
             doGet: params.headerGet,
             ...retryOptions
@@ -338,6 +397,22 @@ async function main() {
             console.log(`${fileName}: FAILED --> ${errors[0].message}`);
         });
         await upload.uploadFiles(options);
+    } else if (params.aem && source.url && target.file) {
+        const options = await createAEMDownloadOptions(source.url, target.file, params);
+        const download = new AEMDownload();
+        download.on("filestart", ({ fileName, fileSize }) => {
+            console.log(`${fileName}: Start transfer ${fileSize} bytes`);
+        });
+        download.on("fileprogress", ({ fileName, fileSize, transferred }) => {
+            console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
+        });
+        download.on("fileend", ({ fileName, fileSize }) => {
+            console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
+        });
+        download.on("fileerror", ({ fileName, errors }) => {
+            console.log(`${fileName}: FAILED --> ${errors[0].message}`);
+        });
+        await download.downloadFiles(options);
     } else if (params.aem) {
         throw Error("Transfer not supported");
     } else if (source.file && target.url) {
