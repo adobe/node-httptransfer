@@ -179,7 +179,7 @@ async function createAEMDownloadOptions(aemFolderUrl, localFolder, params) {
         for (const [ name, value ] of Object.entries(json)) {
             if (value["jcr:primaryType"] === "dam:Asset") {
                 const jcrContent = value["jcr:content"];
-                const metadata = jcrContent && jcrContent["metadata"];
+                const metadata = jcrContent && jcrContent.metadata;
                 const fileSize = metadata && metadata["dam:size"];
                 downloadFiles.push({
                     fileUrl: new URL(path.join(aemFolderUrl.pathname, name), aemFolderUrl),

@@ -186,4 +186,226 @@ describe('AEM Download', function() {
             }]
         });
     });
+
+    it('AEM download - missing content-length', async function() {
+        const testFile = Path.join(__dirname, 'file-1.jpg');
+        nock('http://test-aem-download-retry')
+            .matchHeader('range', 'bytes=0-10')
+            .get('/path/to/file-1.jpg')
+            .reply(200, 'Hello');
+
+        const aemDownload = new AEMDownload();
+        const events = {
+            filestart: [],
+            fileprogress:[],
+            fileend: [],
+            fileerror: []
+        };
+        aemDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        aemDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        aemDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        aemDownload.on('fileerror', (data) => {
+            events.fileerror.push(data);
+        });
+        await aemDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: 'http://test-aem-download-retry/path/to/file-1.jpg',
+                filePath: testFile,
+                fileSize: 11
+            }]
+        });
+
+        const errors = events.fileerror[0].errors;
+        assert.strictEqual(errors.length, 1);
+        assert.ok(errors[0] instanceof UploadError);
+        assert.strictEqual(errors[0].message, 'Server did not respond with a Content-Length header: null');
+
+        assert.deepStrictEqual(events, {
+            filestart: [{
+                fileName: 'file-1.jpg',
+                fileSize: 11,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname
+            }],
+            fileprogress: [],
+            fileend: [],
+            fileerror: [{
+                fileName: 'file-1.jpg',
+                fileSize: 11,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname,
+                errors
+            }]
+        });
+    });
+
+    it('AEM download - retry truncate', async function() {
+        const testFile = Path.join(__dirname, 'file-1.jpg');
+        nock('http://test-aem-download-retry')
+            .matchHeader('range', 'bytes=0-10')
+            .get('/path/to/file-1.jpg')
+            .reply(200, 'Hello', {
+                'Content-Length': 11
+            });
+
+        nock('http://test-aem-download-retry')
+            .matchHeader('range', 'bytes=0-10')
+            .get('/path/to/file-1.jpg')
+            .reply(200, 'Hello World', {
+                'Content-Length': 11
+            });
+
+        const aemDownload = new AEMDownload();
+        const events = {
+            filestart: [],
+            fileprogress:[],
+            fileend: [],
+            fileerror: []
+        };
+        aemDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        aemDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        aemDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        aemDownload.on('fileerror', (data) => {
+            events.fileerror.push(data);
+        });
+        await aemDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: 'http://test-aem-download-retry/path/to/file-1.jpg',
+                filePath: testFile,
+                fileSize: 11
+            }]
+        });
+
+        assert.deepStrictEqual(events, {
+            filestart: [{
+                fileName: 'file-1.jpg',
+                fileSize: 11,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname
+            }],
+            fileprogress: [{
+                fileName: 'file-1.jpg',
+                fileSize: 11,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname,
+                transferred: 11
+            }],
+            fileend: [{
+                fileName: 'file-1.jpg',
+                fileSize: 11,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname
+            }],
+            fileerror: []
+        });
+
+        const fileData = await fs.readFile(testFile);
+        try {
+            await fs.unlink(testFile);
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
+        assert.strictEqual(fileData.toString(), 'Hello World');
+    });
+
+    it('AEM download - retry 5xx', async function() {
+        const testFile = Path.join(__dirname, 'file-1.jpg');
+        nock('http://test-aem-download-retry')
+            .matchHeader('range', 'bytes=0-10')
+            .get('/path/to/file-1.jpg')
+            .reply(500);
+
+        nock('http://test-aem-download-retry')
+            .matchHeader('range', 'bytes=0-10')
+            .get('/path/to/file-1.jpg')
+            .reply(200, 'Hello World', {
+                'Content-Length': 11
+            });
+
+        const aemDownload = new AEMDownload();
+        const events = {
+            filestart: [],
+            fileprogress:[],
+            fileend: [],
+            fileerror: []
+        };
+        aemDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        aemDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        aemDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        aemDownload.on('fileerror', (data) => {
+            events.fileerror.push(data);
+        });
+        await aemDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: 'http://test-aem-download-retry/path/to/file-1.jpg',
+                filePath: testFile,
+                fileSize: 11
+            }]
+        });
+
+        assert.deepStrictEqual(events, {
+            filestart: [{
+                fileName: 'file-1.jpg',
+                fileSize: 11,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname
+            }],
+            fileprogress: [{
+                fileName: 'file-1.jpg',
+                fileSize: 11,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname,
+                transferred: 11
+            }],
+            fileend: [{
+                fileName: 'file-1.jpg',
+                fileSize: 11,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname
+            }],
+            fileerror: []
+        });
+
+        const fileData = await fs.readFile(testFile);
+        try {
+            await fs.unlink(testFile);
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
+        assert.strictEqual(fileData.toString(), 'Hello World');
+    });
 });
