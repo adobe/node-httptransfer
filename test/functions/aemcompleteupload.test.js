@@ -22,18 +22,7 @@ const { AssetMultipart } = require('../../lib/asset/assetmultipart');
 const { NameConflictPolicy } = require('../../lib/asset/nameconflictpolicy');
 const { TransferAsset } = require('../../lib/asset/transferasset');
 const { AEMCompleteUpload } = require("../../lib/functions/aemcompleteupload");
-
-class ControllerMock {
-    constructor() {
-        this.emittedEvents = [];
-    }
-    emit(event, ...args) {
-        this.emittedEvents.push({
-            event,
-            args
-        });
-    }
-}
+const { ControllerMock } = require("./controllermock");
 
 /**
  * @typedef {Object} CreateTransferAssetOptions
@@ -83,19 +72,23 @@ describe("AEMCompleteUpload", () => {
                 });
     
             const controller = new ControllerMock();
-            const completeUpload = new AEMCompleteUpload(controller, {
+            const completeUpload = new AEMCompleteUpload({
                 retryEnabled: false
             });
-            for await (const asset of completeUpload.execute([ transferAsset ])) {
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
                 assert.deepStrictEqual(asset, transferAsset);
             }
 
-            assert.deepStrictEqual(controller.emittedEvents, [{
-                event: "beforecompleteupload",
-                args: [{ transferAsset }]
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }, {
-                event: "aftercompleteupload",
-                args: [{ transferAsset }]
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }]);
         });
         it("replace asset", async () => {
@@ -113,19 +106,23 @@ describe("AEMCompleteUpload", () => {
                 });
     
             const controller = new ControllerMock();
-            const completeUpload = new AEMCompleteUpload(controller, {
+            const completeUpload = new AEMCompleteUpload({
                 retryEnabled: false
             });
-            for await (const asset of completeUpload.execute([ transferAsset ])) {
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
                 assert.deepStrictEqual(asset, transferAsset);
             }
 
-            assert.deepStrictEqual(controller.emittedEvents, [{
-                event: "beforecompleteupload",
-                args: [{ transferAsset }]
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }, {
-                event: "aftercompleteupload",
-                args: [{ transferAsset }]
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }]);
         });
         it("create version", async () => {
@@ -143,19 +140,23 @@ describe("AEMCompleteUpload", () => {
                 });
     
             const controller = new ControllerMock();
-            const completeUpload = new AEMCompleteUpload(controller, {
+            const completeUpload = new AEMCompleteUpload({
                 retryEnabled: false
             });
-            for await (const asset of completeUpload.execute([ transferAsset ])) {
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
                 assert.deepStrictEqual(asset, transferAsset);
             }
 
-            assert.deepStrictEqual(controller.emittedEvents, [{
-                event: "beforecompleteupload",
-                args: [{ transferAsset }]
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }, {
-                event: "aftercompleteupload",
-                args: [{ transferAsset }]
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }]);
         });
         it("create version - label", async () => {
@@ -173,19 +174,23 @@ describe("AEMCompleteUpload", () => {
                 });
     
             const controller = new ControllerMock();
-            const completeUpload = new AEMCompleteUpload(controller, {
+            const completeUpload = new AEMCompleteUpload({
                 retryEnabled: false
             });
-            for await (const asset of completeUpload.execute([ transferAsset ])) {
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
                 assert.deepStrictEqual(asset, transferAsset);
             }
 
-            assert.deepStrictEqual(controller.emittedEvents, [{
-                event: "beforecompleteupload",
-                args: [{ transferAsset }]
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }, {
-                event: "aftercompleteupload",
-                args: [{ transferAsset }]
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }]);
         });
         it("create version - comment", async () => {
@@ -203,19 +208,23 @@ describe("AEMCompleteUpload", () => {
                 });
     
             const controller = new ControllerMock();
-            const completeUpload = new AEMCompleteUpload(controller, {
+            const completeUpload = new AEMCompleteUpload({
                 retryEnabled: false
             });
-            for await (const asset of completeUpload.execute([ transferAsset ])) {
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
                 assert.deepStrictEqual(asset, transferAsset);
             }
 
-            assert.deepStrictEqual(controller.emittedEvents, [{
-                event: "beforecompleteupload",
-                args: [{ transferAsset }]
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }, {
-                event: "aftercompleteupload",
-                args: [{ transferAsset }]
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }]);
         });
         it("create version - label and comment", async () => {
@@ -233,19 +242,23 @@ describe("AEMCompleteUpload", () => {
                 });
     
             const controller = new ControllerMock();
-            const completeUpload = new AEMCompleteUpload(controller, {
+            const completeUpload = new AEMCompleteUpload({
                 retryEnabled: false
             });
-            for await (const asset of completeUpload.execute([ transferAsset ])) {
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
                 assert.deepStrictEqual(asset, transferAsset);
             }
 
-            assert.deepStrictEqual(controller.emittedEvents, [{
-                event: "beforecompleteupload",
-                args: [{ transferAsset }]
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }, {
-                event: "aftercompleteupload",
-                args: [{ transferAsset }]
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
             }]);
         });
     });

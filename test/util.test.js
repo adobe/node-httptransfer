@@ -106,21 +106,21 @@ describe("util", function() {
             stream.emit('data', Buffer.from('orld!'));
             stream.emit('end');
         });
-        const buffer = await util.streamToBuffer(stream, 12);
+        const buffer = await util.streamToBuffer("get", "url", 200, stream, 12);
         assert.deepEqual(buffer.toString(), 'Hello World!');
     });
     it('stream-to-error-buffer', function() {
         const stream = configureStream((stream) => {
             stream.emit('error', 'there was an error!');
         });
-        assert.rejects(util.streamToBuffer(stream, 12));
+        assert.rejects(util.streamToBuffer("get", "url", 200, stream, 12));
     });
     it('stream-to-unexpectedlength-buffer', function() {
         const stream = configureStream((stream) => {
             stream.emit('data', 'test');
             stream.emit('end');
         });
-        assert.rejects(util.streamToBuffer(stream, 12));
+        assert.rejects(util.streamToBuffer("get", "url", 200, stream, 12));
     });
 
     it('file url to file path', function() {

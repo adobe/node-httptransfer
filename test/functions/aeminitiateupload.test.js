@@ -21,20 +21,9 @@ const { AssetMetadata } = require('../../lib/asset/assetmetadata');
 const { AssetMultipart } = require('../../lib/asset/assetmultipart');
 const { TransferAsset } = require('../../lib/asset/transferasset');
 const { AEMInitiateUpload } = require("../../lib/functions/aeminitiateupload");
+const { ControllerMock } = require("./controllermock");
 
-class ControllerMock {
-    constructor() {
-        this.emittedEvents = [];
-    }
-    emit(event, ...args) {
-        this.emittedEvents.push({
-            event,
-            args
-        });
-    }
-}
-
-async function tryInvalidInitiateUploadResponse(response) {
+async function tryInvalidInitiateUploadResponse(response, expectedErrorMessage) {
     const source = new Asset("file:///path/to/source.png");
     const target = new Asset("http://host/path/to/target.png");
 
@@ -48,14 +37,28 @@ async function tryInvalidInitiateUploadResponse(response) {
         });
         
     const controller = new ControllerMock();
-    const initiateUpload = new AEMInitiateUpload(controller, {
+    const initiateUpload = new AEMInitiateUpload({
         retryEnabled: false
     });
-    const generator = initiateUpload.execute([new TransferAsset(source, target, {
+    const transferAsset = new TransferAsset(source, target, {
         metadata: new AssetMetadata(undefined, "image/png", 1234)
-    })]);
+    });
+    const generator = initiateUpload.execute([transferAsset], controller);
 
     await generator.next();
+
+    assert.deepStrictEqual(controller.notifications, [{
+        eventName: "AEMInitiateUpload",
+        functionName: "AEMInitiateUpload",
+        props: undefined,
+        transferItem: transferAsset
+    }, {
+        eventName: "error",
+        functionName: "AEMInitiateUpload",
+        props: undefined,
+        transferItem: transferAsset,
+        error: expectedErrorMessage
+    }]);
 }
 
 describe("AEMInitiateUpload", () => {
@@ -74,8 +77,7 @@ describe("AEMInitiateUpload", () => {
                 new Asset("http://host/path/to/target2.png")
             );
 
-            const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
 
@@ -92,8 +94,7 @@ describe("AEMInitiateUpload", () => {
                 new Asset("http://host/path/to/subfolder/target2.png")
             );
 
-            const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
 
@@ -104,10 +105,10 @@ describe("AEMInitiateUpload", () => {
     describe("execute", () => {
         it("no assets", async () => {
             const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
-            const generator = initiateUpload.execute([]);
+            const generator = initiateUpload.execute([], controller);
             const { value, done } = await generator.next();
             assert.strictEqual(value, undefined);
             assert.strictEqual(done, true);
@@ -136,12 +137,12 @@ describe("AEMInitiateUpload", () => {
                 });
                 
             const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
             const generator = initiateUpload.execute([new TransferAsset(source, target, {
                 metadata: new AssetMetadata(undefined, "image/png", 1234)
-            })]);
+            })], controller);
             
             // check the first file response
             {
@@ -195,14 +196,14 @@ describe("AEMInitiateUpload", () => {
                 });           
      
             const controller = new ControllerMock();
-            const initiateUpload = new AEMInitiateUpload(controller, {
+            const initiateUpload = new AEMInitiateUpload({
                 retryEnabled: false
             });
             const generator = initiateUpload.execute([new TransferAsset(source1, target1, {
                 metadata: new AssetMetadata(undefined, "image/png", 1234)
             }), new TransferAsset(source2, target2, {
                 metadata: new AssetMetadata(undefined, "image/png", 1234)
-            })]);
+            })], controller);
             
             // check the first file response
             {
@@ -238,107 +239,72 @@ describe("AEMInitiateUpload", () => {
     });
     describe("error", () => {
         it("files missing in response", async () => {
-            try {
-                await tryInvalidInitiateUploadResponse({
-                    completeURI: "/path/to.completeUpload.json"
-                });
-                assert.fail("exception should be thrown");
-            } catch (e) {
-                assert.strictEqual(e.message, "'files' field missing in initiateUpload response: {\"completeURI\":\"/path/to.completeUpload.json\"}");
-            }
+            await tryInvalidInitiateUploadResponse({
+                completeURI: "/path/to.completeUpload.json"
+            }, "'files' field missing in initiateUpload response: {\"completeURI\":\"/path/to.completeUpload.json\"}");
         });
         it("files mismatch in response", async () => {
-            try {
-                await tryInvalidInitiateUploadResponse({
-                    files: [],
-                    completeURI: "/path/to.completeUpload.json"
-                });
-                assert.fail("exception should be thrown");
-            } catch (e) {
-                assert.strictEqual(e.message, "'files' field incomplete in initiateUpload response (expected files: 1): {\"files\":[],\"completeURI\":\"/path/to.completeUpload.json\"}");
-            }
+            await tryInvalidInitiateUploadResponse({
+                files: [],
+                completeURI: "/path/to.completeUpload.json"
+            }, "'files' field incomplete in initiateUpload response (expected files: 1): {\"files\":[],\"completeURI\":\"/path/to.completeUpload.json\"}");
         });
         it("completeURI missing in response", async () => {
-            try {
-                await tryInvalidInitiateUploadResponse({
-                    files: [{
-                        minPartSize: 1000, 
-                        maxPartSize: 10000, 
-                        uploadURIs: [
-                            "http://host/path/to/target.png/block"
-                        ], 
-                        uploadToken: "uploadToken"
-                    }],
-                });
-                assert.fail("exception should be thrown");
-            } catch (e) {
-                assert.strictEqual(e.message, "'completeURI' field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}]}");
-            }
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadURIs: [
+                        "http://host/path/to/target.png/block"
+                    ], 
+                    uploadToken: "uploadToken"
+                }],
+            }, "'completeURI' field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}]}");
         });
         it("minPartSize missing", async () => {
-            try {
-                await tryInvalidInitiateUploadResponse({
-                    files: [{
-                        maxPartSize: 10000, 
-                        uploadURIs: [
-                            "http://host/path/to/target.png/block"
-                        ], 
-                        uploadToken: "uploadToken"
-                    }],
-                    completeURI: "/path/to.completeUpload.json"
-                });
-                assert.fail("exception should be thrown");
-            } catch (e) {
-                assert.strictEqual(e.message, "invalid multi-part information for http://host/path/to/target.png: {\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}");
-            }
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    maxPartSize: 10000, 
+                    uploadURIs: [
+                        "http://host/path/to/target.png/block"
+                    ], 
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid multi-part information for http://host/path/to/target.png: {\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}");
         });
         it("maxPartSize missing", async () => {
-            try {
-                await tryInvalidInitiateUploadResponse({
-                    files: [{
-                        minPartSize: 1000, 
-                        uploadURIs: [
-                            "http://host/path/to/target.png/block"
-                        ], 
-                        uploadToken: "uploadToken"
-                    }],
-                    completeURI: "/path/to.completeUpload.json"
-                });
-                assert.fail("exception should be thrown");
-            } catch (e) {
-                assert.strictEqual(e.message, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}");
-            }
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    uploadURIs: [
+                        "http://host/path/to/target.png/block"
+                    ], 
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}");
         });
         it("uploadURIs missing", async () => {
-            try {
-                await tryInvalidInitiateUploadResponse({
-                    files: [{
-                        minPartSize: 1000, 
-                        maxPartSize: 10000, 
-                        uploadToken: "uploadToken"
-                    }],
-                    completeURI: "/path/to.completeUpload.json"
-                });
-                assert.fail("exception should be thrown");
-            } catch (e) {
-                assert.strictEqual(e.message, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadToken\":\"uploadToken\"}");
-            }
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadToken\":\"uploadToken\"}");
         });
         it("uploadURIs array empty", async () => {
-            try {
-                await tryInvalidInitiateUploadResponse({
-                    files: [{
-                        minPartSize: 1000, 
-                        maxPartSize: 10000, 
-                        uploadURIs: [], 
-                        uploadToken: "uploadToken"
-                    }],
-                    completeURI: "/path/to.completeUpload.json"
-                });
-                assert.fail("exception should be thrown");
-            } catch (e) {
-                assert.strictEqual(e.message, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[],\"uploadToken\":\"uploadToken\"}");
-            }
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadURIs: [], 
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[],\"uploadToken\":\"uploadToken\"}");
         });
     });
 });
