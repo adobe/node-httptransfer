@@ -21,45 +21,7 @@ const { AssetMetadata } = require('../../lib/asset/assetmetadata');
 const { AssetMultipart } = require('../../lib/asset/assetmultipart');
 const { TransferAsset } = require('../../lib/asset/transferasset');
 const { AEMInitiateUpload } = require("../../lib/functions/aeminitiateupload");
-
-class ControllerMock {
-    constructor() {
-        this.notifications = [];
-    }
-    notifyBefore(functionName, transferItem, props) {
-        this.notifications.push({
-            event: "before",
-            functionName,
-            transferItem,
-            props
-        });
-    }
-    notifyAfter(functionName, transferItem, props) {
-        this.notifications.push({
-            event: "after",
-            functionName,
-            transferItem,
-            props
-        });
-    }
-    notifyYield(functionName, transferItem, props) {
-        this.notifications.push({
-            event: "yield",
-            functionName,
-            transferItem,
-            props
-        });
-    }
-    notifyFailure(functionName, error, transferItem, props) {
-        this.notifications.push({
-            event: "failure",
-            functionName,
-            error: error.message,
-            transferItem,
-            props
-        });
-    }
-}
+const { ControllerMock } = require("./controllermock");
 
 async function tryInvalidInitiateUploadResponse(response, expectedErrorMessage) {
     const source = new Asset("file:///path/to/source.png");
@@ -86,12 +48,12 @@ async function tryInvalidInitiateUploadResponse(response, expectedErrorMessage) 
     await generator.next();
 
     assert.deepStrictEqual(controller.notifications, [{
-        event: "before",
+        eventName: "AEMInitiateUpload",
         functionName: "AEMInitiateUpload",
         props: undefined,
         transferItem: transferAsset
     }, {
-        event: "failure",
+        eventName: "error",
         functionName: "AEMInitiateUpload",
         props: undefined,
         transferItem: transferAsset,

@@ -22,45 +22,7 @@ const { AssetMultipart } = require('../../lib/asset/assetmultipart');
 const { NameConflictPolicy } = require('../../lib/asset/nameconflictpolicy');
 const { TransferAsset } = require('../../lib/asset/transferasset');
 const { AEMCompleteUpload } = require("../../lib/functions/aemcompleteupload");
-
-class ControllerMock {
-    constructor() {
-        this.notifications = [];
-    }
-    notifyBefore(functionName, transferItem, props) {
-        this.notifications.push({
-            event: "before",
-            functionName,
-            transferItem,
-            props
-        });
-    }
-    notifyAfter(functionName, transferItem, props) {
-        this.notifications.push({
-            event: "after",
-            functionName,
-            transferItem,
-            props
-        });
-    }
-    notifyYield(functionName, transferItem, props) {
-        this.notifications.push({
-            event: "yield",
-            functionName,
-            transferItem,
-            props
-        });
-    }
-    notifyFailure(functionName, error, transferItem, props) {
-        this.notifications.push({
-            event: "failure",
-            functionName,
-            error: error.message,
-            transferItem,
-            props
-        });
-    }
-}
+const { ControllerMock } = require("./controllermock");
 
 /**
  * @typedef {Object} CreateTransferAssetOptions
@@ -118,17 +80,12 @@ describe("AEMCompleteUpload", () => {
             }
 
             assert.deepStrictEqual(controller.notifications, [{
-                event: "before",
+                eventName: "AEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
             }, {
-                event: "after",
-                functionName: "AEMCompleteUpload",
-                props: undefined,
-                transferItem: transferAsset
-            }, {
-                event: "yield",
+                eventName: "AfterAEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
@@ -157,17 +114,12 @@ describe("AEMCompleteUpload", () => {
             }
 
             assert.deepStrictEqual(controller.notifications, [{
-                event: "before",
+                eventName: "AEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
             }, {
-                event: "after",
-                functionName: "AEMCompleteUpload",
-                props: undefined,
-                transferItem: transferAsset
-            }, {
-                event: "yield",
+                eventName: "AfterAEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
@@ -196,17 +148,12 @@ describe("AEMCompleteUpload", () => {
             }
 
             assert.deepStrictEqual(controller.notifications, [{
-                event: "before",
+                eventName: "AEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
             }, {
-                event: "after",
-                functionName: "AEMCompleteUpload",
-                props: undefined,
-                transferItem: transferAsset
-            }, {
-                event: "yield",
+                eventName: "AfterAEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
@@ -235,17 +182,12 @@ describe("AEMCompleteUpload", () => {
             }
 
             assert.deepStrictEqual(controller.notifications, [{
-                event: "before",
+                eventName: "AEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
             }, {
-                event: "after",
-                functionName: "AEMCompleteUpload",
-                props: undefined,
-                transferItem: transferAsset
-            }, {
-                event: "yield",
+                eventName: "AfterAEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
@@ -274,17 +216,12 @@ describe("AEMCompleteUpload", () => {
             }
 
             assert.deepStrictEqual(controller.notifications, [{
-                event: "before",
+                eventName: "AEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
             }, {
-                event: "after",
-                functionName: "AEMCompleteUpload",
-                props: undefined,
-                transferItem: transferAsset
-            }, {
-                event: "yield",
+                eventName: "AfterAEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
@@ -313,17 +250,12 @@ describe("AEMCompleteUpload", () => {
             }
 
             assert.deepStrictEqual(controller.notifications, [{
-                event: "before",
+                eventName: "AEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
             }, {
-                event: "after",
-                functionName: "AEMCompleteUpload",
-                props: undefined,
-                transferItem: transferAsset
-            }, {
-                event: "yield",
+                eventName: "AfterAEMCompleteUpload",
                 functionName: "AEMCompleteUpload",
                 props: undefined,
                 transferItem: transferAsset
