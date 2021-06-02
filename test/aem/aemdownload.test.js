@@ -19,6 +19,7 @@ const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
 const { AEMDownload } = require('../../lib/aem/aemdownload');
+const UploadError = require('../../lib/aem/upload-error');
 
 describe('AEM Download', function() {
     afterEach(async function () {
@@ -62,7 +63,8 @@ describe('AEM Download', function() {
         const events = {
             filestart: [],
             fileprogress:[],
-            fileend: []
+            fileend: [],
+            fileerror: []
         };
         aemDownload.on('filestart', (data) => {
             events.filestart.push(data);
@@ -72,6 +74,9 @@ describe('AEM Download', function() {
         });
         aemDownload.on('fileend', (data) => {
             events.fileend.push(data);
+        });
+        aemDownload.on('fileerror', (data) => {
+            events.fileerror.push(data);
         });
         await aemDownload.downloadFiles({
             downloadFiles: [{
@@ -95,6 +100,7 @@ describe('AEM Download', function() {
         assert.strictEqual(events.filestart.length, 1);
         assert.strictEqual(events.fileprogress.length, 2);
         assert.strictEqual(events.fileend.length, 1);
+        assert.strictEqual(events.fileerror.length, 0);
 
         const fileEventData = {
             fileName: 'file-1.jpg',
@@ -109,5 +115,75 @@ describe('AEM Download', function() {
         verifyProgressEvent(events.fileprogress[0], fileEventData);
         verifyProgressEvent(events.fileprogress[1], fileEventData);
         assert.deepStrictEqual(events.fileend[0], fileEventData);
+    });
+
+    it('AEM 4xx download failure', async function() {
+        const testFile = Path.join(__dirname, 'file-1.jpg');
+        nock('http://test-aem-download-400')
+            .matchHeader("range", "bytes=7-11")
+            .get('/path/to/file-1.jpg')
+            .reply(400);
+        nock('http://test-aem-download-400')
+            .matchHeader("range", "bytes=0-6")
+            .get('/path/to/file-1.jpg')
+            .reply(400);
+
+        const aemDownload = new AEMDownload();
+        const events = {
+            filestart: [],
+            fileprogress:[],
+            fileend: [],
+            fileerror: []
+        };
+        aemDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        aemDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        aemDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        aemDownload.on('fileerror', (data) => {
+            events.fileerror.push(data);
+        });
+        await aemDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: 'http://test-aem-download-400/path/to/file-1.jpg',
+                filePath: testFile,
+                fileSize: 12
+            }],
+            headers: {},
+            concurrent: false,
+            maxConcurrent: 1,
+            preferredPartSize: 7
+        });
+
+        const errors = events.fileerror[0].errors;
+        assert.strictEqual(errors.length, 1);
+        assert.ok(errors[0] instanceof UploadError);
+        assert.strictEqual(errors[0].message, 'Request failed with status code 400');
+        
+        assert.deepStrictEqual(events, {
+            filestart: [{
+                fileName: 'file-1.jpg',
+                fileSize: 12,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname
+            }],
+            fileprogress: [],
+            fileend: [],
+            fileerror: [{
+                fileName: 'file-1.jpg',
+                fileSize: 12,
+                sourceFile: '/path/to/file-1.jpg',
+                sourceFolder: '/path/to',
+                targetFile: testFile,
+                targetFolder: __dirname,
+                errors
+            }]
+        });
     });
 });
