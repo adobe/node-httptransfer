@@ -23,6 +23,10 @@ const { AssetVersion } = require('../../lib/asset/assetversion');
 const { NameConflictPolicy } = require('../../lib/asset/nameconflictpolicy');
 const { TransferAsset } = require('../../lib/asset/transferasset');
 
+function getExpectedFilePath(path) {
+    return path.replace(/\//g, sep);
+}
+
 describe("TransferAsset", function() {
     describe("constructor", () => {
         it("no-source no-target fail", () => {
@@ -61,8 +65,8 @@ describe("TransferAsset", function() {
                 fileSize: undefined,
                 sourceFile: '/path/to/source.png',
                 sourceFolder: '/path/to',
-                targetFile: "/path/to/target.png",
-                targetFolder: "/path/to"
+                targetFile: getExpectedFilePath("/path/to/target.png"),
+                targetFolder: getExpectedFilePath("/path/to")
             });
         });
         it("upload", () => {
@@ -79,8 +83,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -105,8 +109,8 @@ describe("TransferAsset", function() {
                 fileName: "target.png",
                 fileSize: 9876,
                 mimeType: "image/png",
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -139,8 +143,8 @@ describe("TransferAsset", function() {
                 fileName: "target.png",
                 fileSize: 9876,
                 mimeType: "image/png",
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -171,8 +175,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -193,8 +197,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -215,8 +219,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -237,8 +241,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -262,8 +266,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -295,8 +299,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -328,8 +332,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -361,8 +365,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -394,8 +398,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -427,8 +431,8 @@ describe("TransferAsset", function() {
             assert.deepStrictEqual(transferAsset.eventData, {
                 fileName: "target.png",
                 fileSize: undefined,
-                sourceFile: '/path/to/source.png',
-                sourceFolder: '/path/to',
+                sourceFile: getExpectedFilePath('/path/to/source.png'),
+                sourceFolder: getExpectedFilePath('/path/to'),
                 targetFile: "/path/to/target.png",
                 targetFolder: "/path/to"
             });
@@ -453,8 +457,8 @@ describe("TransferAsset", function() {
                 mimeType: "image/png",
                 targetFolder: "/path/to",
                 targetFile: "/path/to/target.png",
-                sourceFolder: `C:${sep}path${sep}to`,
-                sourceFile: `C:${sep}path${sep}to${sep}source.png`,
+                sourceFolder: getExpectedFilePath('C:/path/to'),
+                sourceFile: getExpectedFilePath('C:/path/to/source.png'),
             });
         });
     });

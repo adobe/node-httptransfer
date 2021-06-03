@@ -124,8 +124,20 @@ describe("util", function() {
     });
 
     it('url to path', function() {
-        assert.strictEqual(util.urlToPath('http://host/test%20space/path'), '/test space/path');
-        assert.strictEqual(util.urlToPath('file:///test%20space/path'), `${path.sep}test space${path.sep}path`);
-        assert.strictEqual(util.urlToPath('file:///C:/test%20space/path'), `C:${path.sep}test space${path.sep}path`);
+        assert.deepStrictEqual(util.urlToPath('http://host/test%20space/path'), {
+            path: '/test space/path',
+            name: 'path',
+            parentPath: '/test space',
+        });
+        assert.deepStrictEqual(util.urlToPath('file:///test%20space/path'), {
+            path: `${path.sep}test space${path.sep}path`,
+            name: 'path',
+            parentPath: `${path.sep}test space`,
+        });
+        assert.deepStrictEqual(util.urlToPath('file:///C:/test%20space/path'), {
+            path: `C:${path.sep}test space${path.sep}path`,
+            name: 'path',
+            parentPath: `C:${path.sep}test space`,
+        });
     });
 });
