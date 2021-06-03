@@ -123,9 +123,9 @@ describe("util", function() {
         assert.rejects(util.streamToBuffer("get", "url", 200, stream, 12));
     });
 
-    it('file url to file path', function() {
-        assert.strictEqual(util.fileUrlToFilePath('/test/path'), '/test/path');
-        assert.strictEqual(util.fileUrlToFilePath('file:///test/path'), '/test/path');
-        assert.strictEqual(util.fileUrlToFilePath('file:///C:/test/path'), 'C:/test/path');
+    it('url to path', function() {
+        assert.strictEqual(util.urlToPath('http://host/test%20space/path'), '/test space/path');
+        assert.strictEqual(util.urlToPath('file:///test%20space/path'), `${path.sep}test space${path.sep}path`);
+        assert.strictEqual(util.urlToPath('file:///C:/test%20space/path'), `C:${path.sep}test space${path.sep}path`);
     });
 });

@@ -15,6 +15,7 @@
 'use strict';
 
 const assert = require('assert');
+const { sep } = require('path');
 const { Asset } = require('../../lib/asset/asset');
 const { AssetMetadata } = require('../../lib/asset/assetmetadata');
 const { AssetMultipart } = require('../../lib/asset/assetmultipart');
@@ -439,6 +440,22 @@ describe("TransferAsset", function() {
                 const transferAsset = new TransferAsset(source, target);
                 transferAsset.nameConflictPolicy = 123;    
             }, Error("'nameConflictPolicy' must be of type NameConflictPolicy: 123 (number)"));
+        });
+        it("test event data with windows paths", () => {
+            const source = new Asset("file:///C:/path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+            const transferAsset = new TransferAsset(source, target, {
+                metadata: new AssetMetadata("source.png", "image/png", 100),
+            });
+            assert.deepStrictEqual(transferAsset.eventData, {
+                fileName: "target.png",
+                fileSize: 100,
+                mimeType: "image/png",
+                targetFolder: "/path/to",
+                targetFile: "/path/to/target.png",
+                sourceFolder: `C:${sep}path${sep}to`,
+                sourceFile: `C:${sep}path${sep}to${sep}source.png`,
+            });
         });
     });
 });
