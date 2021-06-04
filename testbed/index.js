@@ -376,13 +376,16 @@ async function main() {
 
     // transfer
     if (params.aem && source.file && target.url) {
+        const startTime = Date.now();
         const options = await createAEMUploadOptions(source.file, target.url, params);
         const upload = new AEMUpload();
         upload.on("filestart", ({ fileName, fileSize }) => {
             console.log(`${fileName}: Start transfer ${fileSize} bytes`);
         });
-        upload.on("fileprogress", ({ fileName, fileSize, transferred }) => {
-            console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
+        upload.on("fileprogress", ({ fileName, fileSize, transferred, totalTransferred }) => {
+            let rate = (totalTransferred/(1024*1024)) / ((Date.now() - startTime) / 1000);
+            rate = Math.round(rate*100) / 100;
+            console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes, ${rate} MBytes/sec`);
         });
         upload.on("fileend", ({ fileName, fileSize }) => {
             console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
@@ -392,13 +395,16 @@ async function main() {
         });
         await upload.uploadFiles(options);
     } else if (params.aem && source.url && target.file) {
+        const startTime = Date.now();
         const options = await createAEMDownloadOptions(source.url, target.file, params);
         const download = new AEMDownload();
         download.on("filestart", ({ fileName, fileSize }) => {
             console.log(`${fileName}: Start transfer ${fileSize} bytes`);
         });
-        download.on("fileprogress", ({ fileName, fileSize, transferred }) => {
-            console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
+        download.on("fileprogress", ({ fileName, fileSize, transferred, totalTransferred }) => {
+            let rate = (totalTransferred/(1024*1024)) / ((Date.now() - startTime) / 1000);
+            rate = Math.round(rate*100) / 100;
+            console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes, ${rate} MBytes/sec`);
         });
         download.on("fileend", ({ fileName, fileSize }) => {
             console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
