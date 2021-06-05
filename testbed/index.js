@@ -12,6 +12,7 @@
 
 "use strict";
 
+const httpMetricsClient = require("@adobe/openwhisk-newrelic/lib/probe/http-client");
 const filterObject = require("filter-obj");
 const fs = require("fs").promises;
 const path = require("path");
@@ -374,6 +375,12 @@ async function main() {
         console.log(`Target: ${target.aem || target.url || target.file}`);
     }
 
+    httpMetricsClient.start(({duration, durationBlocked, durationDNS, durationConnect, durationSSL, durationSend, durationWait, durationReceive}) => {
+        console.log("Duration:", duration, "Socket:", durationBlocked, "DNS:", durationDNS, "Connect:", durationConnect, "SSL", durationSSL, "Send:", durationSend, "Wait:", durationWait, "Receive:", durationReceive);
+        // "duration":1482.474045,"durationBlocked":0.892402,"durationDNS":1.203009,"durationConnect":30.527536,"durationSSL":38.065752,"durationSend":0.073784,"durationWait":158.017854,"durationReceive":1253.693708,"requestBodySize":0,"responseBodySize":10485760
+        // console.log(JSON.stringify(metrics));
+    });
+
     // transfer
     if (params.aem && source.file && target.url) {
         const startTime = Date.now();
@@ -445,6 +452,8 @@ async function main() {
     } else {
         throw Error("Transfer is not supported");
     }
+
+    httpMetricsClient.stop();
 }
 
 main()
