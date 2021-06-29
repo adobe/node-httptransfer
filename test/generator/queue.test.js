@@ -26,7 +26,6 @@ async function toArray(items) {
     return result;
 }
 
-// eslint-disable-next-line mocha/no-exclusive-tests
 describe("queue", () => {
     describe("failure testing", () => {
         it("invalid capacity, zero", () => {
@@ -45,7 +44,7 @@ describe("queue", () => {
             assert.throws(() => {
                 const queue = new Queue(1);
                 queue.complete();
-                queue.add(1);
+                queue.push(1);
             }, Error("Queue has been completed, rejecting new item: 1"));
         }); 
     });
@@ -58,7 +57,7 @@ describe("queue", () => {
                 ++drained;
             });
     
-            const length = queue.add(1);
+            const length = queue.push(1);
             queue.complete();
             assert.strictEqual(length, 1);
             assert.strictEqual(queue.full, true);
@@ -76,7 +75,7 @@ describe("queue", () => {
                 ++drained;
             });
     
-            const length = queue.add(1);
+            const length = queue.push(1);
             queue.complete();
             assert.strictEqual(queue.full, true);
             assert.strictEqual(length, 1);
@@ -94,10 +93,10 @@ describe("queue", () => {
                 ++drained;
             });
     
-            let length = queue.add(1);
+            let length = queue.push(1);
             assert.strictEqual(length, 1);
             assert.strictEqual(queue.full, false);
-            length = queue.add(2);
+            length = queue.push(2);
             assert.strictEqual(length, 2);
             assert.strictEqual(queue.full, true);
             queue.complete();
@@ -115,10 +114,10 @@ describe("queue", () => {
                 ++drained;
             });
     
-            let length = queue.add(1);
+            let length = queue.push(1);
             assert.strictEqual(length, 1);
             assert.strictEqual(queue.full, true);
-            length = queue.add(2);
+            length = queue.push(2);
             assert.strictEqual(length, 2);
             assert.strictEqual(queue.full, true);
             queue.complete();
@@ -140,10 +139,10 @@ describe("queue", () => {
         it("add, complete, steps", async () => {
             const queue = new Queue(2);
             const asyncIter = queue[Symbol.asyncIterator]();
-            queue.add(1);
+            queue.push(1);
             let item = await asyncIter.next();
             assert.deepStrictEqual(item, { done: false, value: 1 });
-            queue.add(2);
+            queue.push(2);
             item = await asyncIter.next();
             assert.deepStrictEqual(item, { done: false, value: 2 });
             queue.complete();
