@@ -15,7 +15,7 @@
 "use strict";
 
 const assert = require("assert");
-const { AggregateBuffers } = require("../../lib/generator/aggregatebuffers");
+const { AccumulateBuffers } = require("../../lib/generator/accumulatebuffers");
 const { IllegalArgumentError } = require("../../lib/error");
 const { Queue } = require("../../lib/generator/queue");
 
@@ -27,57 +27,57 @@ async function toArray(items) {
     return result;
 }
 
-describe("aggregatebuffers", () => {
+describe("AccumulateBuffers", () => {
     describe("failure", () => {
         it("invalid-queue-param", () => {
             assert.throws(() => {
-                new AggregateBuffers("abc", 1);
+                new AccumulateBuffers("abc", 1);
             }, new IllegalArgumentError("queue must be of type Queue or Array", "abc"));
         });
         it("invalid-partsize-type", () => {
             assert.throws(() => {
-                new AggregateBuffers([], "1");
+                new AccumulateBuffers([], "1");
             }, new IllegalArgumentError("partSize must be 1 or larger", "1"));
         });
         it("invalid-partsize-value", () => {
             assert.throws(() => {
-                new AggregateBuffers([], 0);
+                new AccumulateBuffers([], 0);
             }, new IllegalArgumentError("partSize must be 1 or larger", 0));
         });
         it("invalid-push-chunk-type", () => {
             assert.throws(() => {
-                new AggregateBuffers([], 1).push("abc");
+                new AccumulateBuffers([], 1).push("abc");
             }, new IllegalArgumentError("chunk must be of type Buffer", "abc"));
         });
     });
     describe("single chunk", () => {
         it("small", () => {
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 2);
+            const accumulateBuffers = new AccumulateBuffers(result, 2);
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.flush();
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 1);
             assert.strictEqual(result[0].toString("utf-8"), "a");
         });
         it("exact", () => {
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 2);
+            const accumulateBuffers = new AccumulateBuffers(result, 2);
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(2, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(2, "a", "utf-8"));
             assert.strictEqual(result.length, 1);
-            aggregateBuffers.flush();
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 1);
             assert.strictEqual(result[0].toString("utf-8"), "aa");
         });
         it("large", () => {
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 2);
+            const accumulateBuffers = new AccumulateBuffers(result, 2);
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(3, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(3, "a", "utf-8"));
             assert.strictEqual(result.length, 1);
-            aggregateBuffers.flush();
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 2);
             assert.strictEqual(result[0].toString("utf-8"), "aa");
             assert.strictEqual(result[1].toString("utf-8"), "a");
@@ -86,48 +86,48 @@ describe("aggregatebuffers", () => {
     describe("accumulate", () => {
         it("small", () => {
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 4);
+            const accumulateBuffers = new AccumulateBuffers(result, 4);
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.flush();
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 1);
             assert.strictEqual(result[0].toString("utf-8"), "abc");
         });
         it("exact", () => {
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 4);
+            const accumulateBuffers = new AccumulateBuffers(result, 4);
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "d", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "d", "utf-8"));
             assert.strictEqual(result.length, 1);
-            aggregateBuffers.flush();
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 1);
             assert.strictEqual(result[0].toString("utf-8"), "abcd");
         });
         it("large", () => {
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 4);
+            const accumulateBuffers = new AccumulateBuffers(result, 4);
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
             assert.strictEqual(result.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "d", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "d", "utf-8"));
             assert.strictEqual(result.length, 1);
-            aggregateBuffers.push(Buffer.alloc(1, "e", "utf-8"));
-            aggregateBuffers.flush();
+            accumulateBuffers.push(Buffer.alloc(1, "e", "utf-8"));
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 2);
             assert.strictEqual(result[0].toString("utf-8"), "abcd");
             assert.strictEqual(result[1].toString("utf-8"), "e");
@@ -136,15 +136,15 @@ describe("aggregatebuffers", () => {
     describe("queue", () => {
         it("small", async () => {
             const queue = new Queue(1);
-            const aggregateBuffers = new AggregateBuffers(queue, 4);
+            const accumulateBuffers = new AccumulateBuffers(queue, 4);
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.flush();
+            accumulateBuffers.flush();
             queue.complete();
             assert.strictEqual(queue.length, 1);
             const result = await toArray(queue);
@@ -153,17 +153,17 @@ describe("aggregatebuffers", () => {
         });
         it("exact", async () => {
             const queue = new Queue(1);
-            const aggregateBuffers = new AggregateBuffers(queue, 4);
+            const accumulateBuffers = new AccumulateBuffers(queue, 4);
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "d", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "d", "utf-8"));
             assert.strictEqual(queue.length, 1);
-            aggregateBuffers.flush();
+            accumulateBuffers.flush();
             queue.complete();
             assert.strictEqual(queue.length, 1);
             const result = await toArray(queue);
@@ -172,18 +172,18 @@ describe("aggregatebuffers", () => {
         });
         it("large", async () => {
             const queue = new Queue(1);
-            const aggregateBuffers = new AggregateBuffers(queue, 4);
+            const accumulateBuffers = new AccumulateBuffers(queue, 4);
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "a", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "b", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "c", "utf-8"));
             assert.strictEqual(queue.length, 0);
-            aggregateBuffers.push(Buffer.alloc(1, "d", "utf-8"));
+            accumulateBuffers.push(Buffer.alloc(1, "d", "utf-8"));
             assert.strictEqual(queue.length, 1);
-            aggregateBuffers.push(Buffer.alloc(1, "e", "utf-8"));
-            aggregateBuffers.flush();
+            accumulateBuffers.push(Buffer.alloc(1, "e", "utf-8"));
+            accumulateBuffers.flush();
             queue.complete();
             assert.strictEqual(queue.length, 2);
             const result = await toArray(queue);
@@ -197,11 +197,11 @@ describe("aggregatebuffers", () => {
             // slices smaller than buffer
             const buffer = Buffer.from("Hello World", "utf-8");
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 6);
+            const accumulateBuffers = new AccumulateBuffers(result, 6);
             for (let i = 0; i < buffer.length; ++i) {
-                aggregateBuffers.push(buffer.slice(i, i+1));
+                accumulateBuffers.push(buffer.slice(i, i+1));
             }
-            aggregateBuffers.flush();
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 2);
             assert.strictEqual(result[0].toString("utf-8"), "Hello ");
             assert.strictEqual(result[1].toString("utf-8"), "World");
@@ -210,10 +210,10 @@ describe("aggregatebuffers", () => {
             // slices exact as buffer
             const buffer = Buffer.from("Hello World", "utf-8");
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 6);
-            aggregateBuffers.push(buffer.slice(0, 6));
-            aggregateBuffers.push(buffer.slice(6));
-            aggregateBuffers.flush();
+            const accumulateBuffers = new AccumulateBuffers(result, 6);
+            accumulateBuffers.push(buffer.slice(0, 6));
+            accumulateBuffers.push(buffer.slice(6));
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 2);
             assert.strictEqual(result[0].toString("utf-8"), "Hello ");
             assert.strictEqual(result[1].toString("utf-8"), "World");
@@ -222,10 +222,10 @@ describe("aggregatebuffers", () => {
             // slices larger than buffer
             const buffer = Buffer.from("Hello World", "utf-8");
             const result = [];
-            const aggregateBuffers = new AggregateBuffers(result, 3);
-            aggregateBuffers.push(buffer.slice(0, 6));
-            aggregateBuffers.push(buffer.slice(6));
-            aggregateBuffers.flush();
+            const accumulateBuffers = new AccumulateBuffers(result, 3);
+            accumulateBuffers.push(buffer.slice(0, 6));
+            accumulateBuffers.push(buffer.slice(6));
+            accumulateBuffers.flush();
             assert.strictEqual(result.length, 4);
             assert.strictEqual(result[0].toString("utf-8"), "Hel");
             assert.strictEqual(result[1].toString("utf-8"), "lo ");
