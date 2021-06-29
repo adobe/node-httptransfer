@@ -26,6 +26,7 @@ async function toArray(items) {
     return result;
 }
 
+// eslint-disable-next-line mocha/no-exclusive-tests
 describe("queue", () => {
     describe("failure testing", () => {
         it("invalid capacity, zero", () => {
@@ -53,13 +54,14 @@ describe("queue", () => {
             const queue = new Queue(1);
     
             let drained = 0;
-            queue.on("drained", () => {
+            queue.on("drain", () => {
                 ++drained;
             });
     
-            const moreCapacity = queue.add(1);
+            const length = queue.add(1);
             queue.complete();
-            assert.strictEqual(moreCapacity, false);
+            assert.strictEqual(length, 1);
+            assert.strictEqual(queue.full, true);
             assert.strictEqual(drained, 0);
     
             const items = await toArray(queue);
@@ -70,13 +72,14 @@ describe("queue", () => {
             const queue = new Queue(1);
     
             let drained = 0;
-            queue.on("drained", () => {
+            queue.on("drain", () => {
                 ++drained;
             });
     
-            const moreCapacity = queue.add(1);
+            const length = queue.add(1);
             queue.complete();
-            assert.strictEqual(moreCapacity, false);
+            assert.strictEqual(queue.full, true);
+            assert.strictEqual(length, 1);
             assert.strictEqual(drained, 0);
     
             const items = await toArray(queue);
@@ -87,14 +90,16 @@ describe("queue", () => {
             const queue = new Queue(2);
     
             let drained = 0;
-            queue.on("drained", () => {
+            queue.on("drain", () => {
                 ++drained;
             });
     
-            let moreCapacity = queue.add(1);
-            assert.strictEqual(moreCapacity, true);
-            moreCapacity = queue.add(2);
-            assert.strictEqual(moreCapacity, false);
+            let length = queue.add(1);
+            assert.strictEqual(length, 1);
+            assert.strictEqual(queue.full, false);
+            length = queue.add(2);
+            assert.strictEqual(length, 2);
+            assert.strictEqual(queue.full, true);
             queue.complete();
             assert.strictEqual(drained, 0);
     
@@ -106,14 +111,16 @@ describe("queue", () => {
             const queue = new Queue(1);
     
             let drained = 0;
-            queue.on("drained", () => {
+            queue.on("drain", () => {
                 ++drained;
             });
     
-            let moreCapacity = queue.add(1);
-            assert.strictEqual(moreCapacity, false);
-            moreCapacity = queue.add(2);
-            assert.strictEqual(moreCapacity, false);
+            let length = queue.add(1);
+            assert.strictEqual(length, 1);
+            assert.strictEqual(queue.full, true);
+            length = queue.add(2);
+            assert.strictEqual(length, 2);
+            assert.strictEqual(queue.full, true);
             queue.complete();
             assert.strictEqual(drained, 0);
     
