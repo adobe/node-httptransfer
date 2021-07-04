@@ -16,11 +16,9 @@
 
 const assert = require("assert");
 const { IllegalArgumentError } = require("../../lib/error");
-// const { IllegalArgumentError } = require("../../lib/error");
 const { ReadRangeFilter } = require("../../lib/generator/readrangefilter");
-// const { StringReadable } = require("../streams");
 
-describe.only("readrangefilter", () => {
+describe("readrangefilter", () => {
     describe("constructor", () => {
         it("invalid streamOffset type", () => {
             assert.throws(() => {
