@@ -32,7 +32,7 @@ async function* toAsyncIterator(items) {
     }
 }
 
-describe.only("AggregateBuffers", () => {
+describe("AggregateBuffers", () => {
     describe("partSize", () => {
         it("invalid-partsize-type", () => {
             assert.throws(() => {
