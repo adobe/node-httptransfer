@@ -57,10 +57,10 @@ describe("queue", () => {
                 ++drained;
             });
     
-            const length = queue.push(1);
+            const queueFull = !queue.push(1);
             queue.complete();
-            assert.strictEqual(length, 1);
-            assert.strictEqual(queue.full, true);
+            assert.strictEqual(queue.length, 1);
+            assert.strictEqual(queueFull, true);
             assert.strictEqual(drained, 0);
     
             const items = await toArray(queue);
@@ -75,10 +75,10 @@ describe("queue", () => {
                 ++drained;
             });
     
-            const length = queue.push(1);
+            const queueFull = !queue.push(1);
             queue.complete();
-            assert.strictEqual(queue.full, true);
-            assert.strictEqual(length, 1);
+            assert.strictEqual(queueFull, true);
+            assert.strictEqual(queue.length, 1);
             assert.strictEqual(drained, 0);
     
             const items = await toArray(queue);
@@ -93,12 +93,12 @@ describe("queue", () => {
                 ++drained;
             });
     
-            let length = queue.push(1);
-            assert.strictEqual(length, 1);
-            assert.strictEqual(queue.full, false);
-            length = queue.push(2);
-            assert.strictEqual(length, 2);
-            assert.strictEqual(queue.full, true);
+            let queueFull = !queue.push(1);
+            assert.strictEqual(queue.length, 1);
+            assert.strictEqual(queueFull, false);
+            queueFull = !queue.push(2);
+            assert.strictEqual(queue.length, 2);
+            assert.strictEqual(queueFull, true);
             queue.complete();
             assert.strictEqual(drained, 0);
     
@@ -114,12 +114,12 @@ describe("queue", () => {
                 ++drained;
             });
     
-            let length = queue.push(1);
-            assert.strictEqual(length, 1);
-            assert.strictEqual(queue.full, true);
-            length = queue.push(2);
-            assert.strictEqual(length, 2);
-            assert.strictEqual(queue.full, true);
+            let queueFull = !queue.push(1);
+            assert.strictEqual(queue.length, 1);
+            assert.strictEqual(queueFull, true);
+            queueFull = !queue.push(2);
+            assert.strictEqual(queue.length, 2);
+            assert.strictEqual(queueFull, true);
             queue.complete();
             assert.strictEqual(drained, 0);
     

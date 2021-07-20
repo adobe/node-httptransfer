@@ -22,17 +22,26 @@ const { StringDecoder } = require('string_decoder');
  * character at a time.
  */
 class StringReadable extends stream.Readable {
-
-    constructor(str) {
+    /**
+     * Construct StringReadable
+     * 
+     * @param {String} str String to pass through in the stream
+     * @param {Error} [error] If provided, the stream fails with an error at the end
+     */
+    constructor(str, error) {
         super();
         this.data = Buffer.from(str, 'utf8');
         this.position = 0;
+        this.error = error;
     }
 
     _read() {
         if (this.position < this.data.length) {
             this.push(this.data.slice(this.position, this.position + 1));
             ++this.position;
+        } else if (this.error) {
+            // finish the stream with an error
+            this.destroy(this.error);
         } else {
             // end of stream
             this.push(null);
@@ -73,11 +82,7 @@ class StringWritable extends stream.Writable {
  * @param {Error} error Error to emit on first read
  */
 function createErrorReadable(error) {
-    return new stream.Readable({
-        read() {
-            process.nextTick(() => this.emit('error', error));
-        }
-    });
+    return new StringReadable("", error);
 }
 
 /**
@@ -87,7 +92,7 @@ function createErrorReadable(error) {
  */
 function createErrorWritable(error) {
     return new stream.Writable({
-        write(chunk, encoding, callback) {
+        write(_chunk, _encoding, callback) {
             callback(error);
         }
     });
