@@ -129,6 +129,7 @@ describe("AEMInitiateUpload", () => {
                         uploadURIs: [
                             "http://host/path/to/target.png/block"
                         ], 
+                        mimeType: "image/png",
                         uploadToken: "uploadToken"
                     }],
                     completeURI: "/path/to.completeUpload.json"
@@ -141,14 +142,14 @@ describe("AEMInitiateUpload", () => {
                 retryEnabled: false
             });
             const generator = initiateUpload.execute([new TransferAsset(source, target, {
-                metadata: new AssetMetadata(undefined, "image/png", 1234)
+                metadata: new AssetMetadata("target.png", undefined, 1234)
             })], controller);
             
             // check the first file response
             {
                 const { value, done } = await generator.next();
                 assert.deepStrictEqual(value, new TransferAsset(source, target, {
-                    metadata: new AssetMetadata(undefined, "image/png", 1234),
+                    metadata: new AssetMetadata("target.png", "image/png", 1234),
                     multipartTarget: new AssetMultipart([
                         "http://host/path/to/target.png/block"
                     ], 1000, 10000, undefined, "http://host/path/to.completeUpload.json", "uploadToken")
@@ -172,7 +173,7 @@ describe("AEMInitiateUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.initiateUpload.json", 
-                    "fileName=target1.png&fileSize=1234&fileName=target2.png&fileSize=1234"
+                    "fileName=target1.png&fileSize=1234&fileName=target2.png&fileSize=5678"
                 )
                 .reply(200, JSON.stringify({
                     files: [{
@@ -181,10 +182,12 @@ describe("AEMInitiateUpload", () => {
                         uploadURIs: [
                             "http://host/path/to/target1.png/block"
                         ], 
+                        mimeType: "image/png",
                         uploadToken: "uploadToken1"
                     }, {
                         minPartSize: 2000, 
                         maxPartSize: 20000, 
+                        mimeType: "image/png",
                         uploadURIs: [
                             "http://host/path/to/target2.png/block"
                         ], 
@@ -200,16 +203,16 @@ describe("AEMInitiateUpload", () => {
                 retryEnabled: false
             });
             const generator = initiateUpload.execute([new TransferAsset(source1, target1, {
-                metadata: new AssetMetadata(undefined, "image/png", 1234)
+                metadata: new AssetMetadata("target1.png", undefined, 1234)
             }), new TransferAsset(source2, target2, {
-                metadata: new AssetMetadata(undefined, "image/png", 1234)
+                metadata: new AssetMetadata("target2.png", undefined, 5678)
             })], controller);
             
             // check the first file response
             {
                 const { value, done } = await generator.next();
                 assert.deepStrictEqual(value, new TransferAsset(source1, target1, {
-                    metadata: new AssetMetadata(undefined, "image/png", 1234),
+                    metadata: new AssetMetadata("target1.png", "image/png", 1234),
                     multipartTarget: new AssetMultipart([
                         "http://host/path/to/target1.png/block"
                     ], 1000, 10000, undefined, "http://host/path/to.completeUpload.json", "uploadToken1")
@@ -221,7 +224,7 @@ describe("AEMInitiateUpload", () => {
             {
                 const { value, done } = await generator.next();
                 assert.deepStrictEqual(value, new TransferAsset(source2, target2, {
-                    metadata: new AssetMetadata(undefined, "image/png", 1234),
+                    metadata: new AssetMetadata("target2.png", "image/png", 5678),
                     multipartTarget: new AssetMultipart([
                         "http://host/path/to/target2.png/block"
                     ], 2000, 20000, undefined, "http://host/path/to.completeUpload.json", "uploadToken2")

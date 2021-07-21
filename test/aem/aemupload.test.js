@@ -56,7 +56,7 @@ describe('AEM Upload', function() {
             .reply(201);
 
         nock(HOST)
-            .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=undefined&createVersion=true&versionLabel=versionLabel&versionComment=versionComment&replace=false&uploadToken=upload-token')
+            .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=image%2Fjpeg&createVersion=true&versionLabel=versionLabel&versionComment=versionComment&replace=false&uploadToken=upload-token')
             .reply(200, '{}');
 
         const aemUpload = new AEMUpload();
@@ -107,8 +107,12 @@ describe('AEM Upload', function() {
         assert.deepStrictEqual(events.filestart[0], fileEventData);
         assert.deepStrictEqual(events.fileprogress[0], {
             ...fileEventData,
+            mimeType: "image/jpeg",
             transferred: 15
         });
-        assert.deepStrictEqual(events.fileend[0], fileEventData);
+        assert.deepStrictEqual(events.fileend[0], {
+            ...fileEventData,
+            mimeType: "image/jpeg",
+        });
     });
 });
