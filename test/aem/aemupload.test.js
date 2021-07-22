@@ -115,4 +115,78 @@ describe('AEM Upload', function() {
             mimeType: "image/jpeg",
         });
     });
+
+    it('AEM upload failure smoke test', async function() {
+        const HOST = 'http://test-aem-upload-201';
+        const testFile = Path.join(__dirname, 'file-1.jpg');
+        await fs.writeFile(testFile, 'hello world 123', 'utf8');
+
+        nock(HOST)
+            .post('/path/to.initiateUpload.json', 'fileName=file-1.jpg&fileSize=15')
+            .reply(403);
+
+        const aemUpload = new AEMUpload();
+        const events = {
+            filestart: [],
+            fileprogress:[],
+            fileend: [],
+            fileerror: []
+        };
+        aemUpload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        aemUpload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        aemUpload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        aemUpload.on('fileerror', (data) => {
+            events.fileerror.push(data);
+        });
+        await aemUpload.uploadFiles({
+            uploadFiles: [{
+                fileUrl: 'http://test-aem-upload-201/path/to/file-1.jpg',
+                filePath: testFile,
+                fileSize: 15,
+                createVersion: true,
+                versionLabel: 'versionLabel',
+                versionComment: 'versionComment'
+            }],
+            headers: {},
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 7
+        });
+
+        try {
+            await fs.unlink(testFile);
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
+
+        const fileEventData = {
+            fileName: 'file-1.jpg',
+            fileSize: 15,
+            targetFolder: '/path/to',
+            targetFile: '/path/to/file-1.jpg',
+            sourceFolder: __dirname,
+            sourceFile: testFile
+        };
+
+        assert.strictEqual(events.filestart.length, 1);
+        assert.strictEqual(events.fileprogress.length, 0);
+        assert.strictEqual(events.fileend.length, 0);
+        assert.strictEqual(events.fileerror.length, 1);
+
+        assert.deepStrictEqual(events.filestart[0], fileEventData);
+        const errors = events.fileerror[0].errors;
+        delete events.fileerror[0].errors;
+        assert.deepStrictEqual(events.fileerror[0], { 
+            ...fileEventData,
+        });
+        assert.strictEqual(errors.length, 1);
+        assert.strictEqual(errors[0].message, "Request failed with status code 403");
+
+    });
 });
