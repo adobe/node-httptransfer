@@ -58,6 +58,55 @@ describe("AEMCompleteUpload", () => {
         assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
     });
+    describe("mime type", () => {
+        it("no mime-type", async () => {
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+            const metadata = new AssetMetadata(undefined, undefined, 1234);
+            const multipartTarget = new AssetMultipart(
+                [ "http://host/path/to/target-block-1.png" ], 
+                1000, 
+                10000, 
+                undefined, 
+                "http://host/path/to.completeUpload.json", 
+                "upload-token"
+            );
+
+            const transferAsset = new TransferAsset(source, target, {
+                metadata,
+                multipartTarget
+            });
+    
+            nock('http://host')
+                .post(
+                    "/path/to.completeUpload.json", 
+                    "fileName=target.png&fileSize=1234&mimeType=application%2Foctet-stream&createVersion=false&replace=false&uploadToken=upload-token"
+                )
+                .reply(200, '{}', {
+                    "content-type": "application/json"
+                });
+    
+            const controller = new ControllerMock();
+            const completeUpload = new AEMCompleteUpload({
+                retryEnabled: false
+            });
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
+                assert.deepStrictEqual(asset, transferAsset);
+            }
+
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
+            }, {
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
+            }]);
+        });
+    });
     describe("name conflict policy", () => {
         it("default", async () => {
             const transferAsset = createTransferAsset();
@@ -262,5 +311,39 @@ describe("AEMCompleteUpload", () => {
             }]);
         });
     });
+    describe("error", () => {
+        it("http error", async () => {
+            const transferAsset = createTransferAsset();
     
+            nock('http://host')
+                .post(
+                    "/path/to.completeUpload.json", 
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token"
+                )
+                .reply(403);
+    
+            const controller = new ControllerMock();
+            const completeUpload = new AEMCompleteUpload({
+                retryEnabled: false
+            });
+
+            const generator = completeUpload.execute([ transferAsset ], controller);
+            const { value, done } = await generator.next();
+            assert.strictEqual(value, undefined);
+            assert.strictEqual(done, true);
+
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
+            }, {
+                eventName: "error",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                error: "POST 'http://host/path/to.completeUpload.json' failed with status 403",
+                transferItem: transferAsset
+            }]);
+        });
+    });
 });
