@@ -343,6 +343,60 @@ describe("AEMInitiateUpload", () => {
         });
     });
     describe("error", () => {
+        it("invalid mimetype response", async () => {
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+    
+            nock('http://host')
+                .post(
+                    "/path/to.initiateUpload.json", 
+                    "fileName=target.png&fileSize=1234"
+                )
+                .reply(200, JSON.stringify({
+                    files: [{
+                        minPartSize: 1000, 
+                        maxPartSize: 10000, 
+                        uploadURIs: [
+                            "http://host/path/to/target.png/block"
+                        ], 
+                        mimeType: {},
+                        uploadToken: "uploadToken"
+                    }],
+                    completeURI: "/path/to.completeUpload.json"
+                }), {
+                    "content-type": "application/json"
+                });
+                
+            const controller = new ControllerMock();
+            const initiateUpload = new AEMInitiateUpload({
+                retryEnabled: false
+            });
+            const generator = initiateUpload.execute([new TransferAsset(source, target, {
+                metadata: new AssetMetadata("target.png", undefined, 1234)
+            })], controller);
+
+            const { value, done } = await generator.next();
+            assert.strictEqual(value, undefined);
+            assert.strictEqual(done, true);    
+            
+            // check notifications
+            assert.deepStrictEqual([{
+                "eventName": "AEMInitiateUpload",
+                "functionName": "AEMInitiateUpload",
+                "props": undefined,
+                "transferItem": new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.png", undefined, 1234)
+                })
+            }, {
+                "eventName": "error",
+                "functionName": "AEMInitiateUpload",
+                "props": undefined,
+                "error": "invalid mime-type for http://host/path/to/target.png: {}",
+                "transferItem":  new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.png", undefined, 1234)
+                })
+            }], controller.notifications);
+        });
         it("http failure", async () => {
             const source = new Asset("file:///path/to/source.jpg");
             const target = new Asset("http://host/path/to/target.jpg");
@@ -370,7 +424,7 @@ describe("AEMInitiateUpload", () => {
             }
 
             // check notifications
-            assert.deepStrictEqual(controller.notifications, [{
+            assert.deepStrictEqual([{
                 "eventName": "AEMInitiateUpload",
                 "functionName": "AEMInitiateUpload",
                 "props": undefined,
@@ -385,7 +439,7 @@ describe("AEMInitiateUpload", () => {
                 "transferItem":  new TransferAsset(source, target, {
                     metadata: new AssetMetadata("target.jpg", undefined, 1234)
                 })
-            }]);
+            }], controller.notifications);
         });
         it("files missing in response", async () => {
             await tryInvalidInitiateUploadResponse({
