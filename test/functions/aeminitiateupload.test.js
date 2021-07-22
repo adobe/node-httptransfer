@@ -129,6 +129,7 @@ describe("AEMInitiateUpload", () => {
                         uploadURIs: [
                             "http://host/path/to/target.png/block"
                         ], 
+                        mimeType: "image/png",
                         uploadToken: "uploadToken"
                     }],
                     completeURI: "/path/to.completeUpload.json"
@@ -141,14 +142,14 @@ describe("AEMInitiateUpload", () => {
                 retryEnabled: false
             });
             const generator = initiateUpload.execute([new TransferAsset(source, target, {
-                metadata: new AssetMetadata(undefined, "image/png", 1234)
+                metadata: new AssetMetadata("target.png", undefined, 1234)
             })], controller);
             
             // check the first file response
             {
                 const { value, done } = await generator.next();
                 assert.deepStrictEqual(value, new TransferAsset(source, target, {
-                    metadata: new AssetMetadata(undefined, "image/png", 1234),
+                    metadata: new AssetMetadata("target.png", "image/png", 1234),
                     multipartTarget: new AssetMultipart([
                         "http://host/path/to/target.png/block"
                     ], 1000, 10000, undefined, "http://host/path/to.completeUpload.json", "uploadToken")
@@ -172,7 +173,7 @@ describe("AEMInitiateUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.initiateUpload.json", 
-                    "fileName=target1.png&fileSize=1234&fileName=target2.png&fileSize=1234"
+                    "fileName=target1.png&fileSize=1234&fileName=target2.png&fileSize=5678"
                 )
                 .reply(200, JSON.stringify({
                     files: [{
@@ -181,10 +182,12 @@ describe("AEMInitiateUpload", () => {
                         uploadURIs: [
                             "http://host/path/to/target1.png/block"
                         ], 
+                        mimeType: "image/png",
                         uploadToken: "uploadToken1"
                     }, {
                         minPartSize: 2000, 
                         maxPartSize: 20000, 
+                        mimeType: "image/png",
                         uploadURIs: [
                             "http://host/path/to/target2.png/block"
                         ], 
@@ -200,16 +203,16 @@ describe("AEMInitiateUpload", () => {
                 retryEnabled: false
             });
             const generator = initiateUpload.execute([new TransferAsset(source1, target1, {
-                metadata: new AssetMetadata(undefined, "image/png", 1234)
+                metadata: new AssetMetadata("target1.png", undefined, 1234)
             }), new TransferAsset(source2, target2, {
-                metadata: new AssetMetadata(undefined, "image/png", 1234)
+                metadata: new AssetMetadata("target2.png", undefined, 5678)
             })], controller);
             
             // check the first file response
             {
                 const { value, done } = await generator.next();
                 assert.deepStrictEqual(value, new TransferAsset(source1, target1, {
-                    metadata: new AssetMetadata(undefined, "image/png", 1234),
+                    metadata: new AssetMetadata("target1.png", "image/png", 1234),
                     multipartTarget: new AssetMultipart([
                         "http://host/path/to/target1.png/block"
                     ], 1000, 10000, undefined, "http://host/path/to.completeUpload.json", "uploadToken1")
@@ -221,7 +224,7 @@ describe("AEMInitiateUpload", () => {
             {
                 const { value, done } = await generator.next();
                 assert.deepStrictEqual(value, new TransferAsset(source2, target2, {
-                    metadata: new AssetMetadata(undefined, "image/png", 1234),
+                    metadata: new AssetMetadata("target2.png", "image/png", 5678),
                     multipartTarget: new AssetMultipart([
                         "http://host/path/to/target2.png/block"
                     ], 2000, 20000, undefined, "http://host/path/to.completeUpload.json", "uploadToken2")
@@ -236,20 +239,223 @@ describe("AEMInitiateUpload", () => {
                 assert.strictEqual(done, true);    
             }
         });
+        it("single asset, no mimetype", async () => {
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+    
+            nock('http://host')
+                .post(
+                    "/path/to.initiateUpload.json", 
+                    "fileName=target.png&fileSize=1234"
+                )
+                .reply(200, JSON.stringify({
+                    files: [{
+                        minPartSize: 1000, 
+                        maxPartSize: 10000, 
+                        uploadURIs: [
+                            "http://host/path/to/target.png/block"
+                        ], 
+                        mimeType: null,
+                        uploadToken: "uploadToken"
+                    }],
+                    completeURI: "/path/to.completeUpload.json"
+                }), {
+                    "content-type": "application/json"
+                });
+                
+            const controller = new ControllerMock();
+            const initiateUpload = new AEMInitiateUpload({
+                retryEnabled: false
+            });
+            const generator = initiateUpload.execute([new TransferAsset(source, target, {
+                metadata: new AssetMetadata("target.png", undefined, 1234)
+            })], controller);
+            
+            // check the first file response
+            {
+                const { value, done } = await generator.next();
+                assert.deepStrictEqual(value, new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.png", "application/octet-stream", 1234),
+                    multipartTarget: new AssetMultipart([
+                        "http://host/path/to/target.png/block"
+                    ], 1000, 10000, undefined, "http://host/path/to.completeUpload.json", "uploadToken")
+                }));
+                assert.strictEqual(done, false);    
+            }
+    
+            // ensure there are no more files
+            {
+                const { value, done } = await generator.next();
+                assert.strictEqual(value, undefined);
+                assert.strictEqual(done, true);    
+            }
+        });
+        it("single asset, custom mimetype", async () => {
+            const source = new Asset("file:///path/to/source.jpg");
+            const target = new Asset("http://host/path/to/target.jpg");
+    
+            nock('http://host')
+                .post(
+                    "/path/to.initiateUpload.json", 
+                    "fileName=target.jpg&fileSize=1234"
+                )
+                .reply(200, JSON.stringify({
+                    files: [{
+                        minPartSize: 1000, 
+                        maxPartSize: 10000, 
+                        uploadURIs: [
+                            "http://host/path/to/target.jpg/block"
+                        ], 
+                        mimeType: "server/mimetype",
+                        uploadToken: "uploadToken"
+                    }],
+                    completeURI: "/path/to.completeUpload.json"
+                }), {
+                    "content-type": "application/json"
+                });
+                
+            const controller = new ControllerMock();
+            const initiateUpload = new AEMInitiateUpload({
+                retryEnabled: false
+            });
+            const generator = initiateUpload.execute([new TransferAsset(source, target, {
+                metadata: new AssetMetadata("target.jpg", "image/jpg", 1234)
+            })], controller);
+            
+            // check the first file response
+            {
+                const { value, done } = await generator.next();
+                assert.deepStrictEqual(value, new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.jpg", "image/jpg", 1234),
+                    multipartTarget: new AssetMultipart([
+                        "http://host/path/to/target.jpg/block"
+                    ], 1000, 10000, undefined, "http://host/path/to.completeUpload.json", "uploadToken")
+                }));
+                assert.strictEqual(done, false);    
+            }
+    
+            // ensure there are no more files
+            {
+                const { value, done } = await generator.next();
+                assert.strictEqual(value, undefined);
+                assert.strictEqual(done, true);    
+            }
+        });
+        it("single asset, minPartSize == maxPartSize", async () => {
+            const source = new Asset("file:///path/to/source.jpg");
+            const target = new Asset("http://host/path/to/target.jpg");
+    
+            nock('http://host')
+                .post(
+                    "/path/to.initiateUpload.json", 
+                    "fileName=target.jpg&fileSize=1234"
+                )
+                .reply(200, JSON.stringify({
+                    files: [{
+                        minPartSize: 1, 
+                        maxPartSize: 1, 
+                        uploadURIs: [
+                            "http://host/path/to/target.jpg/block"
+                        ], 
+                        mimeType: "server/mimetype",
+                        uploadToken: "uploadToken"
+                    }],
+                    completeURI: "/path/to.completeUpload.json"
+                }), {
+                    "content-type": "application/json"
+                });
+                
+            const controller = new ControllerMock();
+            const initiateUpload = new AEMInitiateUpload({
+                retryEnabled: false
+            });
+            const generator = initiateUpload.execute([new TransferAsset(source, target, {
+                metadata: new AssetMetadata("target.jpg", "image/jpg", 1234)
+            })], controller);
+            
+            // check the first file response
+            {
+                const { value, done } = await generator.next();
+                assert.deepStrictEqual(value, new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.jpg", "image/jpg", 1234),
+                    multipartTarget: new AssetMultipart([
+                        "http://host/path/to/target.jpg/block"
+                    ], 1, 1, undefined, "http://host/path/to.completeUpload.json", "uploadToken")
+                }));
+                assert.strictEqual(done, false);    
+            }
+    
+            // ensure there are no more files
+            {
+                const { value, done } = await generator.next();
+                assert.strictEqual(value, undefined);
+                assert.strictEqual(done, true);    
+            }
+        });
     });
-    describe("error", () => {
-        it("files missing in response", async () => {
+    describe("error", () => {       
+        it("http failure", async () => {
+            const source = new Asset("file:///path/to/source.jpg");
+            const target = new Asset("http://host/path/to/target.jpg");
+    
+            nock('http://host')
+                .post(
+                    "/path/to.initiateUpload.json", 
+                    "fileName=target.jpg&fileSize=1234"
+                )
+                .reply(403);
+                
+            const controller = new ControllerMock();
+            const initiateUpload = new AEMInitiateUpload({
+                retryEnabled: false
+            });
+            const generator = initiateUpload.execute([new TransferAsset(source, target, {
+                metadata: new AssetMetadata("target.jpg", undefined, 1234)
+            })], controller);
+            
+            // check the first file response
+            {
+                const { value, done } = await generator.next();
+                assert.strictEqual(value, undefined);
+                assert.strictEqual(done, true);    
+            }
+
+            // check notifications
+            assert.deepStrictEqual([{
+                "eventName": "AEMInitiateUpload",
+                "functionName": "AEMInitiateUpload",
+                "props": undefined,
+                "transferItem": new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.jpg", undefined, 1234)
+                })
+            }, {
+                "eventName": "error",
+                "functionName": "AEMInitiateUpload",
+                "props": undefined,
+                "error": "POST 'http://host/path/to.initiateUpload.json' failed with status 403",
+                "transferItem":  new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.jpg", undefined, 1234)
+                })
+            }], controller.notifications);
+        });
+        it("files missing", async () => {
             await tryInvalidInitiateUploadResponse({
                 completeURI: "/path/to.completeUpload.json"
             }, "'files' field missing in initiateUpload response: {\"completeURI\":\"/path/to.completeUpload.json\"}");
         });
-        it("files mismatch in response", async () => {
+        it("files length mismatch", async () => {
             await tryInvalidInitiateUploadResponse({
                 files: [],
                 completeURI: "/path/to.completeUpload.json"
             }, "'files' field incomplete in initiateUpload response (expected files: 1): {\"files\":[],\"completeURI\":\"/path/to.completeUpload.json\"}");
         });
-        it("completeURI missing in response", async () => {
+        it("files element invalid type", async () => {
+            await tryInvalidInitiateUploadResponse({
+                files: [ "abc" ],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid multi-part information for http://host/path/to/target.png: \"abc\"");
+        });
+        it("completeURI missing", async () => {
             await tryInvalidInitiateUploadResponse({
                 files: [{
                     minPartSize: 1000, 
@@ -257,9 +463,24 @@ describe("AEMInitiateUpload", () => {
                     uploadURIs: [
                         "http://host/path/to/target.png/block"
                     ], 
+                    mimeType: "image/png",
+                    uploadToken: "uploadToken"
+                }]
+            }, "'completeURI' field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}]}");
+        });
+        it("completeURI not a string", async () => {
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadURIs: [
+                        "http://host/path/to/target.png/block"
+                    ], 
+                    mimeType: "image/png",
                     uploadToken: "uploadToken"
                 }],
-            }, "'completeURI' field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}]}");
+                completeURI: {}
+            }, "'completeURI' field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}],\"completeURI\":{}}");
         });
         it("minPartSize missing", async () => {
             await tryInvalidInitiateUploadResponse({
@@ -268,10 +489,25 @@ describe("AEMInitiateUpload", () => {
                     uploadURIs: [
                         "http://host/path/to/target.png/block"
                     ], 
+                    mimeType: "image/png",
                     uploadToken: "uploadToken"
                 }],
                 completeURI: "/path/to.completeUpload.json"
-            }, "invalid multi-part information for http://host/path/to/target.png: {\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}");
+            }, "invalid multi-part information for http://host/path/to/target.png: {\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}");
+        });
+        it("minPartSize invalid number", async () => {
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 0,
+                    maxPartSize: 10000, 
+                    uploadURIs: [
+                        "http://host/path/to/target.png/block"
+                    ], 
+                    mimeType: "image/png",
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid minPartSize for http://host/path/to/target.png: {\"minPartSize\":0,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}");
         });
         it("maxPartSize missing", async () => {
             await tryInvalidInitiateUploadResponse({
@@ -280,20 +516,36 @@ describe("AEMInitiateUpload", () => {
                     uploadURIs: [
                         "http://host/path/to/target.png/block"
                     ], 
+                    mimeType: "image/png",
                     uploadToken: "uploadToken"
                 }],
                 completeURI: "/path/to.completeUpload.json"
-            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"uploadToken\":\"uploadToken\"}");
+            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}");
+        });
+        it("maxPartSize invalid number", async () => {
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 2,
+                    maxPartSize: 1, 
+                    uploadURIs: [
+                        "http://host/path/to/target.png/block"
+                    ], 
+                    mimeType: "image/png",
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid maxPartSize for http://host/path/to/target.png: {\"minPartSize\":2,\"maxPartSize\":1,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}");
         });
         it("uploadURIs missing", async () => {
             await tryInvalidInitiateUploadResponse({
                 files: [{
                     minPartSize: 1000, 
                     maxPartSize: 10000, 
+                    mimeType: "image/png",
                     uploadToken: "uploadToken"
                 }],
                 completeURI: "/path/to.completeUpload.json"
-            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadToken\":\"uploadToken\"}");
+            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}");
         });
         it("uploadURIs array empty", async () => {
             await tryInvalidInitiateUploadResponse({
@@ -301,10 +553,70 @@ describe("AEMInitiateUpload", () => {
                     minPartSize: 1000, 
                     maxPartSize: 10000, 
                     uploadURIs: [], 
+                    mimeType: "image/png",
                     uploadToken: "uploadToken"
                 }],
                 completeURI: "/path/to.completeUpload.json"
-            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[],\"uploadToken\":\"uploadToken\"}");
+            }, "invalid multi-part information for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}");
+        });
+        it("first uploadURI element invalid", async () => {
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadURIs: [ null ], 
+                    mimeType: "image/png",
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid upload url for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[null],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}");
+        });
+        it("second uploadURI element invalid", async () => {
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadURIs: [ "http://host/path/to/target.png/block", null ], 
+                    mimeType: "image/png",
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid upload url for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\",null],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}");
+        });
+        it("invalid mimetype", async () => {          
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadURIs: [ "http://host/path/to/target.png/block" ], 
+                    mimeType: {},
+                    uploadToken: "uploadToken"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid mimetype for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":{},\"uploadToken\":\"uploadToken\"}");
+        });
+        it("uploadToken missing", async () => {          
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadURIs: [ "http://host/path/to/target.png/block" ], 
+                    mimeType: "image/png"
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid uploadToken for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\"}");
+        });
+        it("invalid uploadToken", async () => {          
+            await tryInvalidInitiateUploadResponse({
+                files: [{
+                    minPartSize: 1000, 
+                    maxPartSize: 10000, 
+                    uploadURIs: [ "http://host/path/to/target.png/block" ], 
+                    mimeType: "image/png",
+                    uploadToken: {}
+                }],
+                completeURI: "/path/to.completeUpload.json"
+            }, "invalid uploadToken for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":{}}");
         });
     });
 });
