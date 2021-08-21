@@ -114,8 +114,9 @@ describe("AEMInitiateUpload", () => {
             assert.strictEqual(done, true);
         });
         it("single asset", async () => {
+            const partHeaders = { partHeader: 'testing' };
             const source = new Asset("file:///path/to/source.png");
-            const target = new Asset("http://host/path/to/target.png");
+            const target = new Asset("http://host/path/to/target.png", undefined, partHeaders);
     
             nock('http://host')
                 .post(
@@ -152,7 +153,7 @@ describe("AEMInitiateUpload", () => {
                     metadata: new AssetMetadata("target.png", "image/png", 1234),
                     multipartTarget: new AssetMultipart([
                         "http://host/path/to/target.png/block"
-                    ], 1000, 10000, undefined, "http://host/path/to.completeUpload.json", "uploadToken")
+                    ], 1000, 10000, partHeaders, "http://host/path/to.completeUpload.json", "uploadToken")
                 }));
                 assert.strictEqual(done, false);    
             }
