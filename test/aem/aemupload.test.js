@@ -51,7 +51,13 @@ describe('AEM Upload', function() {
                 'Content-Length': initRaw.length
             });
 
-        nock(HOST)
+        nock(HOST, {
+            reqheaders: {
+                'content-length': 15,
+                'content-type': 'image/jpeg',
+                partHeader: 'test'
+            }
+        })
             .put('/part', 'hello world 123')
             .reply(201);
 
@@ -81,7 +87,8 @@ describe('AEM Upload', function() {
                 fileSize: 15,
                 createVersion: true,
                 versionLabel: 'versionLabel',
-                versionComment: 'versionComment'
+                versionComment: 'versionComment',
+                multipartHeaders: { partHeader: 'test' }
             }],
             headers: {},
             concurrent: true,
