@@ -16,10 +16,12 @@
 
 const assert = require('assert');
 const nock = require('nock');
-const { postForm } = require('../lib/fetch');
+const { postForm, testSetResponseBodyOverride, issuePut } = require('../lib/fetch');
+const fetch = require('node-fetch-npm');
 
 describe('fetch', function() {
     afterEach(async function() {
+        global.window = undefined;
         assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
     });
@@ -100,6 +102,28 @@ describe('fetch', function() {
             const form = new URLSearchParams();    
             const result = await postForm("http://post-form-test/path", form);
             assert.deepStrictEqual(result, expectedResponse);
+        });
+
+        it('issue put simulating browser', async function() {
+            global.window = { fetch };
+            nock('http://put-without-stream-test')
+                .put('/path', '')
+                .reply(200, JSON.stringify({}), {
+                    'content-type': 'application/json'
+                });
+            testSetResponseBodyOverride('PUT', [1, 2, 3]);
+            return issuePut('http://put-without-stream-test/path', {});
+        });
+
+        it('issue put simulating missing fetch browser', async function() {
+            global.window = { };
+            nock('http://put-without-stream-test')
+                .put('/path', '')
+                .reply(200, JSON.stringify({}), {
+                    'content-type': 'application/json'
+                });
+            testSetResponseBodyOverride('PUT', [1, 2, 3]);
+            return issuePut('http://put-without-stream-test/path', {});
         });
     });
 });
