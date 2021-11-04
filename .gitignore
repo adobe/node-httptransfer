@@ -74,3 +74,6 @@ es2015/
 
 # Local test files
 testfiles
+
+# end-to-end test data
+e2e/output

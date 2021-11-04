@@ -38,7 +38,9 @@
     "blob-polyfill": "^6.0.20211015",
     "codecov": "^3.8.2",
     "conventional-changelog-eslint": "^3.0.9",
+    "dotenv": "^10.0.0",
     "license-checker": "^25.0.1",
+    "mkdirp": "^1.0.4",
     "mocha": "^8.3.2",
     "nock": "^12.0.3",
     "nyc": "^15.1.0",
@@ -55,6 +57,7 @@
   ],
   "scripts": {
     "test": "DEBUG=httptransfer:* nyc mocha --recursive --exit",
+    "e2e": "DEBUG=httptransfer:* mocha --recursive --exit ./e2e",
     "posttest": "eslint ./ && license-checker --summary",
     "beautify": "eslint ./ --fix",
     "build-es2015": "./node_modules/.bin/rimraf es2015 && ./node_modules/.bin/babel ./lib --out-dir es2015",
