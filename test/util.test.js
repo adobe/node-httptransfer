@@ -140,4 +140,11 @@ describe("util", function() {
             parentPath: `C:${path.sep}test space`,
         });
     });
+
+    it('url path dirname', function() {
+        assert.strictEqual(util.urlPathDirname(`${path.sep}my${path.sep}test${path.sep}path`), '/my/test');
+        assert.strictEqual(util.urlPathDirname(`${path.sep}my${path.sep}test${path.sep}file.jpg`), '/my/test');
+        assert.strictEqual(util.urlPathDirname('/my/test/path'), '/my/test');
+        assert.strictEqual(util.urlPathDirname('/my/test/file.jpg'), '/my/test');
+    });
 });

@@ -19,6 +19,7 @@ const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
 const { AEMUpload } = require('../../lib/aem/aemupload');
+const { Blob } = require('blob-polyfill');
 
 describe('AEM Upload', function() {
     afterEach(async function () {
@@ -195,5 +196,64 @@ describe('AEM Upload', function() {
         assert.strictEqual(errors.length, 1);
         assert.strictEqual(errors[0].message, "Request failed with status code 403");
 
+    });
+
+    it('AEM upload blob smoke test', async function() {
+        const blob = new Blob(['hello world 123']);
+        const HOST = 'http://test-aem-upload-201';
+        const initResponse = {
+            completeURI: `${HOST}/path/to.completeUpload.json`,
+            folderPath: '/path/to',
+            files: [{
+                fileName: 'file-1.jpg',
+                mimeType: 'image/jpeg',
+                uploadToken: 'upload-token',
+                uploadURIs: [
+                    `${HOST}/part`
+                ],
+                minPartSize: 10,
+                maxPartSize: 100
+            }]
+        };
+        const initRaw = JSON.stringify(initResponse);
+        nock(HOST)
+            .post('/path/to.initiateUpload.json', 'fileName=file-1.jpg&fileSize=15')
+            .reply(201, initRaw, {
+                'Content-Length': initRaw.length
+            });
+
+        nock(HOST, {
+            reqheaders: {
+                'content-length': 13,
+                'content-type': 'image/jpeg'
+            }
+        })
+            .put('/part', '[object Blob]')
+            .reply(201);
+
+        nock(HOST)
+            .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=image%2Fjpeg&createVersion=false&replace=false&uploadToken=upload-token')
+            .reply(200, '{}');
+
+        const aemUpload = new AEMUpload();
+        return aemUpload.uploadFiles({
+            uploadFiles: [{
+                fileUrl: 'http://test-aem-upload-201/path/to/file-1.jpg',
+                blob,
+                fileSize: 15
+            }]
+        });
+    });
+
+    it('AEM upload no filePath or blob error', function() {
+        const aemUpload = new AEMUpload();
+        assert.rejects(() => aemUpload.uploadFiles({
+            uploadFiles: [{
+                fileUrl: 'http://test-aem-upload-201/path/to/file-1.jpg',
+                fileSize: 15
+            }]
+        }), {
+            name: 'IllegalArgumentException'
+        });
     });
 });
