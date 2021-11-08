@@ -126,6 +126,14 @@ Copy blob.txt within a container:
 node index.js azure://container/path/to/blob.txt azure://container/path/to/target.txt
 ```
 
+## End-to-End Tests
+
+The module provides some integration-style tests for verifying basic transfer functionality
+with an Adobe Experience Manager instance. To run the tests:
+
+* Create a `.env` file by following the instructions in [.env_example](./e2e/.env_example).
+* Run the tests by executing `npm run e2e` from the root directory of the repository.
+
 ### Contributing
 
 Contributions are welcomed! Read the [Contributing Guide](./.github/CONTRIBUTING.md) for more information.

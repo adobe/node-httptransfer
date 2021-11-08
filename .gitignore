@@ -50,7 +50,7 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+*.env
 
 # next.js build output
 .next
@@ -74,3 +74,6 @@ es2015/
 
 # Local test files
 testfiles
+
+# end-to-end test data
+e2e/output
