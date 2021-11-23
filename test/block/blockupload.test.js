@@ -29,6 +29,109 @@ describe('Block Upload', function() {
 
     it('Block upload smoke test', async function() {
         console.log("block upload test");
+
+        const HOST = 'http://test-aem-upload-201';
+        const testFile = Path.join(__dirname, 'file-1.jpg');
+        await fs.writeFile(testFile, 'hello world 123', 'utf8');
+        const initResponse = {
+            completeURI: `${HOST}/path/to.completeUpload.json`,
+            folderPath: '/path/to',
+            files: [{
+                fileName: 'file-1.jpg',
+                mimeType: 'image/jpeg',
+                uploadToken: 'upload-token',
+                uploadURIs: [
+                    `${HOST}/part`
+                ],
+                minPartSize: 10,
+                maxPartSize: 100
+            }]
+        };
+        const initRaw = JSON.stringify(initResponse);
+        nock(HOST)
+            .post('/path/to.initiateUpload.json', 'fileName=file-1.jpg&fileSize=15')
+            .reply(201, initRaw, {
+                'Content-Length': initRaw.length
+            });
+
+        nock(HOST, {
+            reqheaders: {
+                'content-length': 15,
+                'content-type': 'image/jpeg',
+                partHeader: 'test'
+            }
+        })
+            .put('/part', 'hello world 123')
+            .reply(201);
+
+        nock(HOST)
+            .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=image%2Fjpeg&createVersion=true&versionLabel=versionLabel&versionComment=versionComment&replace=false&uploadToken=upload-token')
+            .reply(200, '{}');
+
+        const blockUpload = new BlockUpload();
+        const events = {
+            filestart: [],
+            fileprogress:[],
+            fileend: []
+        };
+        blockUpload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockUpload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockUpload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        const targetUrls = ['http://test-aem-upload-201/path/to/file-1-1.jpg',
+                            'http://test-aem-upload-201/path/to/file-1-2.jpg',
+                            'http://test-aem-upload-201/path/to/file-1-3.jpg',
+                            'http://test-aem-upload-201/path/to/file-1-4.jpg',
+                            'http://test-aem-upload-201/path/to/file-1-5.jpg'
+                        ];
+        await blockUpload.uploadFiles({
+            uploadFiles: [{
+                fileUrl: targetUrls,
+                filePath: testFile,
+                fileSize: 100,
+                // createVersion: true,
+                // versionLabel: 'versionLabel',
+                // versionComment: 'versionComment',
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            }],
+            headers: {},
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 7
+        });
+
+        try {
+            await fs.unlink(testFile);
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
+
+        const fileEventData = {
+            fileName: 'file-1.jpg',
+            fileSize: 15,
+            targetFolder: '/path/to',
+            targetFile: '/path/to/file-1.jpg',
+            sourceFolder: __dirname,
+            sourceFile: testFile
+        };
+
+        assert.deepStrictEqual(events.filestart[0], fileEventData);
+        assert.deepStrictEqual(events.fileprogress[0], {
+            ...fileEventData,
+            mimeType: "image/jpeg",
+            transferred: 15
+        });
+        assert.deepStrictEqual(events.fileend[0], {
+            ...fileEventData,
+            mimeType: "image/jpeg",
+        });
     });
 
 });
