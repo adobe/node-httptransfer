@@ -33,26 +33,26 @@ describe('Block Upload', function() {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
-        const initResponse = {
-            completeURI: `${HOST}/path/to.completeUpload.json`,
-            folderPath: '/path/to',
-            files: [{
-                fileName: 'file-1.jpg',
-                mimeType: 'image/jpeg',
-                uploadToken: 'upload-token',
-                uploadURIs: [
-                    `${HOST}/part`
-                ],
-                minPartSize: 10,
-                maxPartSize: 100
-            }]
-        };
-        const initRaw = JSON.stringify(initResponse);
-        nock(HOST)
-            .post('/path/to.initiateUpload.json', 'fileName=file-1.jpg&fileSize=15')
-            .reply(201, initRaw, {
-                'Content-Length': initRaw.length
-            });
+        // const initResponse = {
+        //     completeURI: `${HOST}/path/to.completeUpload.json`,
+        //     folderPath: '/path/to',
+        //     files: [{
+        //         fileName: 'file-1.jpg',
+        //         mimeType: 'image/jpeg',
+        //         uploadToken: 'upload-token',
+        //         uploadURIs: [
+        //             `${HOST}/part`
+        //         ],
+        //         minPartSize: 10,
+        //         maxPartSize: 100
+        //     }]
+        // };
+        // const initRaw = JSON.stringify(initResponse);
+        // nock(HOST)
+        //     .post('/path/to.initiateUpload.json', 'fileName=file-1.jpg&fileSize=15')
+        //     .reply(201, initRaw, {
+        //         'Content-Length': initRaw.length
+        //     });
 
         nock(HOST, {
             reqheaders: {
@@ -64,9 +64,9 @@ describe('Block Upload', function() {
             .put('/part', 'hello world 123')
             .reply(201);
 
-        nock(HOST)
-            .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=image%2Fjpeg&createVersion=true&versionLabel=versionLabel&versionComment=versionComment&replace=false&uploadToken=upload-token')
-            .reply(200, '{}');
+        // nock(HOST)
+        //     .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=image%2Fjpeg&createVersion=true&versionLabel=versionLabel&versionComment=versionComment&replace=false&uploadToken=upload-token')
+        //     .reply(200, '{}');
 
         const blockUpload = new BlockUpload();
         const events = {
@@ -83,6 +83,8 @@ describe('Block Upload', function() {
         blockUpload.on('fileend', (data) => {
             events.fileend.push(data);
         });
+        const targetUrl =  'http://test-aem-upload-201/path/to/file-1-1.jpg';
+        
         const targetUrls = ['http://test-aem-upload-201/path/to/file-1-1.jpg',
                             'http://test-aem-upload-201/path/to/file-1-2.jpg',
                             'http://test-aem-upload-201/path/to/file-1-3.jpg',
@@ -91,7 +93,7 @@ describe('Block Upload', function() {
                         ];
         await blockUpload.uploadFiles({
             uploadFiles: [{
-                fileUrl: targetUrls,
+                fileUrl: targetUrl,
                 filePath: testFile,
                 fileSize: 100,
                 // createVersion: true,

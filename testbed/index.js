@@ -31,7 +31,8 @@ const {
     transferStream,
     getResourceHeaders,
     AEMUpload,
-    AEMDownload
+    AEMDownload,
+    BlockUpload
 } = require("../index.js");
 
 function createAzureCredential(auth) {
@@ -410,10 +411,31 @@ async function main() {
     } else if (params.aem) {
         throw Error("Transfer not supported");
     } else if (source.file && target.url) {
-        await uploadFile(source.file, target.url, {
-            headers: target.headers,
-            ...retryOptions
-        });
+        console.log("DBG: @@@@ source",source.file);
+        console.log("DBG: @@@@ target",target.url);
+        const upload = new BlockUpload();
+        const options = { uploadFiles: [{
+            fileUrl: target.url,
+            filePath: source.file,
+            fileSize: 100,
+            // createVersion: true,
+            // versionLabel: 'versionLabel',
+            // versionComment: 'versionComment',
+            multipartHeaders: { partHeader: 'test' },
+            minPartSize: 10,
+            maxPartSize: 25
+        }],
+        headers: target.headers,
+        ...retryOptions,
+        concurrent: true,
+        maxConcurrent: 5,
+        preferredPartSize: 7
+        };
+        await upload.uploadFiles(options);
+        // await upload.uploadFiles(source.file, target.url, {
+        //     headers: target.headers,
+        //     ...retryOptions
+        // });
     } else if (source.url && target.file) {
         await downloadFile(source.url, target.file, {
             mkdirs: true,
