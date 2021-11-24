@@ -411,8 +411,6 @@ async function main() {
     } else if (params.aem) {
         throw Error("Transfer not supported");
     } else if (source.file && target.url) {
-        console.log("DBG: @@@@ source",source.file);
-        console.log("DBG: @@@@ target",target.url);
         const upload = new BlockUpload();
         const options = { uploadFiles: [{
             fileUrl: target.url,
@@ -449,11 +447,28 @@ async function main() {
             ...retryOptions
         });
     } else if (source.file && target.urls) {
-        await uploadAEMMultipartFile(source.file, target, {
-            ...retryOptions,
+        const upload = new BlockUpload();
+        const options = { uploadFiles: [{
+            fileUrl: target.urls,
+            filePath: source.file,
+            multipartHeaders: { partHeader: 'test' },
+            minPartSize: params.minPartSize,
+            maxPartSize: params.maxPartSize,
             partSize: params.partSize,
-            maxConcurrent: params.maxConcurrent || 1
-        });
+        }],
+        headers: target.headers,
+        ...retryOptions,
+        concurrent: true,
+        maxConcurrent: 5,
+        preferredPartSize: 7
+        };
+        await upload.uploadFiles(options);
+        
+        // await uploadAEMMultipartFile(source.file, target, {
+        //     ...retryOptions,
+        //     partSize: params.partSize,
+        //     maxConcurrent: params.maxConcurrent || 1
+        // });
 
         console.log("Commit uncommitted blocks");
         const url = new URL(params.target);
