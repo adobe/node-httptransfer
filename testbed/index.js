@@ -311,6 +311,11 @@ async function main() {
                         }
                     },
                 })
+                .option("block", {
+                    describe: "Use block transfer upload/download",
+                    type: "boolean",
+                    default: false
+                })
                 .example("$0 azure://container/source.txt blob.txt", "Download path/to/source.txt in container to blob.txt")
                 .example("$0 blob.txt azure://container/target.txt", "Upload blob.txt to path/to/target.txt in container")
                 .example("$0 azure://container/source.txt azure://container/target.txt", "Transfer source.txt to target.txt in container")
@@ -375,106 +380,115 @@ async function main() {
         console.log(`Target: ${target.aem || target.url || target.file}`);
     }
 
-    // transfer
-    if (params.aem && source.file && target.url) {
-        const options = await createAEMUploadOptions(source.file, target.url, params);
-        const upload = new AEMUpload();
-        upload.on("filestart", ({ fileName, fileSize }) => {
-            console.log(`${fileName}: Start transfer ${fileSize} bytes`);
-        });
-        upload.on("fileprogress", ({ fileName, fileSize, transferred }) => {
-            console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
-        });
-        upload.on("fileend", ({ fileName, fileSize }) => {
-            console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
-        });
-        upload.on("fileerror", ({ fileName, errors }) => {
-            console.log(`${fileName}: FAILED --> ${errors[0].message}`);
-        });
-        await upload.uploadFiles(options);
-    } else if (params.aem && source.url && target.file) {
-        const options = await createAEMDownloadOptions(source.url, target.file, params);
-        const download = new AEMDownload();
-        download.on("filestart", ({ fileName, fileSize }) => {
-            console.log(`${fileName}: Start transfer ${fileSize} bytes`);
-        });
-        download.on("fileprogress", ({ fileName, fileSize, transferred }) => {
-            console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
-        });
-        download.on("fileend", ({ fileName, fileSize }) => {
-            console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
-        });
-        download.on("fileerror", ({ fileName, errors }) => {
-            console.log(`${fileName}: FAILED --> ${errors[0].message}`);
-        });
-        await download.downloadFiles(options);
-    } else if (params.aem) {
-        throw Error("Transfer not supported");
-    } else if (source.file && target.url) {
-        const upload = new BlockUpload();
-        const options = { uploadFiles: [{
-            fileUrl: target.url,
-            filePath: source.file,
-            fileSize: 100,
-            // createVersion: true,
-            // versionLabel: 'versionLabel',
-            // versionComment: 'versionComment',
-            multipartHeaders: { partHeader: 'test' },
-            minPartSize: 10,
-            maxPartSize: 25
-        }],
-        headers: target.headers,
-        ...retryOptions,
-        concurrent: true,
-        maxConcurrent: 5,
-        preferredPartSize: 7
-        };
-        await upload.uploadFiles(options);
-        // await upload.uploadFiles(source.file, target.url, {
-        //     headers: target.headers,
-        //     ...retryOptions
-        // });
-    } else if (source.url && target.file) {
-        await downloadFile(source.url, target.file, {
-            mkdirs: true,
-            ...retryOptions
-        });
-    } else if (source.url && target.url) {
-        await transferStream(source.url, target.url, {
-            target: {
-                headers: target.headers
-            },
-            ...retryOptions
-        });
-    } else if (source.file && target.urls) {
-        const upload = new BlockUpload();
-        const options = { uploadFiles: [{
-            fileUrl: target.urls,
-            filePath: source.file,
-            multipartHeaders: { partHeader: 'test' },
-            minPartSize: params.minPartSize,
-            maxPartSize: params.maxPartSize,
-            partSize: params.partSize,
-        }],
-        headers: target.headers,
-        ...retryOptions,
-        concurrent: true,
-        maxConcurrent: 5,
-        preferredPartSize: 7
-        };
-        await upload.uploadFiles(options);
-        
-        // await uploadAEMMultipartFile(source.file, target, {
-        //     ...retryOptions,
-        //     partSize: params.partSize,
-        //     maxConcurrent: params.maxConcurrent || 1
-        // });
-
-        console.log("Commit uncommitted blocks");
-        const url = new URL(params.target);
-        await commitAzureBlocks(params.azureAuth, url.host, url.pathname.substring(1));
+    if(params.block) {
+        console.log("time to do blocks");
+        if (source.file && target.url) {
+            const upload = new BlockUpload();
+            const options = { uploadFiles: [{
+                fileUrl: target.url,
+                filePath: source.file,
+                fileSize: 100,
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            }],
+            headers: target.headers,
+            ...retryOptions,
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 7
+            };
+            await upload.uploadFiles(options);
+        } else if (source.file && target.urls) {
+            const upload = new BlockUpload();
+            const options = { uploadFiles: [{
+                fileUrl: target.urls,
+                filePath: source.file,
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: params.minPartSize,
+                maxPartSize: params.maxPartSize,
+                partSize: params.partSize,
+            }],
+            headers: target.headers,
+            ...retryOptions,
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 7
+            };
+            await upload.uploadFiles(options);
+            console.log("Commit uncommitted blocks");
+            const url = new URL(params.target);
+            await commitAzureBlocks(params.azureAuth, url.host, url.pathname.substring(1));
+        } else {
+            throw Error("Transfer is not supported");
+        }
     } else {
-        throw Error("Transfer is not supported");
+        // transfer
+        if (params.aem && source.file && target.url) {
+            const options = await createAEMUploadOptions(source.file, target.url, params);
+            const upload = new AEMUpload();
+            upload.on("filestart", ({ fileName, fileSize }) => {
+                console.log(`${fileName}: Start transfer ${fileSize} bytes`);
+            });
+            upload.on("fileprogress", ({ fileName, fileSize, transferred }) => {
+                console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
+            });
+            upload.on("fileend", ({ fileName, fileSize }) => {
+                console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
+            });
+            upload.on("fileerror", ({ fileName, errors }) => {
+                console.log(`${fileName}: FAILED --> ${errors[0].message}`);
+            });
+            await upload.uploadFiles(options);
+        } else if (params.aem && source.url && target.file) {
+            const options = await createAEMDownloadOptions(source.url, target.file, params);
+            const download = new AEMDownload();
+            download.on("filestart", ({ fileName, fileSize }) => {
+                console.log(`${fileName}: Start transfer ${fileSize} bytes`);
+            });
+            download.on("fileprogress", ({ fileName, fileSize, transferred }) => {
+                console.log(`${fileName}: Transferred ${transferred}/${fileSize} bytes`);
+            });
+            download.on("fileend", ({ fileName, fileSize }) => {
+                console.log(`${fileName}: Complete transfer ${fileSize} bytes`);
+            });
+            download.on("fileerror", ({ fileName, errors }) => {
+                console.log(`${fileName}: FAILED --> ${errors[0].message}`);
+            });
+            await download.downloadFiles(options);
+        } else if (params.aem) {
+            throw Error("Transfer not supported");
+        } else if (source.file && target.url) {
+            await uploadFile(source.file, target.url, {
+                headers: target.headers,
+                ...retryOptions
+            });
+        } else if (source.url && target.file) {
+            await downloadFile(source.url, target.file, {
+                mkdirs: true,
+                ...retryOptions
+            });
+        } else if (source.url && target.url) {
+            await transferStream(source.url, target.url, {
+                target: {
+                    headers: target.headers
+                },
+                ...retryOptions
+            });
+        } else if (source.file && target.urls) {
+            await uploadAEMMultipartFile(source.file, target, {
+                ...retryOptions,
+                partSize: params.partSize,
+                maxConcurrent: params.maxConcurrent || 1
+            });
+    
+            console.log("Commit uncommitted blocks");
+            const url = new URL(params.target);
+            await commitAzureBlocks(params.azureAuth, url.host, url.pathname.substring(1));
+        } else {
+            throw Error("Transfer is not supported");
+        }
+        
     }
 }
 
