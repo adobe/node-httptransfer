@@ -400,6 +400,7 @@ async function main() {
             };
             await upload.uploadFiles(options);
         } else if (source.file && target.urls) {
+            //multi-part upload
             const upload = new BlockUpload();
             const options = { uploadFiles: [{
                 fileUrl: target.urls,
