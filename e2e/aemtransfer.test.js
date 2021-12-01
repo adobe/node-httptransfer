@@ -24,19 +24,24 @@ const {
 } = require("../lib/index");
 const {
     getAemEndpoint,
-    getAuthorizationHeader
+    getAuthorizationHeader,
+    getUniqueTestId
 } = require("./e2eutils");
 
 describe('AEM Transfer e2e test', function() {
     this.timeout(60000);
-    async function doAEMUpload(fileUrl, fileSize) {
+    function writeErrors(errors) {
+        return errors.map((error) => error.code);
+    }
+
+    async function doAEMUpload(fileUrl, fileSize, errorCount = 0) {
         const aemUpload = new AEMUpload();
         const uploadErrors = [];
         aemUpload.on("filestart", ({ fileName, fileSize }) => console.log(`Upload: start ${fileName}, ${fileSize} bytes`));
         aemUpload.on("fileprogress", ({ fileName, fileSize, transferred }) => console.log(`Upload: progress ${fileName}, ${transferred}/${fileSize} bytes`));
         aemUpload.on("fileend", ({ fileName, fileSize }) => console.log(`Upload: completed ${fileName}, ${fileSize} bytes`));
-        aemUpload.on("filerror", ({ fileName, errors }) => {
-            console.log(`Upload: error ${fileName}`, errors);
+        aemUpload.on("fileerror", ({ fileName, errors }) => {
+            console.log(`Upload: error ${fileName}`, writeErrors(errors));
             uploadErrors.push(errors);
         });
         await aemUpload.uploadFiles({
@@ -49,7 +54,8 @@ describe('AEM Transfer e2e test', function() {
             concurrent: true,
             maxConcurrent: 16
         });
-        assert.strictEqual(uploadErrors.length, 0);
+        assert.strictEqual(uploadErrors.length, errorCount);
+        return uploadErrors;
     }
 
     async function doAEMDownload(fileUrl, fileSize, downloadFile) {
@@ -58,8 +64,8 @@ describe('AEM Transfer e2e test', function() {
         aemDownload.on("filestart", (data) => console.log(`Download: start ${JSON.stringify(data)}`));
         aemDownload.on("fileprogress", (data) => console.log(`Download: progress ${JSON.stringify(data)}`));
         aemDownload.on("fileend", (data) => console.log(`Download: completed ${JSON.stringify(data)}`));
-        aemDownload.on("filerror", ({ fileName, errors }) => {
-            console.log(`Download: error ${fileName}`, errors);
+        aemDownload.on("fileerror", ({ fileName, errors }) => {
+            console.log(`Download: error ${fileName}`, writeErrors(errors));
             downloadErrors.push(errors);
         });
         await aemDownload.downloadFiles({
@@ -77,7 +83,7 @@ describe('AEM Transfer e2e test', function() {
     }
 
     it('AEM upload then download', async function () {
-        const testId = `node-httptransfer_aem-e2e_${new Date().getTime()}`;
+        const testId = getUniqueTestId();
         const fileName = `${testId}.jpg`;
         const fileUrl = `${getAemEndpoint()}/content/dam/${fileName}`;
         const fileSize = 282584;
@@ -86,5 +92,17 @@ describe('AEM Transfer e2e test', function() {
         await mkdirp(downloadDir);
         await doAEMUpload(fileUrl, fileSize);
         return doAEMDownload(fileUrl, fileSize, downloadFile);
+    });
+
+    it('AEM upload with invalid characters', async function () {
+        const testId = getUniqueTestId();
+        const fileName = `${testId}:[invalid name].jpg`;
+        const fileUrl = `${getAemEndpoint()}/content/dam/${fileName}`;
+        const fileSize = 282584;
+        const uploadErrors = await doAEMUpload(fileUrl, fileSize, 1);
+        assert.strictEqual(uploadErrors[0].length, 1);
+        assert.strictEqual(uploadErrors[0][0].uploadError, true);
+        assert.strictEqual(uploadErrors[0][0].code, 'EINVALIDOPTIONS');
+        assert.strictEqual(uploadErrors[0][0].message, 'Request failed with status code 400');
     });
 });
