@@ -32,8 +32,11 @@ const {
     getResourceHeaders,
     AEMUpload,
     AEMDownload,
-    BlockUpload
+    BlockUpload,
+    BlockDownload
 } = require("../index.js");
+
+const AZURE_MIN_BLOCK_SIZE = 64 * 1024; // 64 kb
 
 function createAzureCredential(auth) {
     if (!auth || !auth.accountName || !auth.accountKey) {
@@ -202,6 +205,85 @@ async function createAEMDownloadOptions(aemFolderUrl, localFolder, params) {
         maxConcurrent: params.maxConcurrent,
         preferredPartSize: params.partSize
     };
+}
+
+/**
+ * Download file as multiple blocks
+ * @param {Location} source source url 
+ * @param {Location} target target path 
+ * @param {*} retryOptions Retry options
+ */
+async function downloadOneFileAsBlocks(source, target, retryOptions) {
+    const download = new BlockDownload();
+    const options = {
+        downloadFiles: [{
+            fileUrl: source.url,
+            filePath: target.path,
+            fileSize: -1
+        }],
+        headers: target.headers,
+        maxConcurrency: 8,
+        preferredPartSize: AZURE_MIN_BLOCK_SIZE,
+        ...retryOptions
+
+    };
+    await download.downloadFiles(options);
+}
+
+/**
+ * Upload blocks using one url
+ * @param {Location} source source path 
+ * @param {Location} target target url 
+ * @param {*} retryOptions Retry options
+ */
+async function uploadOneBlock(source, target, retryOptions) {
+    const upload = new BlockUpload();
+    const options = {
+        uploadFiles: [{
+            fileUrl: target.url,
+            filePath: source.file,
+            fileSize: 100,
+            multipartHeaders: { partHeader: 'test' },
+            minPartSize: 10,
+            maxPartSize: 25
+        }],
+        headers: target.headers,
+        ...retryOptions,
+        concurrent: true,
+        maxConcurrent: 5,
+        preferredPartSize: 7
+    };
+    await upload.uploadFiles(options);
+}
+
+/**
+ * Upload blocks using many urls
+ * @param {Location} source source path 
+ * @param {Location} target target url 
+ * @param {*} params Additional request parameters
+ * @param {*} retryOptions Retry options
+ */
+async function uploadMultipleBlocks(source, target, params, retryOptions) {
+    const upload = new BlockUpload();
+    const options = {
+        uploadFiles: [{
+            fileUrl: target.urls,
+            filePath: source.file,
+            multipartHeaders: { partHeader: 'test' },
+            minPartSize: params.minPartSize,
+            maxPartSize: params.maxPartSize,
+            partSize: params.partSize,
+        }],
+        headers: target.headers,
+        ...retryOptions,
+        concurrent: true,
+        maxConcurrent: 5,
+        preferredPartSize: 7
+    };
+    await upload.uploadFiles(options);
+    console.log("Commit uncommitted blocks");
+    const url = new URL(params.target);
+    await commitAzureBlocks(params.azureAuth, url.host, url.pathname.substring(1));
 }
 
 async function main() {
@@ -382,44 +464,16 @@ async function main() {
 
     if(params.block) {
         console.log("time to do blocks");
-        if (source.file && target.url) {
-            const upload = new BlockUpload();
-            const options = { uploadFiles: [{
-                fileUrl: target.url,
-                filePath: source.file,
-                fileSize: 100,
-                multipartHeaders: { partHeader: 'test' },
-                minPartSize: 10,
-                maxPartSize: 25
-            }],
-            headers: target.headers,
-            ...retryOptions,
-            concurrent: true,
-            maxConcurrent: 5,
-            preferredPartSize: 7
-            };
-            await upload.uploadFiles(options);
+        if (source.url && target.file) {
+            console.log("Downloading as blocks");
+            await downloadOneFileAsBlocks(source, target, retryOptions);
+        } else if (source.file && target.url) {
+            console.log("Uploading using one block url");
+            await uploadOneBlock(source, target, retryOptions);
         } else if (source.file && target.urls) {
             //multi-part upload
-            const upload = new BlockUpload();
-            const options = { uploadFiles: [{
-                fileUrl: target.urls,
-                filePath: source.file,
-                multipartHeaders: { partHeader: 'test' },
-                minPartSize: params.minPartSize,
-                maxPartSize: params.maxPartSize,
-                partSize: params.partSize,
-            }],
-            headers: target.headers,
-            ...retryOptions,
-            concurrent: true,
-            maxConcurrent: 5,
-            preferredPartSize: 7
-            };
-            await upload.uploadFiles(options);
-            console.log("Commit uncommitted blocks");
-            const url = new URL(params.target);
-            await commitAzureBlocks(params.azureAuth, url.host, url.pathname.substring(1));
+            console.log("Uploading using multi-part urls");
+            await uploadMultipleBlocks(source, target, params, retryOptions);
         } else {
             throw Error("Transfer is not supported");
         }
