@@ -381,16 +381,14 @@ async function main() {
     }
 
     if(params.block) {
-        console.log("time to do blocks");
+        console.log("Testing block upload transfer");
         if (source.file && target.url) {
+            console.log("Requesting block upload transfer single");
             const upload = new BlockUpload();
             const options = { uploadFiles: [{
                 fileUrl: target.url,
                 filePath: source.file,
-                fileSize: 100,
-                multipartHeaders: { partHeader: 'test' },
-                minPartSize: 10,
-                maxPartSize: 25
+                fileSize: size
             }],
             headers: target.headers,
             ...retryOptions,
@@ -400,15 +398,17 @@ async function main() {
             };
             await upload.uploadFiles(options);
         } else if (source.file && target.urls) {
+            console.log("Requesting block upload transfer multi-part");
             //multi-part upload
             const upload = new BlockUpload();
             const options = { uploadFiles: [{
                 fileUrl: target.urls,
                 filePath: source.file,
+                fileSize: size,
                 multipartHeaders: { partHeader: 'test' },
                 minPartSize: params.minPartSize,
                 maxPartSize: params.maxPartSize,
-                partSize: params.partSize,
+                partSize: params.partSize
             }],
             headers: target.headers,
             ...retryOptions,
