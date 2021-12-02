@@ -442,7 +442,7 @@ describe("AEMInitiateUpload", () => {
         it("files missing", async () => {
             await tryInvalidInitiateUploadResponse({
                 completeURI: "/path/to.completeUpload.json"
-            }, "'files' field missing in initiateUpload response: {\"completeURI\":\"/path/to.completeUpload.json\"}");
+            }, "Target AEM instance must have direct binary upload enabled");
         });
         it("files length mismatch", async () => {
             await tryInvalidInitiateUploadResponse({
