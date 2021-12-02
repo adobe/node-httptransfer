@@ -28,37 +28,48 @@ const {
     getUniqueTestId
 } = require("./e2eutils");
 
+const FILE_SIZE = 282584;
+
 describe('AEM Transfer e2e test', function() {
     this.timeout(60000);
     function writeErrors(errors) {
         return errors.map((error) => error.code);
     }
 
-    async function doAEMUpload(fileUrl, fileSize, errorCount = 0) {
+    async function doAEMUpload(fileUrls, errorCount = 0) {
         const aemUpload = new AEMUpload();
         const uploadErrors = [];
+        const uploadSuccesses = [];
         aemUpload.on("filestart", ({ fileName, fileSize }) => console.log(`Upload: start ${fileName}, ${fileSize} bytes`));
         aemUpload.on("fileprogress", ({ fileName, fileSize, transferred }) => console.log(`Upload: progress ${fileName}, ${transferred}/${fileSize} bytes`));
-        aemUpload.on("fileend", ({ fileName, fileSize }) => console.log(`Upload: completed ${fileName}, ${fileSize} bytes`));
+        aemUpload.on("fileend", ({ fileName, fileSize }) => {
+            console.log(`Upload: completed ${fileName}, ${fileSize} bytes`);
+            uploadSuccesses.push(fileName);
+        });
         aemUpload.on("fileerror", ({ fileName, errors }) => {
             console.log(`Upload: error ${fileName}`, writeErrors(errors));
             uploadErrors.push(errors);
         });
         await aemUpload.uploadFiles({
-            uploadFiles: [{
-                fileUrl,
-                fileSize,
-                filePath: Path.join(__dirname, "images/freeride-siberia.jpg")
-            }], 
+            uploadFiles: fileUrls.map((fileUrl) => {
+                return {
+                    fileUrl,
+                    fileSize: FILE_SIZE,
+                    filePath: Path.join(__dirname, "images/freeride-siberia.jpg")
+                };
+            }),
             headers: getAuthorizationHeader(),
             concurrent: true,
             maxConcurrent: 16
         });
         assert.strictEqual(uploadErrors.length, errorCount);
-        return uploadErrors;
+        return {
+            uploadErrors,
+            uploadSuccesses
+        };
     }
 
-    async function doAEMDownload(fileUrl, fileSize, downloadFile) {
+    async function doAEMDownload(fileUrl, downloadFile) {
         const aemDownload = new AEMDownload();
         const downloadErrors = [];
         aemDownload.on("filestart", (data) => console.log(`Download: start ${JSON.stringify(data)}`));
@@ -71,7 +82,7 @@ describe('AEM Transfer e2e test', function() {
         await aemDownload.downloadFiles({
             downloadFiles: [{
                 fileUrl,
-                fileSize,
+                fileSize: FILE_SIZE,
                 filePath: downloadFile
             }], 
             headers: getAuthorizationHeader(),
@@ -86,23 +97,29 @@ describe('AEM Transfer e2e test', function() {
         const testId = getUniqueTestId();
         const fileName = `${testId}.jpg`;
         const fileUrl = `${getAemEndpoint()}/content/dam/${fileName}`;
-        const fileSize = 282584;
         const downloadDir = Path.join(__dirname, "output", testId);
         const downloadFile = Path.join(downloadDir, fileName);
         await mkdirp(downloadDir);
-        await doAEMUpload(fileUrl, fileSize);
-        return doAEMDownload(fileUrl, fileSize, downloadFile);
+        await doAEMUpload([fileUrl]);
+        return doAEMDownload(fileUrl, downloadFile);
     });
 
     it('AEM upload with invalid characters', async function () {
         const testId = getUniqueTestId();
         const fileName = `${testId}:[invalid name].jpg`;
-        const fileUrl = `${getAemEndpoint()}/content/dam/${fileName}`;
-        const fileSize = 282584;
-        const uploadErrors = await doAEMUpload(fileUrl, fileSize, 1);
+        const successName = `${testId}.jpg`;
+        const {
+            uploadErrors,
+            uploadSuccesses
+        } = await doAEMUpload([
+            `${getAemEndpoint()}/content/dam/${fileName}`,
+            `${getAemEndpoint()}/content/dam/${successName}`
+        ], 1);
+        assert.strictEqual(uploadSuccesses.length, 1);
+        assert.strictEqual(uploadSuccesses[0], successName);
         assert.strictEqual(uploadErrors[0].length, 1);
         assert.strictEqual(uploadErrors[0][0].uploadError, true);
-        assert.strictEqual(uploadErrors[0][0].code, 'EINVALIDOPTIONS');
-        assert.strictEqual(uploadErrors[0][0].message, 'Request failed with status code 400');
+        assert.strictEqual(uploadErrors[0][0].code, "EUNKNOWN");
+        assert.strictEqual(uploadErrors[0][0].message, `File cannot be uploaded: Filename '${fileName}' has unsupported characters`);
     });
 });
