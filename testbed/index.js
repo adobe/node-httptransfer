@@ -36,7 +36,7 @@ const {
     BlockDownload
 } = require("../index.js");
 
-const AZURE_MIN_BLOCK_SIZE = 64 * 1024; // 64 kb
+const BLOB_MIN_BLOCK_SIZE = 64 * 1024; // 64 kb
 
 function createAzureCredential(auth) {
     if (!auth || !auth.accountName || !auth.accountKey) {
@@ -222,8 +222,8 @@ async function downloadOneFileAsBlocks(source, target, retryOptions) {
             fileSize: -1
         }],
         headers: target.headers,
-        maxConcurrency: 8,
-        preferredPartSize: AZURE_MIN_BLOCK_SIZE,
+        maxConcurrent: 8,
+        preferredPartSize: BLOB_MIN_BLOCK_SIZE,
         ...retryOptions
 
     };
