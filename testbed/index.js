@@ -236,16 +236,13 @@ async function downloadOneFileAsBlocks(source, target, retryOptions) {
  * @param {Location} target target url 
  * @param {*} retryOptions Retry options
  */
-async function uploadOneBlock(source, target, retryOptions) {
+async function uploadOneBlock(source, target, retryOptions, size) {
     const upload = new BlockUpload();
     const options = {
         uploadFiles: [{
             fileUrl: target.url,
             filePath: source.file,
-            fileSize: 100,
-            multipartHeaders: { partHeader: 'test' },
-            minPartSize: 10,
-            maxPartSize: 25
+            fileSize: size
         }],
         headers: target.headers,
         ...retryOptions,
@@ -263,7 +260,7 @@ async function uploadOneBlock(source, target, retryOptions) {
  * @param {*} params Additional request parameters
  * @param {*} retryOptions Retry options
  */
-async function uploadMultipleBlocks(source, target, params, retryOptions) {
+async function uploadMultipleBlocks(source, target, params, retryOptions, size) {
     const upload = new BlockUpload();
     const options = {
         uploadFiles: [{
@@ -463,17 +460,17 @@ async function main() {
     }
 
     if(params.block) {
-        console.log("time to do blocks");
+        console.log("Testing block upload transfer");
         if (source.url && target.file) {
             console.log("Downloading as blocks");
             await downloadOneFileAsBlocks(source, target, retryOptions);
         } else if (source.file && target.url) {
             console.log("Uploading using one block url");
-            await uploadOneBlock(source, target, retryOptions);
+            await uploadOneBlock(source, target, retryOptions, size);
         } else if (source.file && target.urls) {
             //multi-part upload
             console.log("Uploading using multi-part urls");
-            await uploadMultipleBlocks(source, target, params, retryOptions);
+            await uploadMultipleBlocks(source, target, params, retryOptions, size);
         } else {
             throw Error("Transfer is not supported");
         }
