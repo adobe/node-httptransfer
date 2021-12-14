@@ -54,7 +54,9 @@ describe('Block Transfer e2e test', function() {
                 fileSize,
                 filePath: Path.join(__dirname, "images/freeride-siberia.jpg")
             }], 
-            headers: getAuthorizationHeader(),
+            headers: {
+                "x-ms-blob-type": "BlockBlob"
+            }, //getAuthorizationHeader(),
             concurrent: true,
             maxConcurrent: 16
         });
@@ -74,10 +76,10 @@ describe('Block Transfer e2e test', function() {
         await blockDownload.downloadFiles({
             downloadFiles: [{
                 fileUrl,
-                fileSize: -1,
+                fileSize: fileSize,
                 filePath: downloadFile
             }], 
-            headers: getAuthorizationHeader(),
+            headers: 'headers', // getAuthorizationHeader(),
             concurrent: true,
             maxConcurrent: 16
         });
