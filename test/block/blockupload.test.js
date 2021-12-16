@@ -19,7 +19,10 @@ const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
 const { BlockUpload } = require('../../lib/block/blockupload');
-const { Blob } = require('blob-polyfill');
+// const { Blob } = require('blob-polyfill');
+
+const debug = require("debug");
+debug.enable('httptransfer*');
 
 describe('Block Upload', function() {
     afterEach(async function () {
@@ -33,40 +36,15 @@ describe('Block Upload', function() {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
-        // const initResponse = {
-        //     completeURI: `${HOST}/path/to.completeUpload.json`,
-        //     folderPath: '/path/to',
-        //     files: [{
-        //         fileName: 'file-1.jpg',
-        //         mimeType: 'image/jpeg',
-        //         uploadToken: 'upload-token',
-        //         uploadURIs: [
-        //             `${HOST}/part`
-        //         ],
-        //         minPartSize: 10,
-        //         maxPartSize: 100
-        //     }]
-        // };
-        // const initRaw = JSON.stringify(initResponse);
-        // nock(HOST)
-        //     .post('/path/to.initiateUpload.json', 'fileName=file-1.jpg&fileSize=15')
-        //     .reply(201, initRaw, {
-        //         'Content-Length': initRaw.length
-        //     });
 
         nock(HOST, {
             reqheaders: {
                 'content-length': 15,
-                'content-type': 'image/jpeg',
-                partHeader: 'test'
+                'content-type': 'image/jpeg'
             }
         })
-            .put('/part', 'hello world 123')
+            .put('/path/to/file-1.jpg', 'hello world 123')
             .reply(201);
-
-        // nock(HOST)
-        //     .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=image%2Fjpeg&createVersion=true&versionLabel=versionLabel&versionComment=versionComment&replace=false&uploadToken=upload-token')
-        //     .reply(200, '{}');
 
         const blockUpload = new BlockUpload();
         const events = {
@@ -74,36 +52,30 @@ describe('Block Upload', function() {
             fileprogress:[],
             fileend: []
         };
-        blockUpload.on('filestart', (data) => {
+        blockUpload.on('transferPart', (data) => {
             events.filestart.push(data);
         });
         blockUpload.on('fileprogress', (data) => {
             events.fileprogress.push(data);
         });
-        blockUpload.on('fileend', (data) => {
+        blockUpload.on('aftertransfer', (data) => {
             events.fileend.push(data);
         });
-        const targetUrl =  'http://test-aem-upload-201/path/to/file-1-1.jpg';
-        
-        const targetUrls = ['http://test-aem-upload-201/path/to/file-1-1.jpg',
-                            'http://test-aem-upload-201/path/to/file-1-2.jpg',
-                            'http://test-aem-upload-201/path/to/file-1-3.jpg',
-                            'http://test-aem-upload-201/path/to/file-1-4.jpg',
-                            'http://test-aem-upload-201/path/to/file-1-5.jpg'
-                        ];
+        const targetUrl =  'http://test-aem-upload-201/path/to/file-1.jpg';
+
         await blockUpload.uploadFiles({
             uploadFiles: [{
                 fileUrl: targetUrl,
                 filePath: testFile,
-                fileSize: 100,
-                // createVersion: true,
-                // versionLabel: 'versionLabel',
-                // versionComment: 'versionComment',
+                fileSize: 15,
                 multipartHeaders: { partHeader: 'test' },
                 minPartSize: 10,
                 maxPartSize: 25
             }],
-            headers: {},
+            headers: {
+                // Asset Compute passes through content-type header
+                'content-type': 'image/jpeg',
+            },
             concurrent: true,
             maxConcurrent: 5,
             preferredPartSize: 7
@@ -120,8 +92,9 @@ describe('Block Upload', function() {
             fileSize: 15,
             targetFolder: '/path/to',
             targetFile: '/path/to/file-1.jpg',
+            mimeType: "image/jpeg",
             sourceFolder: __dirname,
-            sourceFile: testFile
+            sourceFile: testFile,
         };
 
         assert.deepStrictEqual(events.filestart[0], fileEventData);
