@@ -158,7 +158,6 @@ describe('Block Upload', function() {
             uploadFiles: [{
                 fileUrl: targetUrls,
                 filePath: testFile,
-                fileSize: 15,
                 multipartHeaders: { partHeader: 'test' },
                 minPartSize: 10,
                 maxPartSize: 25

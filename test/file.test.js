@@ -18,7 +18,7 @@ const assert = require('assert');
 const fs = require('fs').promises;
 const nock = require('nock');
 const path = require('path');
-const { downloadFile, uploadFile } = require('../lib/file');
+const { downloadFile, uploadFile, uploadFileConcurrently } = require('../lib/file');
 const { testSetResponseBodyOverride, testHasResponseBodyOverrides } = require('../lib/fetch');
 const { createErrorReadable } = require('./streams');
 
@@ -383,6 +383,153 @@ describe('file', function() {
             try {
                 await fs.writeFile(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'), 'hello world 123', 'utf8');
                 await uploadFile(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'), 'http://badhost/path/to/file.ext', {
+                    retryMaxDuration: 1000
+                });
+                assert.fail('failure expected');
+            } catch (e) {
+                // expect elapsed to be at least 500ms, since less than that a 3rd
+                // retry would fit (400ms-500ms wait).
+                const elapsed = Date.now() - start;
+                assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
+                assert.ok(e.message.includes('badhost'));
+            }
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        }).timeout(20000);
+    });
+    describe('upload concurrently', function() {
+        afterEach(async function() {
+            assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
+            assert.ok(nock.isDone(), 'check if all nocks have been used');
+            nock.cleanAll();
+        });
+
+        it('status-201', async function() {
+            nock('http://test-status-201')
+                .matchHeader('content-length', 15)
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'hello world 123', 'utf8');
+            await uploadFileConcurrently(path.resolve('./test-transfer-file-up-status-201.dat'), 'http://test-status-201/path/to/file.ext');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-201.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        it('status-201-header', async function() {
+            nock('http://test-status-201')
+                .matchHeader('content-length', 15)
+                .matchHeader('content-type', 'image/jpeg')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'hello world 123', 'utf8');
+            await uploadFileConcurrently(path.resolve('./test-transfer-file-up-status-201.dat'), 'http://test-status-201/path/to/file.ext', {
+                headers: {
+                    'content-type': 'image/jpeg'
+                }
+            });
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-201.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        it('status-404', async function() {
+            nock('http://test-status-404')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(404);
+
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-404.dat'), 'hello world 123', 'utf8');
+            try {
+                await uploadFileConcurrently(path.resolve('./test-transfer-file-up-status-404.dat'), 'http://test-status-404/path/to/file.ext');
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
+            }
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-404.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        it('status-404-retry', async function() {
+            nock('http://test-status-404')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(404);
+
+            nock('http://test-status-404')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-404-retry.dat'), 'hello world 123', 'utf8');
+            await uploadFileConcurrently(path.resolve('./test-transfer-file-up-status-404-retry.dat'), 'http://test-status-404/path/to/file.ext', {
+                retryAllErrors: true
+            });
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-404-retry.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        }).timeout(20000);
+        it('status-503-retry', async function() {
+            nock('http://test-status-503')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(503);
+
+            nock('http://test-status-503')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+
+            await fs.writeFile(path.resolve('./test-transfer-file-up-status-503-retry.dat'), 'hello world 123', 'utf8');
+            await uploadFileConcurrently(path.resolve('./test-transfer-file-up-status-503-retry.dat'), 'http://test-status-503/path/to/file.ext');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-status-503-retry.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        it('timeout-retry', async function() {
+            nock('http://test-status-timeout')
+                .put('/path/to/file.ext', 'hello world 123')
+                .delayConnection(1000)
+                .reply(201);
+
+            nock('http://test-status-timeout')
+                .put('/path/to/file.ext', 'hello world 123')
+                .reply(201);
+
+            await fs.writeFile(path.resolve('./test-transfer-file-up-timeout-retry.dat'), 'hello world 123', 'utf8');
+            await uploadFileConcurrently(path.resolve('./test-transfer-file-up-timeout-retry.dat'), 'http://test-status-timeout/path/to/file.ext', {
+                timeout: 200
+            });
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-up-timeout-retry.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        it('badhost-retry-failure (2)', async function() {
+            const start = Date.now();
+            try {
+                await fs.writeFile(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'), 'hello world 123', 'utf8');
+                await uploadFileConcurrently(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'), 'http://badhost/path/to/file.ext', {
                     retryMaxDuration: 1000
                 });
                 assert.fail('failure expected');
