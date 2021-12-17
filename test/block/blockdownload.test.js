@@ -20,40 +20,41 @@ const Path = require('path');
 const { BlockDownload } = require('../../lib/block/blockdownload');
 const fileUrl = require('file-url');
 
-describe('Block Download', function() {
+describe('Block Download', function () {
     afterEach(async function () {
         assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
     });
 
-    it.only('Block download smoke test (single file download)', async function() {
+    it.only('Block download smoke test (single file download)', async function () {
         console.log("block download test");
 
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.jpeg";
         nock(HOST)
-        .head(filenameToDownload)
-        .reply((uri, requestBody) => {
-            return [
-              200,
-              "OK",
-              { 'content-type': 'image/jpeg',
-                'content-length': 15,
-                'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
-                'etag': ''
-                 }, 
-            ]
-          })
+            .head(filenameToDownload)
+            .reply((uri, requestBody) => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 15,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    },
+                ]
+            })
 
         nock(HOST)
-        .get(filenameToDownload, 'hello world 123')
-        .reply(200);
+            .get(filenameToDownload, 'hello world 123')
+            .reply(200);
 
         const blockDownload = new BlockDownload();
         const events = {
             filestart: [],
-            fileprogress:[],
+            fileprogress: [],
             fileend: [],
             error: []
         };
@@ -70,7 +71,7 @@ describe('Block Download', function() {
             events.error.push(data);
         });
 
-        const fileToDownload =  `${HOST}${filenameToDownload}`;
+        const fileToDownload = `${HOST}${filenameToDownload}`;
         await blockDownload.downloadFiles({
             downloadFiles: [{
                 fileUrl: fileToDownload,
@@ -79,13 +80,13 @@ describe('Block Download', function() {
             }],
             concurrent: true,
             maxConcurrent: 4
-        }); 
+        });
 
         assert.equal(events.error.length, 0);
         assert.fail();
     });
 
-    it('Block download: download error', async function() {
+    it('Block download: download error', async function () {
         console.log("block download test");
 
         assert.fail();
