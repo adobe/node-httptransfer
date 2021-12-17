@@ -16,7 +16,9 @@
 
 const assert = require('assert');
 const nock = require('nock');
+const Path = require('path');
 const { BlockDownload } = require('../../lib/block/blockdownload');
+const fileUrl = require('file-url');
 
 describe('Block Download', function() {
     afterEach(async function () {
@@ -24,10 +26,10 @@ describe('Block Download', function() {
         nock.cleanAll();
     });
 
-    it('Block download smoke test', async function() {
+    it.only('Block download smoke test (single file download)', async function() {
         console.log("block download test");
 
-        const HOST = 'http://test-aem-download-201';
+        const HOST = "http://test-aem-download-201";
 
         const blockDownload = new BlockDownload();
         const events = {
@@ -48,6 +50,18 @@ describe('Block Download', function() {
         blockDownload.on('error', (data) => {
             events.error.push(data);
         });
+
+        const testFile = Path.resolve("./test-files/image.jpeg");
+        const targetUrl =  "http://test-aem-download-this-is-here/path/to/file-1.jpeg";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileUrl(Path.resolve("./test-files/image.jpeg")),
+                filePath: Path.resolve("./test-files/tmp.jpeg"),
+                fileSize: 2000
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        }); 
 
         assert.equal(events.error.length, 0);
         assert.fail();
