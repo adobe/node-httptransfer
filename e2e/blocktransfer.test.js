@@ -23,8 +23,7 @@ const {
     BlockUpload
 } = require("../lib");
 const {
-    getBlobUrl,
-    getAuthorizationHeader
+    getBlobUrl
 } = require("./e2eutils");
 
 /***
