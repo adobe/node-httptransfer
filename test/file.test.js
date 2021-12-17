@@ -726,7 +726,7 @@ describe('multipart upload concurrently', function () {
                 });
                 assert.fail('expected to fail');
             } catch (e) {
-                assert.ok(e.message.includes('Too large to upload'));
+                assert.ok(e.message.includes('too large to upload'));
             }
 
             try {
