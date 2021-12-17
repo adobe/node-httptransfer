@@ -16,6 +16,7 @@
 
 const assert = require('assert');
 const nock = require('nock');
+const { BlockDownload } = require('../../lib/block/blockdownload');
 
 describe('Block Download', function() {
     afterEach(async function () {
@@ -25,9 +26,36 @@ describe('Block Download', function() {
 
     it('Block download smoke test', async function() {
         console.log("block download test");
+
+        const HOST = 'http://test-aem-download-201';
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress:[],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        assert.equal(events.error.length, 0);
+        assert.fail();
     });
 
     it('Block download: download error', async function() {
         console.log("block download test");
+
+        assert.fail();
     });
 });
