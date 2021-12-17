@@ -23,8 +23,7 @@ const {
     BlockUpload
 } = require("../lib");
 const {
-    getBlobUrl,
-    getAuthorizationHeader
+    getBlobUrl
 } = require("./e2eutils");
 
 /***
@@ -48,17 +47,25 @@ describe('Block Transfer e2e test', function() {
             console.log(`Upload: error ${fileName}`, errors);
             uploadErrors.push(errors);
         });
+
+        let target =  fileUrl;
+        let maxPartSize;
+        if (typeof(fileUrl) === 'object') {
+            target = fileUrl.urls;
+            maxPartSize = fileUrl.maxPartSize;
+        }
         await blockUpload.uploadFiles({
             uploadFiles: [{
-                fileUrl,
+                fileUrl: target,
+                filePath: Path.join(__dirname, "images/freeride-siberia.jpg"),
                 fileSize,
-                filePath: Path.join(__dirname, "images/freeride-siberia.jpg")
+                maxPartSize
             }], 
             headers: {
                 "x-ms-blob-type": "BlockBlob"
-            }, //getAuthorizationHeader(),
-            concurrent: true,
-            maxConcurrent: 16
+            },
+            maxConcurrent: 16,
+            preferredPartSize: 100000
         });
         assert.strictEqual(uploadErrors.length, 0);
     }
@@ -73,11 +80,19 @@ describe('Block Transfer e2e test', function() {
             console.log(`Download: error ${fileName}`, errors);
             downloadErrors.push(errors);
         });
+        let target =  fileUrl;
+        let maxPartSize;
+        if (typeof(fileUrl) === 'object') {
+            target = fileUrl.urls;
+            maxPartSize = fileUrl.maxPartSize;
+        }
+
         await blockDownload.downloadFiles({
             downloadFiles: [{
-                fileUrl,
-                fileSize: fileSize,
-                filePath: downloadFile
+                fileUrl: target,
+                filePath: downloadFile,
+                maxPartSize,
+                fileSize,
             }], 
             headers: 'headers', // getAuthorizationHeader(),
             concurrent: true,
@@ -90,9 +105,15 @@ describe('Block Transfer e2e test', function() {
     it('AEM upload then download', async function () {
         const testId = `node-httptransfer_aem-e2e_${new Date().getTime()}`;
         const fileName = `${testId}.jpg`;
-        // TODO: This should not be via AEM but just a raw blob location
-        const fileUrl = `${getBlobUrl(fileName, "rw")}`;
+        const filePath =  Path.join(__dirname, "images/freeride-siberia.jpg");
         const fileSize = 282584;
+        // TODO: This should not be via AEM but just a raw blob location
+        const fileUrl = getBlobUrl(filePath, {
+            permissions: "rw",
+            size: fileSize,
+            maxPartSize: 100000
+        });
+        console.log('**** FILE URL', fileUrl);
         const downloadDir = Path.join(__dirname, "output", testId);
         const downloadFile = Path.join(downloadDir, fileName);
         await mkdirp(downloadDir);
