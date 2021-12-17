@@ -27,4 +27,7 @@ describe('Block Download', function() {
         console.log("block download test");
     });
 
+    it('Block download: download error', async function() {
+        console.log("block download test");
+    });
 });
