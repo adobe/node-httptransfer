@@ -1091,6 +1091,44 @@ describe('multipart upload concurrently', function () {
                 console.log(e);
             }
         });
+        it('timeout-error-1-retry-max-duration', async function () {
+            await fs.writeFile('test-transfer-file-20.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 8)
+                    .put('/path/to/file-1.ext', 'hello wo')
+                    .delayConnection(500)
+                    .reply(201);
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 7)
+                    .put('/path/to/file-2.ext', 'rld 123')
+                    .reply(201);
+
+                await uploadMultiPartFileConcurrently('test-transfer-file-20.dat', {
+                    urls: [
+                        'http://timeout-error/path/to/file-1.ext',
+                        'http://timeout-error/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8,
+                }, {
+                    timeout: 200,
+                    retryMaxDuration: 1
+                });
+
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('network timeout'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-20.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
         it('timeout-error-2', async function () {
             await fs.writeFile('test-transfer-file-21.dat', 'hello world 123', 'utf8');
 

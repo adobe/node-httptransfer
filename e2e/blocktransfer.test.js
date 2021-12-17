@@ -24,7 +24,7 @@ const {
 } = require("../lib");
 const {
     getBlobUrl,
-    getAuthorizationHeader
+    // getAuthorizationHeader
 } = require("./e2eutils");
 
 /***
