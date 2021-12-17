@@ -29,7 +29,17 @@ describe('Block Download', function() {
     it.only('Block download smoke test (single file download)', async function() {
         console.log("block download test");
 
-        const HOST = "http://test-aem-download-201";
+        const HOST = 'http://test-aem-download.com';
+        const filenameToDownload = '/path/to/image-file-1.jpeg';
+        nock(HOST)
+        .head(filenameToDownload)
+        .reply(200, {
+            'content-type': "image/jpeg"
+        });
+
+        nock(HOST)
+        .get(filenameToDownload, 'hello world 123')
+        .reply(200);
 
         const blockDownload = new BlockDownload();
         const events = {
@@ -51,12 +61,11 @@ describe('Block Download', function() {
             events.error.push(data);
         });
 
-        const testFile = Path.resolve("./test-files/image.jpeg");
-        const targetUrl =  "http://test-aem-download-this-is-here/path/to/file-1.jpeg";
+        const fileToDownload =  `${HOST}${filenameToDownload}`;
         await blockDownload.downloadFiles({
             downloadFiles: [{
-                fileUrl: fileUrl(Path.resolve("./test-files/image.jpeg")),
-                filePath: Path.resolve("./test-files/tmp.jpeg"),
+                fileUrl: fileToDownload,
+                filePath: Path.resolve("./tmp.jpeg"), // where to put the file
                 fileSize: 2000
             }],
             concurrent: true,
