@@ -29,13 +29,22 @@ describe('Block Download', function() {
     it.only('Block download smoke test (single file download)', async function() {
         console.log("block download test");
 
-        const HOST = 'http://test-aem-download.com';
-        const filenameToDownload = '/path/to/image-file-1.jpeg';
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.jpeg";
         nock(HOST)
         .head(filenameToDownload)
-        .reply(200, {
-            'content-type': "image/jpeg"
-        });
+        .reply((uri, requestBody) => {
+            return [
+              200,
+              "OK",
+              { 'content-type': 'image/jpeg',
+                'content-length': 15,
+                'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                'etag': ''
+                 }, 
+            ]
+          })
 
         nock(HOST)
         .get(filenameToDownload, 'hello world 123')
@@ -66,7 +75,7 @@ describe('Block Download', function() {
             downloadFiles: [{
                 fileUrl: fileToDownload,
                 filePath: Path.resolve("./tmp.jpeg"), // where to put the file
-                fileSize: 2000
+                fileSize: 15
             }],
             concurrent: true,
             maxConcurrent: 4
