@@ -210,7 +210,7 @@ describe('Block Download', function () {
         assert.deepStrictEqual(events, expectedEvents);
     });
 
-    it('Block download: download small pnf file', async function () {
+    it('Block download: download small png file', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.png";
         nock(HOST)
