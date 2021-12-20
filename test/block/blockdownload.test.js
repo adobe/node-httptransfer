@@ -315,4 +315,74 @@ describe('Block Download', function () {
         };
         assert.deepStrictEqual(events, expectedEvents);
     });
+
+    it.only('Block download: HEAD and GET filesize mismatch', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.png";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/png',
+                        'content-length': 1911,
+                        'content-disposition': 'attachment; filename="image-file-1.png"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .replyWithFile(200,
+                `${__dirname}/test-files/png-file.png`,
+                {
+                    'content-type': 'image/png',
+                    'content-length': 2000,
+                    'content-disposition': 'attachment; filename="image-file-1.png"',
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'etag': ''
+                }
+            );
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.png";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileToDownload,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 1911
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        });
+
+        await fs.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+
+        console.log(events)
+        assert.deepStrictEqual(events, expectedEvents);
+    });
 });
