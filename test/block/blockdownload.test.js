@@ -316,7 +316,7 @@ describe('Block Download', function () {
         assert.deepStrictEqual(events, expectedEvents);
     });
 
-    it.skip('Block download: HEAD and GET filesize mismatch', async function () {
+    it('Block download: HEAD and GET filesize mismatch', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.png";
         nock(HOST)
@@ -370,19 +370,21 @@ describe('Block Download', function () {
 
         const fileToDownload = `${HOST}${filenameToDownload}`;
         const mockDownloadFileLocation = "./test/tmp.png";
-        await blockDownload.downloadFiles({
-            downloadFiles: [{
-                fileUrl: fileToDownload,
-                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
-                fileSize: 1911
-            }],
-            concurrent: true,
-            maxConcurrent: 4
-        });
 
-        await fs.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
-
-        console.log(events)
-        assert.deepStrictEqual(events, expectedEvents);
+        try {
+            await blockDownload.downloadFiles({
+                downloadFiles: [{
+                    fileUrl: fileToDownload,
+                    filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                    fileSize: 1911
+                }],
+                concurrent: true,
+                maxConcurrent: 4
+            });
+            assert.fail("Should have thrown an error");
+        } catch (err) {
+            console.log(err.message);
+            assert.ok(err.message.includes("not seem to have respected Range header"));
+        }
     });
 });
