@@ -24,7 +24,8 @@ const {
 } = require("../lib");
 const {
     getBlobUrl,
-    commitAzureBlocks
+    commitAzureBlocks,
+    getFileHash
 } = require("./e2eutils");
 
 /***
@@ -110,11 +111,11 @@ describe('Block Transfer e2e test', function() {
     it('AEM upload then download', async function () {
         const testId = `node-httptransfer_aem-e2e_${new Date().getTime()}`;
         const fileName = `${testId}.jpg`;
-        const filePath =  Path.join(__dirname, "images/freeride-siberia.jpg");
+        const originalFilePath =  Path.join(__dirname, "images/freeride-siberia.jpg");
         const fileSize = 282584;
 
         // multipart upload urls
-        const uploadFileUrls = getBlobUrl(filePath, {
+        const uploadFileUrls = getBlobUrl(originalFilePath, {
             permissions: "cw",
             size: fileSize,
             maxPartSize: 100000
@@ -122,14 +123,17 @@ describe('Block Transfer e2e test', function() {
         const downloadDir = Path.join(__dirname, "output", testId);
         const downloadFile = Path.join(downloadDir, fileName);
         await mkdirp(downloadDir);
-        await doBlockUpload(uploadFileUrls, fileSize, filePath);
-        console.log("** DONE UPLOADING");
+        await doBlockUpload(uploadFileUrls, fileSize, originalFilePath);
         // singular url used for downloading
-        const downloadFileUrl = getBlobUrl(filePath, {
+        console.log('Upload complete for file', fileName);
+        const downloadFileUrl = getBlobUrl(originalFilePath, {
             permissions: "r",
             size: fileSize
         });
-        console.log("**** DOWNLOAD URL", downloadFileUrl);
-        return doBlockDownload(downloadFileUrl, fileSize, downloadFile);
+        console.log("Downloading file using url:", downloadFileUrl);
+        await doBlockDownload(downloadFileUrl, fileSize, downloadFile);
+
+        // check downloaded file is the same as the original file by generating a hash
+        assert.strictEqual(await getFileHash(originalFilePath), await getFileHash(downloadFile));
     });
 });

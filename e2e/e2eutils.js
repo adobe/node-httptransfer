@@ -13,6 +13,8 @@
 "use strict";
 
 const Path = require('path');
+const { promises: fs } = require("fs");
+const crypto = require('crypto');
 const {
     BlobServiceClient,
     StorageSharedKeyCredential,
@@ -115,6 +117,10 @@ module.exports.commitAzureBlocks = async function(filepath) {
     const blobClient = containerClient.getBlockBlobClient(blobName);
     const blockList = await blobClient.getBlockList("uncommitted");
     await blobClient.commitBlockList(blockList.uncommittedBlocks.map(x => x.name));
+};
+module.exports.getFileHash = async function(filepath) {
+    const file = await fs.readFile(filepath);
+    return crypto.createHash('md5').update(file).digest('hex');
 };
 
 /**
