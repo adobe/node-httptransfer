@@ -15,20 +15,376 @@
 'use strict';
 
 const assert = require('assert');
-const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
-const { BlockUpload } = require('../../lib/block/blockdownload');
-const { Blob } = require('blob-polyfill');
+const { BlockDownload } = require('../../lib/block/blockdownload');
+const fs = require('fs').promises;
 
-describe('Block Download', function() {
+describe('Block Download', function () {
     afterEach(async function () {
-        assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
     });
 
-    it('Block download smoke test', async function() {
-        console.log("block download test");
+    it('Block download smoke test (single file download)', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.jpeg";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 15,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "AAAAAAAAAAAAAAA",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 15,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.jpeg";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileToDownload,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 15
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        });
+
+        await fs.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+        assert.equal(events.filestart.length, 1);
+        assert.equal(events.filestart[0].fileSize, 15);
+        assert.equal(events.fileprogress.length, 1);
+        assert.equal(events.fileprogress[0].fileSize, 15);
+        assert.equal(events.fileprogress[0].transferred, 15);
+        assert.equal(events.fileend.length, 1);
+        assert.equal(events.fileprogress[0].fileSize, 15);
+        assert.equal(events.error.length, 0);
+        assert.ok(nock.isDone(), nock.pendingMocks());
     });
 
+    it('Block download: download small jpeg file', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.jpeg";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 2024,
+                        'content-disposition': 'attachment; filename="image-file-1.jpeg"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .replyWithFile(200,
+                `${__dirname}/test-files/jpeg-file.jpeg`,
+                {
+                    'content-type': 'image/jpeg',
+                    'content-length': 2024,
+                    'content-disposition': 'attachment; filename="image-file-1.jpeg"',
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'etag': ''
+                }
+            );
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.jpeg";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileToDownload,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 2024
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        });
+
+        await fs.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+
+        const expectedEvents = {
+            filestart: [
+                {
+                    fileName: 'tmp.jpeg',
+                    fileSize: 2024,
+                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
+                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.jpeg',
+                    sourceFolder: '/path/to',
+                    sourceFile: '/path/to/image-file-1.jpeg',
+                    mimeType: 'image/jpeg'
+                }
+            ],
+            fileprogress: [
+                {
+                    fileName: 'tmp.jpeg',
+                    fileSize: 2024,
+                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
+                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.jpeg',
+                    sourceFolder: '/path/to',
+                    sourceFile: '/path/to/image-file-1.jpeg',
+                    mimeType: 'image/jpeg',
+                    transferred: 2024
+                }
+            ],
+            fileend: [
+                {
+                    fileName: 'tmp.jpeg',
+                    fileSize: 2024,
+                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
+                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.jpeg',
+                    sourceFolder: '/path/to',
+                    sourceFile: '/path/to/image-file-1.jpeg',
+                    mimeType: 'image/jpeg'
+                }
+            ],
+            error: []
+        };
+        assert.deepStrictEqual(events, expectedEvents);
+    });
+
+    it('Block download: download small png file', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.png";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/png',
+                        'content-length': 1911,
+                        'content-disposition': 'attachment; filename="image-file-1.png"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .replyWithFile(200,
+                `${__dirname}/test-files/png-file.png`,
+                {
+                    'content-type': 'image/png',
+                    'content-length': 1911,
+                    'content-disposition': 'attachment; filename="image-file-1.png"',
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'etag': ''
+                }
+            );
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.png";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileToDownload,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 1911
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        });
+
+        await fs.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+
+        const expectedEvents = {
+            filestart: [
+                {
+                    fileName: 'tmp.png',
+                    fileSize: 1911,
+                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
+                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.png',
+                    sourceFolder: '/path/to',
+                    sourceFile: '/path/to/image-file-1.png',
+                    mimeType: 'image/png'
+                }
+            ],
+            fileprogress: [
+                {
+                    fileName: 'tmp.png',
+                    fileSize: 1911,
+                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
+                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.png',
+                    sourceFolder: '/path/to',
+                    sourceFile: '/path/to/image-file-1.png',
+                    mimeType: 'image/png',
+                    transferred: 1911
+                }
+            ],
+            fileend: [
+                {
+                    fileName: 'tmp.png',
+                    fileSize: 1911,
+                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
+                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.png',
+                    sourceFolder: '/path/to',
+                    sourceFile: '/path/to/image-file-1.png',
+                    mimeType: 'image/png'
+                }
+            ],
+            error: []
+        };
+        assert.deepStrictEqual(events, expectedEvents);
+    });
+
+    it('Block download: HEAD and GET filesize mismatch', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.png";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/png',
+                        'content-length': 1911,
+                        'content-disposition': 'attachment; filename="image-file-1.png"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .replyWithFile(200,
+                `${__dirname}/test-files/png-file.png`,
+                {
+                    'content-type': 'image/png',
+                    'content-length': 2000,
+                    'content-disposition': 'attachment; filename="image-file-1.png"',
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'etag': ''
+                }
+            );
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.png";
+
+        try {
+            await blockDownload.downloadFiles({
+                downloadFiles: [{
+                    fileUrl: fileToDownload,
+                    filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                    fileSize: 1911
+                }],
+                concurrent: true,
+                maxConcurrent: 4
+            });
+            assert.fail("Should have thrown an error");
+        } catch (err) {
+            console.log(err.message);
+            assert.ok(err.message.includes("not seem to have respected Range header"));
+        }
+    });
 });
