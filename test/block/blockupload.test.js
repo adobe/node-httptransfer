@@ -29,7 +29,7 @@ describe('Block Upload', function() {
         nock.cleanAll();
     });
 
-    it.only('Block upload smoke test', async function() {
+    it('Block upload smoke test', async function() {
         console.log("block upload test");
 
         const HOST = 'http://test-aem-upload-201';
@@ -104,7 +104,7 @@ describe('Block Upload', function() {
         });
     });
 
-    it.only('Block upload smoke test (multiple urls)', async function() {
+    it('Block upload smoke test (multiple urls)', async function() {
         console.log("block upload test");
 
         const HOST = 'http://test-aem-upload-201';
