@@ -109,9 +109,9 @@ describe('Block Download', function () {
 
     it('Block download smoke test (multiple file download)', async function () {
         const HOST = "http://test-aem-download.com";
-        const filenameToDownload = "/path/to/image-file-.jpeg";
+        const filenameToDownload = "/path/to/image-file";
         nock(HOST)
-            .head(`${filenameToDownload}1`)
+            .head(`${filenameToDownload}1.jpeg`)
             .reply(() => {
                 return [
                     200,
@@ -127,7 +127,7 @@ describe('Block Download', function () {
             });
 
         nock(HOST)
-            .get(`${filenameToDownload}1`)
+            .get(`${filenameToDownload}1.jpeg`)
             .reply(() => {
                 return [
                     200,
@@ -142,8 +142,8 @@ describe('Block Download', function () {
                 ];
             });
 
-            nock(HOST)
-            .head(`${filenameToDownload}2`)
+        nock(HOST)
+            .head(`${filenameToDownload}2.jpeg`)
             .reply(() => {
                 return [
                     200,
@@ -159,7 +159,7 @@ describe('Block Download', function () {
             });
 
         nock(HOST)
-            .get(`${filenameToDownload}2`)
+            .get(`${filenameToDownload}2.jpeg`)
             .reply(() => {
                 return [
                     200,
@@ -198,12 +198,12 @@ describe('Block Download', function () {
         const mockDownloadFileLocation = "./test/tmp.jpeg";
         await blockDownload.downloadFiles({
             downloadFiles: [{
-                fileUrl: `${fileToDownload}1`,
+                fileUrl: `${fileToDownload}1.jpeg`,
                 filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
                 fileSize: 15
             },
             {
-                fileUrl: `${fileToDownload}2`,
+                fileUrl: `${fileToDownload}2.jpeg`,
                 filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
                 fileSize: 15
             }],
