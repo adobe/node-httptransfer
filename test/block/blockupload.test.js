@@ -67,10 +67,7 @@ describe('Block Upload', function() {
             uploadFiles: [{
                 fileUrl: targetUrl,
                 filePath: testFile,
-                fileSize: 15,
-                multipartHeaders: { partHeader: 'test' },
-                minPartSize: 10,
-                maxPartSize: 25
+                fileSize: 15
             }],
             headers: {
                 // Asset Compute passes through content-type header
@@ -78,7 +75,6 @@ describe('Block Upload', function() {
             },
             concurrent: true,
             maxConcurrent: 5,
-            preferredPartSize: 7
         });
 
         try {
