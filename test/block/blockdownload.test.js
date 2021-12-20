@@ -22,18 +22,17 @@ const fileUrl = require('file-url');
 
 describe('Block Download', function () {
     afterEach(async function () {
-        assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
     });
 
-    it.only('Block download smoke test (single file download)', async function () {
+    it('Block download smoke test (single file download)', async function () {
         console.log("block download test");
 
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.jpeg";
         nock(HOST)
             .head(filenameToDownload)
-            .reply((uri, requestBody) => {
+            .reply(() => {
                 return [
                     200,
                     "OK",
@@ -43,13 +42,25 @@ describe('Block Download', function () {
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
                         'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
                         'etag': ''
-                    },
+                    }
                 ]
-            })
+            });
 
         nock(HOST)
-            .get(filenameToDownload, 'hello world 123')
-            .reply(200);
+            .get(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "AAAAAAAAAAAAAAA",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 15,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    }
+                ]
+            });
 
         const blockDownload = new BlockDownload();
         const events = {
@@ -83,12 +94,13 @@ describe('Block Download', function () {
         });
 
         assert.equal(events.error.length, 0);
-        assert.fail();
+        assert.ok(nock.isDone(), nock.pendingMocks(), 'check if all nocks have been used');
     });
 
-    it('Block download: download error', async function () {
+    it.skip('Block download: download error', async function () {
         console.log("block download test");
 
         assert.fail();
+        assert.ok(nock.isDone(), nock.pendingMocks(), 'check if all nocks have been used');
     });
 });
