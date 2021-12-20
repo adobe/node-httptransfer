@@ -387,4 +387,139 @@ describe('Block Download', function () {
             assert.ok(err.message.includes("not seem to have respected Range header"));
         }
     });
+
+    it('Block download: HEAD OK, GET 404', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.png";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/png',
+                        'content-length': 1911,
+                        'content-disposition': 'attachment; filename="image-file-1.png"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(`${filenameToDownload}`)
+            .reply(() => {
+                return [
+                    404
+                ];
+            });
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.png";
+
+        try {
+            await blockDownload.downloadFiles({
+                downloadFiles: [{
+                    fileUrl: fileToDownload,
+                    filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                    fileSize: 1911
+                }],
+                concurrent: true,
+                maxConcurrent: 4
+            });
+            assert.fail("Should have thrown an error");
+        } catch (err) {
+            console.log(err.message);
+            assert.ok(nock.isDone()); // HEAD and GET should have been attempted
+            assert.ok(err.message.includes("failed"));
+            assert.ok(err.message.includes("404"));
+        }
+    });
+
+    it('Block download: HEAD 404 and GET OK', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.png";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    404
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .replyWithFile(200,
+                `${__dirname}/test-files/png-file.png`,
+                {
+                    'content-type': 'image/png',
+                    'content-length': 2000,
+                    'content-disposition': 'attachment; filename="image-file-1.png"',
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'etag': ''
+                }
+            );
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.png";
+
+        try {
+            await blockDownload.downloadFiles({
+                downloadFiles: [{
+                    fileUrl: fileToDownload,
+                    filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                    fileSize: 1911
+                }],
+                concurrent: true,
+                maxConcurrent: 4
+            });
+            assert.fail("Should have thrown an error");
+        } catch (err) {
+            console.log(err.message);
+            assert.ok(!nock.isDone()); // the GET should not have been attempted
+            assert.ok(err.message.includes("failed"));
+            assert.ok(err.message.includes("404"));
+        }
+    });
 });
