@@ -260,7 +260,7 @@ async function uploadOneBlock(source, target, retryOptions, size) {
  * @param {*} params Additional request parameters
  * @param {*} retryOptions Retry options
  */
-async function uploadMultipleBlocks(source, target, params, retryOptions, size) {
+async function uploadMultipleBlocks(source, target, params, retryOptions) {
     const upload = new BlockUpload();
     const options = {
         uploadFiles: [{

@@ -15,11 +15,7 @@
 'use strict';
 
 const assert = require('assert');
-const fs = require('fs').promises;
 const nock = require('nock');
-const Path = require('path');
-const { BlockUpload } = require('../../lib/block/blockdownload');
-const { Blob } = require('blob-polyfill');
 
 describe('Block Download', function() {
     afterEach(async function () {
