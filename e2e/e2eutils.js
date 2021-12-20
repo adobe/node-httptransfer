@@ -99,15 +99,30 @@ function createAzureSAS(auth, containerName, blobName, perm="r") {
     return `${blobClient.url}?${query}`;
 }
 
+function getAzureAuth() {
+    return {
+        accountName: process.env.AZURE_STORAGE_ACCOUNT,
+        accountKey: process.env.AZURE_STORAGE_KEY
+    };
+}
+
+module.exports.commitAzureBlocks = async function(filepath) {
+    const auth = getAzureAuth();
+    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+    const blobName = Path.basename(filepath);
+
+    const containerClient = createAzureContainerClient(auth, containerName);
+    const blobClient = containerClient.getBlockBlobClient(blobName);
+    const blockList = await blobClient.getBlockList("uncommitted");
+    await blobClient.commitBlockList(blockList.uncommittedBlocks.map(x => x.name));
+};
+
 /**
  * Generates blob url for local file
  * @param {string} filepath Path to local file to generate a blobUrl
  */
 module.exports.getBlobUrl = function(filepath, options) {
-    const auth = {
-        accountName: process.env.AZURE_STORAGE_ACCOUNT,
-        accountKey: process.env.AZURE_STORAGE_KEY
-    };
+    const auth = getAzureAuth();
     const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
     const blobName = Path.basename(filepath);
 

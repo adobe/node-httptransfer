@@ -23,7 +23,8 @@ const {
     BlockUpload
 } = require("../lib");
 const {
-    getBlobUrl
+    getBlobUrl,
+    commitAzureBlocks
 } = require("./e2eutils");
 
 /***
@@ -37,7 +38,7 @@ const {
 
 describe('Block Transfer e2e test', function() {
     this.timeout(60000);
-    async function doBlockUpload(fileUrl, fileSize) {
+    async function doBlockUpload(fileUrl, fileSize, filePath) {
         const blockUpload = new BlockUpload();
         const uploadErrors = [];
         blockUpload.on("filestart", ({ fileName, fileSize }) => console.log(`Upload: start ${fileName}, ${fileSize} bytes`));
@@ -68,6 +69,9 @@ describe('Block Transfer e2e test', function() {
             preferredPartSize: 100000
         });
         assert.strictEqual(uploadErrors.length, 0);
+
+        console.log("Commit uncommitted blocks");
+        await commitAzureBlocks(filePath);
     }
 
     async function doBlockDownload(fileUrl, fileSize, downloadFile) {
@@ -117,7 +121,8 @@ describe('Block Transfer e2e test', function() {
         const downloadDir = Path.join(__dirname, "output", testId);
         const downloadFile = Path.join(downloadDir, fileName);
         await mkdirp(downloadDir);
-        await doBlockUpload(fileUrl, fileSize);
+        await doBlockUpload(fileUrl, fileSize, filePath);
+        console.log("** DONE UPLOADING")
         return doBlockDownload(fileUrl, fileSize, downloadFile);
     });
 });
