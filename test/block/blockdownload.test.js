@@ -20,6 +20,9 @@ const Path = require('path');
 const { BlockDownload } = require('../../lib/block/blockdownload');
 const fs = require('fs').promises;
 
+const debug = require('debug');
+debug.enable('httptransfer*');
+
 describe('Block Download', function () {
     afterEach(async function () {
         nock.cleanAll();
@@ -104,7 +107,7 @@ describe('Block Download', function () {
         assert.ok(nock.isDone(), nock.pendingMocks());
     });
 
-    it('Block download: download small jpeg file', async function () {
+    it.only('Block download: download small jpeg file', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.jpeg";
         nock(HOST)

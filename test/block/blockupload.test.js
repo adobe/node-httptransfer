@@ -19,9 +19,8 @@ const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
 const { BlockUpload } = require('../../lib/block/blockupload');
-// const { Blob } = require('blob-polyfill');
 
-const debug = require("debug");
+const debug = require('debug');
 debug.enable('httptransfer*');
 
 describe('Block Upload', function() {
@@ -30,7 +29,7 @@ describe('Block Upload', function() {
         nock.cleanAll();
     });
 
-    it('Block upload smoke test', async function() {
+    it.only('Block upload smoke test', async function() {
         console.log("block upload test");
 
         const HOST = 'http://test-aem-upload-201';
@@ -104,7 +103,8 @@ describe('Block Upload', function() {
             mimeType: "image/jpeg",
         });
     });
-    it('Block upload smoke test (multiple urls)', async function() {
+
+    it.only('Block upload smoke test (multiple urls)', async function() {
         console.log("block upload test");
 
         const HOST = 'http://test-aem-upload-201';
