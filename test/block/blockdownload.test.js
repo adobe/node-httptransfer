@@ -107,7 +107,7 @@ describe('Block Download', function () {
         assert.ok(nock.isDone(), nock.pendingMocks());
     });
 
-    it('Block download: download small jpeg file', async function () {
+    it('Block small jpeg file', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.jpeg";
         nock(HOST)
@@ -213,7 +213,7 @@ describe('Block Download', function () {
         assert.deepStrictEqual(events, expectedEvents);
     });
 
-    it('Block download: download small png file', async function () {
+    it('Block download small png file', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.png";
         nock(HOST)
@@ -226,8 +226,7 @@ describe('Block Download', function () {
                         'content-type': 'image/png',
                         'content-length': 1911,
                         'content-disposition': 'attachment; filename="image-file-1.png"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
-                        'etag': ''
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
                     }
                 ];
             });
@@ -240,8 +239,7 @@ describe('Block Download', function () {
                     'content-type': 'image/png',
                     'content-length': 1911,
                     'content-disposition': 'attachment; filename="image-file-1.png"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
-                    'etag': ''
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
                 }
             );
 
@@ -319,7 +317,7 @@ describe('Block Download', function () {
         assert.deepStrictEqual(events, expectedEvents);
     });
 
-    it('Block download: HEAD and GET filesize mismatch', async function () {
+    it('Block download handles errors gracefully when HEAD and GET filesize mismatch', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.png";
         nock(HOST)
@@ -391,7 +389,7 @@ describe('Block Download', function () {
         }
     });
 
-    it('Block download: HEAD OK, GET 404', async function () {
+    it('Block download handles errors gracefully when HEAD OK, GET 404', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.png";
         nock(HOST)
@@ -460,7 +458,7 @@ describe('Block Download', function () {
         }
     });
 
-    it('Block download: HEAD 404 and GET OK', async function () {
+    it('Block download handles errors gracefully when HEAD 404 and GET OK', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.png";
         nock(HOST)
