@@ -316,7 +316,7 @@ describe('Block Download', function () {
         assert.deepStrictEqual(events, expectedEvents);
     });
 
-    it.only('Block download: HEAD and GET filesize mismatch', async function () {
+    it.skip('Block download: HEAD and GET filesize mismatch', async function () {
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.png";
         nock(HOST)
