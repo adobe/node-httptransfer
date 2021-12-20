@@ -18,7 +18,7 @@ const assert = require('assert');
 const nock = require('nock');
 const Path = require('path');
 const { BlockDownload } = require('../../lib/block/blockdownload');
-const fileUrl = require('file-url');
+const fs = require('fs').promises;
 
 describe('Block Download', function () {
     afterEach(async function () {
@@ -26,8 +26,6 @@ describe('Block Download', function () {
     });
 
     it('Block download smoke test (single file download)', async function () {
-        console.log("block download test");
-
         const HOST = "http://test-aem-download.com";
         const filenameToDownload = "/path/to/image-file-1.jpeg";
         nock(HOST)
@@ -93,11 +91,19 @@ describe('Block Download', function () {
             maxConcurrent: 4
         });
 
+        await fs.unlink(Path.resolve("./tmp.jpeg"), "Could not unlink mock downloaded file");
+        assert.equal(events.filestart.length, 1);
+        assert.equal(events.filestart[0].fileSize, 15);
+        assert.equal(events.fileprogress.length, 1);
+        assert.equal(events.fileprogress[0].fileSize, 15);
+        assert.equal(events.fileprogress[0].transferred, 15);
+        assert.equal(events.fileend.length, 1);
+        assert.equal(events.fileprogress[0].fileSize, 15);
         assert.equal(events.error.length, 0);
-        assert.ok(nock.isDone(), nock.pendingMocks(), 'check if all nocks have been used');
+        assert.ok(nock.isDone(), nock.pendingMocks());
     });
 
-    it.skip('Block download: download error', async function () {
+    it.skip('Block download: download small file', async function () {
         console.log("block download test");
 
         assert.fail();
