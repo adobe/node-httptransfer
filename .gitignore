@@ -77,3 +77,6 @@ testfiles
 
 # end-to-end test data
 e2e/output
+
+# large test files
+test/block/test-files/large-file.pdf
