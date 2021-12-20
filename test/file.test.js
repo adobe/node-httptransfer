@@ -869,14 +869,14 @@ describe('multipart upload concurrently', function () {
                     .put('/path/to/file-1.ext', 'hel')
                     .reply(404);
 
-                nock('http://test-status-404')
-                    .matchHeader('content-length', 3)
-                    .put('/path/to/file-2.ext', 'lo ')
-                    .reply(200);
-                nock('http://test-status-404')
-                    .matchHeader('content-length', 3)
-                    .put('/path/to/file-3.ext', 'wor')
-                    .reply(200);
+                // nock('http://test-status-404')
+                //     .matchHeader('content-length', 3)
+                //     .put('/path/to/file-2.ext', 'lo ')
+                //     .reply(200);
+                // nock('http://test-status-404')
+                //     .matchHeader('content-length', 3)
+                //     .put('/path/to/file-3.ext', 'wor')
+                //     .reply(200);
                 // TODO, look into why this is happening
                 // first URL fails first
                 // two (out of 4 remaining) urls get executed before the filter function causes the request to end due to an error
