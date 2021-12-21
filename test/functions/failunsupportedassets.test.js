@@ -61,9 +61,9 @@ describe("FailUnsupportedAssets", () => {
             error: "File cannot be uploaded: Empty file"
         }]);
     });
-    it("unsupported-parenthesis", async function() {
+    it("unsupported-brackets", async function() {
         const source = new Asset("file://path/to/file.png");
-        const target = new Asset("https://host/path/to/(upload).png");
+        const target = new Asset("https://host/path/to/[upload].png");
         const inputAsset = new TransferAsset(source, target, {
             metadata: new AssetMetadata(undefined, "image/png", 1)
         });
@@ -77,7 +77,20 @@ describe("FailUnsupportedAssets", () => {
             functionName: "FailUnsupportedAssets",
             props: undefined,
             transferItem: inputAsset,
-            error: "File cannot be uploaded: Filename '(upload).png' has unsupported characters"
+            error: "File cannot be uploaded: Filename '[upload].png' has unsupported characters"
         }]);
+    });
+    it("supported-parenthesis", async function() {
+        const source = new Asset("file://path/to/file.png");
+        const target = new Asset("https://host/path/to/(upload).png");
+        const inputAsset = new TransferAsset(source, target, {
+            metadata: new AssetMetadata(undefined, "image/png", 1)
+        });
+        const failUnsupportedAssets = new FailUnsupportedAssets;
+        const controller = new ControllerMock;
+        for await (const transferAsset of failUnsupportedAssets.execute([ inputAsset ], controller)) {
+            assert.deepStrictEqual(transferAsset, inputAsset);
+        }
+        assert.deepStrictEqual(controller.notifications, []);
     });
 });
