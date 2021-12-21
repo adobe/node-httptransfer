@@ -16,7 +16,7 @@
 
 const assert = require("assert");
 const UploadError = require("../../lib/block/upload-error");
-const errorCodes = require("../../lib/block/error-codes");
+const errorCodes = require("../../lib/http-error-codes");
 
 describe('Upload Error', function() {
     function verifyCodes(httpStatus, expectedCode) {
