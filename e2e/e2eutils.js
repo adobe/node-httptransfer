@@ -31,7 +31,7 @@ require('dotenv').config({ path: Path.join(__dirname, '.env') });
  * use.
  * @returns {string} URL for an AEM instance.
  */
-module.exports.getAemEndpoint = function() {
+module.exports.getAemEndpoint = function () {
     const endpoint = process.env.AEM_ENDPOINT;
 
     if (!endpoint) {
@@ -46,7 +46,7 @@ module.exports.getAemEndpoint = function() {
  * to communicate with AEM.
  * @param {DirectBinaryUploadOptions} uploadOptions Will be updated with auth info.
  */
-module.exports.getAuthorizationHeader = function() {
+module.exports.getAuthorizationHeader = function () {
     const basic = process.env.BASIC_AUTH;
     const token = process.env.LOGIN_TOKEN;
 
@@ -79,7 +79,7 @@ function createAzureContainerClient(auth, containerName) {
     return blobServiceClient.getContainerClient(containerName);
 }
 
-function createAzureSAS(auth, containerName, blobName, perm="r") {
+function createAzureSAS(auth, containerName, blobName, perm = "r") {
     const containerClient = createAzureContainerClient(auth, containerName);
 
     const permissions = new BlobSASPermissions();
@@ -108,7 +108,7 @@ function getAzureAuth() {
     };
 }
 
-module.exports.commitAzureBlocks = async function(filepath) {
+module.exports.commitAzureBlocks = async function (filepath) {
     const auth = getAzureAuth();
     const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
     const blobName = Path.basename(filepath);
@@ -118,7 +118,7 @@ module.exports.commitAzureBlocks = async function(filepath) {
     const blockList = await blobClient.getBlockList("uncommitted");
     await blobClient.commitBlockList(blockList.uncommittedBlocks.map(x => x.name));
 };
-module.exports.getFileHash = async function(filepath) {
+module.exports.getFileHash = async function (filepath) {
     const file = await fs.readFile(filepath);
     return crypto.createHash('md5').update(file).digest('hex');
 };
@@ -127,7 +127,7 @@ module.exports.getFileHash = async function(filepath) {
  * Generates blob url for local file
  * @param {string} filepath Path to local file to generate a blobUrl
  */
-module.exports.getBlobUrl = function(filepath, options) {
+module.exports.getBlobUrl = function (filepath, options) {
     const auth = getAzureAuth();
     const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
     const blobName = Path.basename(filepath);
@@ -150,12 +150,13 @@ module.exports.getBlobUrl = function(filepath, options) {
     } else {
         return sasUrl;
     }
-    
+};
+
 /**
  * Retrieves an ID that can be used to uniquely identify an execution of a test.
  *
  * @returns {string} Identifier for the test.
  */
-module.exports.getUniqueTestId = function() {
+module.exports.getUniqueTestId = function () {
     return `node-httptransfer_aem-e2e_${new Date().getTime()}`;
 };

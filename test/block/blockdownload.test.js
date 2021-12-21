@@ -307,44 +307,8 @@ describe('Block Download', function () {
             maxConcurrent: 4
         });
 
-        const expectedEvents = {
-            filestart: [
-                {
-                    fileName: 'tmp.png',
-                    fileSize: 1911,
-                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
-                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.png',
-                    sourceFolder: '/path/to',
-                    sourceFile: '/path/to/image-file-1.png',
-                    mimeType: 'image/png'
-                }
-            ],
-            fileprogress: [
-                {
-                    fileName: 'tmp.png',
-                    fileSize: 1911,
-                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
-                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.png',
-                    sourceFolder: '/path/to',
-                    sourceFile: '/path/to/image-file-1.png',
-                    mimeType: 'image/png',
-                    transferred: 1911
-                }
-            ],
-            fileend: [
-                {
-                    fileName: 'tmp.png',
-                    fileSize: 1911,
-                    targetFolder: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test',
-                    targetFile: '/Users/mathern/Desktop/git/_adobe/node-httptransfer/test/tmp.png',
-                    sourceFolder: '/path/to',
-                    sourceFile: '/path/to/image-file-1.png',
-                    mimeType: 'image/png'
-                }
-            ],
-            error: []
-        };
-        assert.deepStrictEqual(events, expectedEvents);
+        assert.equal(events.error.length, 0);
+        assert.ok(nock.isDone(), nock.pendingMocks());
 
         const actualHash = await fileHash(mockDownloadFileLocation);
         await fs.promises.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
@@ -416,6 +380,9 @@ describe('Block Download', function () {
             maxConcurrent: 4
         });
 
+        assert.equal(events.error.length, 0);
+        assert.ok(nock.isDone(), nock.pendingMocks());
+        
         const actualHash = await fileHash(mockDownloadFileLocation);
         await fs.promises.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
         const expecteHash = await fileHash(`${__dirname}/test-files/jpeg-file.jpeg`);
