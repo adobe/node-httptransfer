@@ -13,6 +13,15 @@
 "use strict";
 
 const Path = require('path');
+const { promises: fs } = require("fs");
+const crypto = require('crypto');
+const {
+    BlobServiceClient,
+    StorageSharedKeyCredential,
+    generateBlobSASQueryParameters,
+    SASProtocol,
+    BlobSASPermissions
+} = require("@azure/storage-blob");
 
 // load .env values in the e2e folder, if any
 require('dotenv').config({ path: Path.join(__dirname, '.env') });
@@ -52,4 +61,94 @@ module.exports.getAuthorizationHeader = function() {
     }
 
     throw new Error('Either BASIC_AUTH or LOGIN_TOKEN env variable must be set');
+};
+
+function createAzureCredential(auth) {
+    if (!auth || !auth.accountName || !auth.accountKey) {
+        throw Error("Azure Storage credentials not provided");
+    }
+    return new StorageSharedKeyCredential(auth.accountName, auth.accountKey);
+}
+
+function createAzureContainerClient(auth, containerName) {
+    const sharedKeyCredential = createAzureCredential(auth);
+    const blobServiceClient = new BlobServiceClient(
+        `https://${auth.accountName}.blob.core.windows.net`,
+        sharedKeyCredential
+    );
+    return blobServiceClient.getContainerClient(containerName);
+}
+
+function createAzureSAS(auth, containerName, blobName, perm="r") {
+    const containerClient = createAzureContainerClient(auth, containerName);
+
+    const permissions = new BlobSASPermissions();
+    permissions.read = perm.includes("r");
+    permissions.write = perm.includes("w");
+    permissions.delete = perm.includes("d");
+
+    const ONE_HOUR_MS = 60 * 60 * 1000;
+    const sharedKeyCredential = createAzureCredential(auth);
+    const blobClient = containerClient.getBlockBlobClient(blobName);
+    const query = generateBlobSASQueryParameters({
+        protocol: SASProtocol.Https,
+        expiresOn: new Date(Date.now() + ONE_HOUR_MS),
+        containerName,
+        blobName,
+        permissions
+    }, sharedKeyCredential).toString();
+
+    return `${blobClient.url}?${query}`;
+}
+
+function getAzureAuth() {
+    return {
+        accountName: process.env.AZURE_STORAGE_ACCOUNT,
+        accountKey: process.env.AZURE_STORAGE_KEY
+    };
+}
+
+module.exports.commitAzureBlocks = async function(filepath) {
+    const auth = getAzureAuth();
+    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+    const blobName = Path.basename(filepath);
+
+    const containerClient = createAzureContainerClient(auth, containerName);
+    const blobClient = containerClient.getBlockBlobClient(blobName);
+    const blockList = await blobClient.getBlockList("uncommitted");
+    await blobClient.commitBlockList(blockList.uncommittedBlocks.map(x => x.name));
+};
+module.exports.getFileHash = async function(filepath) {
+    const file = await fs.readFile(filepath);
+    return crypto.createHash('md5').update(file).digest('hex');
+};
+
+/**
+ * Generates blob url for local file
+ * @param {string} filepath Path to local file to generate a blobUrl
+ */
+module.exports.getBlobUrl = function(filepath, options) {
+    const auth = getAzureAuth();
+    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+    const blobName = Path.basename(filepath);
+
+    const sasUrl = createAzureSAS(auth, containerName, blobName, options.permissions);
+
+    const numParts = options.numParts || Math.ceil(options.size / options.maxPartSize);
+    if (numParts > 1) {
+        const urls = [];
+        for (let i = 0; i < numParts; ++i) {
+            // each block id must be the same size
+            const blockId = Buffer.from(String(i).padStart(10, "0")).toString("base64");
+            urls.push(`${sasUrl}&comp=block&blockid=${blockId}`);
+        }
+        return {
+            minPartSize: options.minPartSize,
+            maxPartSize: options.maxPartSize,
+            urls
+        };
+    } else {
+        return sasUrl;
+    }
+    
 };
