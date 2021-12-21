@@ -19,7 +19,7 @@ const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
 const { AEMDownload } = require('../../lib/aem/aemdownload');
-const UploadError = require('../../lib/aem/upload-error');
+const UploadError = require('../../lib/block/upload-error');
 
 describe('AEM Download', function() {
     afterEach(async function () {
