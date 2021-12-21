@@ -151,4 +151,11 @@ module.exports.getBlobUrl = function(filepath, options) {
         return sasUrl;
     }
     
+/**
+ * Retrieves an ID that can be used to uniquely identify an execution of a test.
+ *
+ * @returns {string} Identifier for the test.
+ */
+module.exports.getUniqueTestId = function() {
+    return `node-httptransfer_aem-e2e_${new Date().getTime()}`;
 };
