@@ -122,6 +122,12 @@ module.exports.getFileHash = async function (filepath) {
     const file = await fs.readFile(filepath);
     return crypto.createHash('md5').update(file).digest('hex');
 };
+module.exports.validateAzureAuth = function() {
+    if (!process.env.AZURE_STORAGE_ACCOUNT || !process.env.AZURE_STORAGE_KEY || !process.env.AZURE_STORAGE_CONTAINER_NAME) {
+        throw new Error(`Missing some or all required azure storage credentials. 
+        Please make sure the following environment variables are set: 'AZURE_STORAGE_ACCOUNT', 'AZURE_STORAGE_KEY', and 'AZURE_STORAGE_CONTAINER_NAME'`);
+    }
+};
 
 /**
  * Generates blob url for local file

@@ -134,6 +134,17 @@ with an Adobe Experience Manager instance. To run the tests:
 * Create a `.env` file by following the instructions in [.env_example](./e2e/.env_example).
 * Run the tests by executing `npm run e2e` from the root directory of the repository.
 
+## End-to-End block upload/download Tests
+If you want to just run the block upload/download tests, you only need [Azure credentials](#Azure-credentials):
+
+```bash
+export AZURE_STORAGE_ACCOUNT=<storage account name from https://portal.azure.com>
+export AZURE_STORAGE_KEY=<storage key from https://portal.azure.com>
+export AZURE_STORAGE_CONTAINER_NAME=<storage container name>
+```
+
+The run `npm run e2e-block`
+
 ### Contributing
 
 Contributions are welcomed! Read the [Contributing Guide](./.github/CONTRIBUTING.md) for more information.
