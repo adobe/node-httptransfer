@@ -134,7 +134,7 @@ with an Adobe Experience Manager instance. To run the tests:
 * Create a `.env` file by following the instructions in [.env_example](./e2e/.env_example).
 * Run the tests by executing `npm run e2e` from the root directory of the repository.
 
-## End-to-End Block upload/download Tests
+## End-to-End block upload/download Tests
 If you want to just run the block upload/download tests, you only need [Azure credentials](#Azure-credentials):
 
 ```bash
