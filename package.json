@@ -17,7 +17,7 @@
     "content-disposition": "^0.5.4",
     "content-range": "^2.0.2",
     "content-type": "^1.0.4",
-    "core-js": "^3.11.3",
+    "core-js": "^3.20.0",
     "debug": "^4.3.3",
     "drange": "^2.0.1",
     "file-url": "2.0.2",
