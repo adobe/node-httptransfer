@@ -34,7 +34,7 @@ const {
  * 2) Additional support functions are required for obtaining signed URLs, etc.
  * 3) Same approach of upload and then download, but in this case we bypass AEM as the producer of URLs
  * 4) TODO: The code for block uploads assumes that AEM (actually Oak) will send the blob complete signal to finish storing a file after upload
- * -- This should be accomodated somehow in this test (or maybe we still have to piggy-back on AEM after all?)
+ * -- This should be accommodated somehow in this test (or maybe we still have to piggy-back on AEM after all?)
  */
 
 describe('Block Transfer e2e test', function() {
