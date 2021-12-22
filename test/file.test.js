@@ -362,7 +362,7 @@ describe('file', function () {
             }
         });
 
-        it.skip('status-200-truncate-retry', async function () {
+        it('status-200-truncate-retry', async function () {
             // truncated errors are not retried
             nock('http://test-status-200-truncate-retry')
                 .head('/path/to/file.ext')
@@ -375,8 +375,8 @@ describe('file', function () {
                 });
             nock('http://test-status-200-truncate-retry')
                 .get('/path/to/file.ext')
-                .reply(200, 'hello world', {
-                    'content-length': 5
+                .reply(200, 'hello', {
+                    'content-length': 11
                 });
 
             nock('http://test-status-200-truncate-retry')
