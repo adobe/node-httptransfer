@@ -42,6 +42,10 @@ function fileHash(filename, algorithm = "sha1") {
 }
 
 describe('Block Download', function () {
+    beforeEach(async function () {
+        nock.cleanAll();
+    });
+
     afterEach(async function () {
         nock.cleanAll();
     });

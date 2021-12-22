@@ -29,11 +29,6 @@ describe("AssetMetadata", () => {
                 new AssetMetadata(undefined, undefined, -1);
             }, Error("'contentLength' must be a non-negative number: -1 (number)"));
         });
-        it("contentLength NaN", () => {
-            assert.strict.throws(() => {
-                new AssetMetadata(undefined, undefined, NaN);
-            }, Error("'contentLength' must be a non-negative number: NaN (number)"));
-        });
         it("contentLength Infinity", () => {
             assert.strict.throws(() => {
                 new AssetMetadata(undefined, undefined, Infinity);
