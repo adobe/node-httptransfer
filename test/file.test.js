@@ -564,7 +564,7 @@ describe('file', function () {
             }
         }).timeout(10000);
 
-        it.only('timeout-retry', async function () {
+        it('timeout-retry', async function () {
             nock('http://test-status-timeout')
                 .head('/path/to/file.ext')
                 .reply(200, "OK", {
