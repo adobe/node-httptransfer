@@ -611,7 +611,6 @@ describe('file', function () {
                     'etag': ''
                 });
 
-            const start = Date.now();
             try {
                 await downloadFileConcurrently('http://badhost/path/to/file.ext', path.resolve('./test-transfer-file-timeout-retry-1.dat'), {
                     retryMaxDuration: 1000
