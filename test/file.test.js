@@ -25,6 +25,10 @@ const { createErrorReadable } = require('./streams');
 
 describe('file', function () {
     describe('download', function () {
+        beforeEach(async function () {
+            nock.cleanAll();
+        });
+
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
@@ -271,6 +275,10 @@ describe('file', function () {
     });
 
     describe('download concurrently', function () {
+        beforeEach(async function () {
+            nock.cleanAll();
+        });
+
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), `check if all nocks have been used, ${nock.pendingMocks()}`);
@@ -442,11 +450,7 @@ describe('file', function () {
                     const result = await fs.readFile(path.resolve('./test-transfer-file-status-404.dat'), 'utf8');
                     assert.strictEqual(result, '');
                 } catch (err) {
-                    if (!err.code === "ENOENT") {
-                        assert.fail(); // something unexpected happened
-                    } else {
-                        assert.ok(); // nothing was downloaded or even created
-                    }
+                    assert.ok(err.code === "ENOENT"); // nothing was downloaded or even created
                 }
             }
 
@@ -630,6 +634,10 @@ describe('file', function () {
     });
 
     describe('upload', function () {
+        beforeEach(async function () {
+            nock.cleanAll();
+        });
+
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
@@ -784,6 +792,10 @@ describe('file', function () {
     });
 
     describe('upload concurrently', function () {
+        beforeEach(async function () {
+            nock.cleanAll();
+        });
+
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
