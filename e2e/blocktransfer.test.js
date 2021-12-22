@@ -18,10 +18,17 @@ const assert = require("assert");
 const Path = require("path");
 const mkdirp = require("mkdirp");
 const { promises: fs } = require("fs");
+
+// not exported and not expected to be used by clients
 const {
     BlockDownload,
     BlockUpload
 } = require("../lib");
+const {
+    uploadMultiPartFileConcurrently,
+    uploadFileConcurrently,
+    downloadFileConcurrently
+} = require("../lib/index");
 const {
     getBlobUrl,
     commitAzureBlocks,
@@ -123,7 +130,7 @@ describe('Block Transfer e2e test', function() {
         await blockDownload.downloadFiles({
             downloadFiles: [{
                 fileUrl: target,
-                filePath: options.downloadFile,
+                filePath: options.downloadFilePath,
                 fileSize: options.fileSize,
                 maxPartSize,
             }], 
@@ -134,9 +141,44 @@ describe('Block Transfer e2e test', function() {
             maxConcurrent: 16
         });
         assert.strictEqual(downloadErrors.length, 0);
-        return fs.stat(options.downloadFile);
+        return fs.stat(options.downloadFilePath);
     }
 
+    it('AEM upload then download using Block classes directly (jpg)', async function () {
+        // make sure necessary environment variables are set
+        validateAzureAuth();
+
+        const testId = `node-httptransfer_aem-e2e_${new Date().getTime()}`;
+        const fileName = `${testId}.jpg`;
+        const originalFilePath =  Path.join(__dirname, "images/freeride-siberia.jpg");
+        const fileSize = 282584;
+
+        // single url used for uploading and downloading
+        const fileUrl = getBlobUrl(fileName, {
+            permissions: "cwr",
+            size: fileSize
+        });
+        await doBlockUpload({
+            fileSize,
+            fileName,
+            fileUrl: fileUrl, 
+            filePath: originalFilePath
+        });
+        console.log('Upload complete for file', fileName);
+        console.log("Downloading file using url:", fileUrl);
+
+        const downloadDir = Path.join(__dirname, "output", testId);
+        const downloadFilePath = Path.join(downloadDir, fileName);
+        await mkdirp(downloadDir);
+        await doBlockDownload({
+            fileUrl,
+            fileSize,
+            downloadFilePath
+        });
+
+        // check downloaded file is the same as the original file by generating a hash
+        assert.strictEqual(await getFileHash(originalFilePath), await getFileHash(downloadFilePath));
+    });
     it('AEM upload then download (jpg)', async function () {
         // make sure necessary environment variables are set
         validateAzureAuth();
@@ -151,27 +193,68 @@ describe('Block Transfer e2e test', function() {
             permissions: "cwr",
             size: fileSize
         });
-        const downloadDir = Path.join(__dirname, "output", testId);
-        const downloadFile = Path.join(downloadDir, fileName);
-        await mkdirp(downloadDir);
-        await doBlockUpload({
-            fileSize,
-            fileName,
-            fileUrl: fileUrl, 
-            filePath: originalFilePath
+        await uploadFileConcurrently(originalFilePath, fileUrl, {
+            headers: {
+                "x-ms-blob-type": "BlockBlob"
+            }
         });
         console.log('Upload complete for file', fileName);
         console.log("Downloading file using url:", fileUrl);
-        await doBlockDownload({
-            fileUrl,
+
+        const downloadDir = Path.join(__dirname, "output", testId);
+        const downloadFilePath = Path.join(downloadDir, fileName);
+        await mkdirp(downloadDir);
+        await downloadFileConcurrently(fileUrl, downloadFilePath, {
+            headers: {
+                "x-ms-blob-type": "BlockBlob"
+            }
+        });
+        // check downloaded file is the same as the original file by generating a hash
+        assert.strictEqual(await getFileHash(originalFilePath), await getFileHash(downloadFilePath));
+    });
+
+    it('AEM multipart upload then download using Block classes directly (jpg)', async function () {
+        // make sure necessary environment variables are set
+        validateAzureAuth();
+
+        const testId = `node-httptransfer_aem-e2e_${new Date().getTime()}`;
+        const fileName = `${testId}.jpg`;
+        const originalFilePath =  Path.join(__dirname, "images/freeride-siberia.jpg");
+        const fileSize = 282584;
+
+        // multipart upload urls
+        const uploadFileUrls = getBlobUrl(fileName, {
+            permissions: "cw",
+            size: fileSize,
+            maxPartSize: 100000
+        });
+        await doBlockUpload({
             fileSize,
-            downloadFile
+            fileName,
+            fileUrl: uploadFileUrls, 
+            filePath: originalFilePath
+        });
+        // singular url used for downloading
+        console.log('Upload complete for file', fileName);
+        const downloadFileUrl = getBlobUrl(fileName, {
+            permissions: "r",
+            size: fileSize
+        });
+        console.log("Downloading file using url:", downloadFileUrl);
+
+        const downloadDir = Path.join(__dirname, "output", testId);
+        const downloadFilePath = Path.join(downloadDir, fileName);
+        await mkdirp(downloadDir);
+
+        await doBlockDownload({
+            fileUrl: downloadFileUrl,
+            fileSize,
+            downloadFilePath
         });
 
         // check downloaded file is the same as the original file by generating a hash
-        assert.strictEqual(await getFileHash(originalFilePath), await getFileHash(downloadFile));
+        assert.strictEqual(await getFileHash(originalFilePath), await getFileHash(downloadFilePath));
     });
-
     it('AEM multipart upload then download (jpg)', async function () {
         // make sure necessary environment variables are set
         validateAzureAuth();
@@ -187,15 +270,15 @@ describe('Block Transfer e2e test', function() {
             size: fileSize,
             maxPartSize: 100000
         });
-        const downloadDir = Path.join(__dirname, "output", testId);
-        const downloadFile = Path.join(downloadDir, fileName);
-        await mkdirp(downloadDir);
-        await doBlockUpload({
-            fileSize,
-            fileName,
-            fileUrl: uploadFileUrls, 
-            filePath: originalFilePath
+        await uploadMultiPartFileConcurrently(originalFilePath, uploadFileUrls, {
+            headers: {
+                "x-ms-blob-type": "BlockBlob"
+            }
         });
+        
+        // commit blocks
+        await commitAzureBlocks(fileName);
+
         // singular url used for downloading
         console.log('Upload complete for file', fileName);
         const downloadFileUrl = getBlobUrl(fileName, {
@@ -203,13 +286,17 @@ describe('Block Transfer e2e test', function() {
             size: fileSize
         });
         console.log("Downloading file using url:", downloadFileUrl);
-        await doBlockDownload({
-            fileUrl: downloadFileUrl,
-            fileSize,
-            downloadFile
+        const downloadDir = Path.join(__dirname, "output", testId);
+        const downloadFilePath = Path.join(downloadDir, fileName);
+        await mkdirp(downloadDir);
+
+        await downloadFileConcurrently(downloadFileUrl, downloadFilePath, {
+            headers: {
+                "x-ms-blob-type": "BlockBlob"
+            }
         });
 
         // check downloaded file is the same as the original file by generating a hash
-        assert.strictEqual(await getFileHash(originalFilePath), await getFileHash(downloadFile));
+        assert.strictEqual(await getFileHash(originalFilePath), await getFileHash(downloadFilePath));
     });
 });
