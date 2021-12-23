@@ -36,6 +36,7 @@ describe('Upload Error', function() {
         verifyCodes(501, errorCodes.NOT_SUPPORTED);
         verifyCodes(413, errorCodes.TOO_LARGE);
         verifyCodes(500, errorCodes.UNKNOWN);
+        verifyCodes(429, errorCodes.TOO_MANY_REQUESTS);
         assert.strictEqual(UploadError.fromError({ response: { status: 500 } }).getCode(), errorCodes.UNKNOWN);
 
         uploadError = UploadError.fromError({
