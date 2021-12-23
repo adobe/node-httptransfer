@@ -104,7 +104,7 @@ describe('Block Upload', function () {
         });
     });
 
-    it('Block upload smoke test, one max concurrency', async function () {
+    it('Block upload smoke test, 1 max concurrency', async function () {
         console.log("block upload test");
 
         const HOST = 'http://test-aem-upload-201';
