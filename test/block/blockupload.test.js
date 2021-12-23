@@ -199,10 +199,72 @@ describe('Block Upload', function() {
             mimeType: "image/jpeg",
         });
     });
+    it('Block upload test fails with source too large (not enough urls)', async function() {
+        console.log("block upload test");
+
+        const testFile = Path.join(__dirname, 'file-1-1.jpg');
+        await fs.writeFile(testFile, 'hello world 123', 'utf8');
+
+        const blockUpload = new BlockUpload();
+        const targetUrls =  [
+            'http://test-aem-upload-201/path/to/file-1-1.jpg',
+            'http://test-aem-upload-201/path/to/file-1-2.jpg'
+        ];
+        // no preferred part size
+        try {
+            await blockUpload.uploadFiles({
+                uploadFiles: [{
+                    fileUrl: targetUrls,
+                    filePath: testFile,
+                    multipartHeaders: { partHeader: 'test' },
+                    minPartSize: 3,
+                    maxPartSize: 5
+                }],
+                headers: {
+                    // Asset Compute passes through content-type header
+                    'content-type': 'image/jpeg',
+                },
+                concurrent: true,
+                maxConcurrent: 5
+            });
+            assert.fail('Should have failed');
+        } catch (error) {
+            assert.ok(error.message.includes('too large to upload'));
+        }
+
+        // preferred part size passed
+        try {
+            await blockUpload.uploadFiles({
+                uploadFiles: [{
+                    fileUrl: targetUrls,
+                    filePath: testFile,
+                    multipartHeaders: { partHeader: 'test' },
+                    minPartSize: 3,
+                    maxPartSize: 5
+                }],
+                headers: {
+                    // Asset Compute passes through content-type header
+                    'content-type': 'image/jpeg',
+                },
+                concurrent: true,
+                maxConcurrent: 5,
+                preferredPartSize: 10
+            });
+            assert.fail('Should have failed');
+        } catch (error) {
+            assert.ok(error.message.includes('too large to upload'));
+        }
+
+        try {
+            await fs.unlink(testFile);
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
+    });
 
     it('Block upload no filePath or blob error', function() {
-        const blobkUpload = new BlockUpload();
-        assert.rejects(() => blobkUpload.uploadFiles({
+        const blockUpload = new BlockUpload();
+        assert.rejects(() => blockUpload.uploadFiles({
             uploadFiles: [{
                 fileUrl: 'http://test-aem-upload-201/path/to/file-1-1.jpg',
                 fileSize: 15
