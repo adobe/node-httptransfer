@@ -379,7 +379,7 @@ describe('Block Upload', function () {
         }
     });
 
-    it('Block upload smoke test (multiple upload promises, various concurrencies)', async function () {
+    it('Block upload smoke test (multiple upload promises, variable max concurrency)', async function () {
         const uploadTasks = [];
 
         for (let i = 0; i < 3; i++) {
