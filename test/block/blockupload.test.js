@@ -379,6 +379,67 @@ describe('Block Upload', function () {
         }
     });
 
+    it('Block upload smoke test (multiple upload promises, various concurrencies)', async function () {
+        const uploadTasks = [];
+
+        for (let i = 0; i < 3; i++) {
+
+            console.log("block upload test");
+
+            const HOST = 'http://test-aem-upload-201';
+            const testFile = Path.join(__dirname, `file-1-${i}.jpg`);
+            await fs.writeFile(testFile, `hello world 123 ${i}`, 'utf8');
+
+            nock(HOST, {
+                reqheaders: {
+                    'content-length': 17,
+                    'content-type': 'image/jpeg'
+                }
+            })
+                .put(`/path/to/file-1-${i}.jpg`, `hello world 123 ${i}`)
+                .reply(201);
+
+            const blockUpload = new BlockUpload();
+            const events = {
+                filestart: [],
+                fileprogress: [],
+                fileend: []
+            };
+            blockUpload.on('transferPart', (data) => {
+                events.filestart.push(data);
+            });
+            blockUpload.on('fileprogress', (data) => {
+                events.fileprogress.push(data);
+            });
+            blockUpload.on('aftertransfer', (data) => {
+                events.fileend.push(data);
+            });
+            const targetUrl = `http://test-aem-upload-201/path/to/file-1-${i}.jpg`;
+
+            const uploadTask = blockUpload.uploadFiles({
+                uploadFiles: [{
+                    fileUrl: targetUrl,
+                    filePath: testFile,
+                    fileSize: 17
+                }],
+                headers: {
+                    // Asset Compute passes through content-type header
+                    'content-type': 'image/jpeg',
+                },
+                concurrent: true,
+                maxConcurrent: i+1
+            });
+            uploadTasks.push[uploadTask];
+        }
+
+        await Promise.all(uploadTasks);
+
+        for (let i = 0; i < 3; i++) {
+            const testFile = Path.join(__dirname, `file-1-${i}.jpg`);
+            await fs.unlink(testFile); // if unlink fails, there is an issue with the file
+        }
+    });
+
     it('Block upload smoke test (multiple urls)', async function () {
         console.log("block upload test");
 
@@ -474,7 +535,7 @@ describe('Block Upload', function () {
             mimeType: "image/jpeg",
         });
     });
-    
+
     it('Block upload test fails with source too large (not enough urls)', async function() {
         console.log("block upload test");
 
