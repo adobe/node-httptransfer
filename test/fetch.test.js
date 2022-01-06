@@ -25,6 +25,7 @@ describe('fetch', function() {
         assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
     });
+    
     describe('postForm', function () {
         it('simple', async function() {
             const expectedResponse = {
@@ -43,6 +44,7 @@ describe('fetch', function() {
             const result = await postForm("http://post-form-test/path", form);
             assert.deepStrictEqual(result, expectedResponse);
         });
+
         it('timeout-option', async function() {
             nock('http://post-form-test')
                 .post('/path', 'name=value')
@@ -63,6 +65,7 @@ describe('fetch', function() {
                 assert.strictEqual(e.message, 'POST \'http://post-form-test/path\' connect failed: network timeout at: http://post-form-test/path');
             }
         });
+
         it('header-override', async function() {
             const expectedResponse = {
                 ok: 123
@@ -88,6 +91,7 @@ describe('fetch', function() {
             });
             assert.deepStrictEqual(result, expectedResponse);
         });
+
         it('empty-form', async function() {
             const expectedResponse = {
                 ok: 123
