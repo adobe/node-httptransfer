@@ -93,6 +93,7 @@ describe("retry", function () {
         this.beforeEach( () => {
             delete process.env.__OW_ACTION_DEADLINE;
         });
+        
         it("none", function () {
             const options = retryInit();
             assertStartTime(options);
@@ -220,7 +221,7 @@ describe("retry", function () {
             });
         });
     });
-    
+
     describe("retry", function () {
         it("empty", async function () {
             const result = await retry(async () => 1);

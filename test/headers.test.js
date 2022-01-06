@@ -170,13 +170,14 @@ describe('headers', function() {
             assert.strictEqual(result.size, 100);
         });
     });
-    
+
     describe('getResourceHeaders', function() {
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
+        
         it('head 404 failure', async function() {
             try {
                 nock('http://test-headers')
