@@ -19,7 +19,7 @@ const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
 const { AEMDownload } = require('../../lib/aem/aemdownload');
-const UploadError = require('../../lib/block/upload-error');
+const DownloadError = require('../../lib/block/download-error');
 
 describe('AEM Download', function() {
     afterEach(async function () {
@@ -161,7 +161,7 @@ describe('AEM Download', function() {
 
         const errors = events.fileerror[0].errors;
         assert.strictEqual(errors.length, 1);
-        assert.ok(errors[0] instanceof UploadError);
+        assert.ok(errors[0] instanceof DownloadError);
         assert.strictEqual(errors[0].message, 'Request failed with status code 400');
         
         assert.deepStrictEqual(events, {
@@ -223,7 +223,7 @@ describe('AEM Download', function() {
 
         const errors = events.fileerror[0].errors;
         assert.strictEqual(errors.length, 1);
-        assert.ok(errors[0] instanceof UploadError);
+        assert.ok(errors[0] instanceof DownloadError);
         assert.strictEqual(errors[0].message, 'Server did not respond with a Content-Length header: null');
 
         assert.deepStrictEqual(events, {
