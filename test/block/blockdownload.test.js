@@ -580,6 +580,73 @@ describe('Block Download', function () {
         }
     });
 
+    it('Block download smoke test (repeated single downloads, variable max concurrency, all metadata set)', async function () {
+        for (let i = 0; i < 3; i++) {
+            const HOST = "http://test-aem-download.com";
+            const filenameToDownload = "/path/to/image-file-1.jpeg";
+
+            nock(HOST)
+                .get(filenameToDownload)
+                .reply(() => {
+                    return [
+                        200,
+                        "AAAAAAAAAAAAAAA",
+                        {
+                            'content-type': 'image/jpeg',
+                            'content-length': 15,
+                            'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'etag': ''
+                        }
+                    ];
+                });
+
+            const blockDownload = new BlockDownload();
+            const events = {
+                filestart: [],
+                fileprogress: [],
+                fileend: [],
+                error: []
+            };
+            blockDownload.on('filestart', (data) => {
+                events.filestart.push(data);
+            });
+            blockDownload.on('fileprogress', (data) => {
+                events.fileprogress.push(data);
+            });
+            blockDownload.on('fileend', (data) => {
+                events.fileend.push(data);
+            });
+            blockDownload.on('error', (data) => {
+                events.error.push(data);
+            });
+
+            const fileToDownload = `${HOST}${filenameToDownload}`;
+            const mockDownloadFileLocation = "./test/tmp.jpeg";
+            await blockDownload.downloadFiles({
+                downloadFiles: [{
+                    fileUrl: fileToDownload,
+                    filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                    fileSize: 15,
+                    contentType: "image/jpeg"
+                }],
+                concurrent: true,
+                maxConcurrent: i+1
+            });
+
+            await fs.promises.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+            assert.equal(events.filestart.length, 1);
+            assert.equal(events.filestart[0].fileSize, 15);
+            assert.equal(events.fileprogress.length, 1);
+            assert.equal(events.fileprogress[0].fileSize, 15);
+            assert.equal(events.fileprogress[0].transferred, 15);
+            assert.equal(events.fileend.length, 1);
+            assert.equal(events.fileprogress[0].fileSize, 15);
+            assert.equal(events.error.length, 0);
+            assert.ok(nock.isDone(), nock.pendingMocks());
+        }
+    });
+
     it('Block download smoke test (repeated single download in chunks)', async function () {
         for (let i = 0; i < 3; i++) {
             const HOST = "http://test-aem-download.com";
@@ -1155,6 +1222,65 @@ describe('Block Download', function () {
                 fileUrl: fileToDownload,
                 filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
                 fileSize: 2024
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        });
+
+        assert.equal(events.error.length, 0);
+        assert.ok(nock.isDone(), nock.pendingMocks());
+
+        const actualHash = await fileHash(mockDownloadFileLocation);
+        await fs.promises.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+        const expecteHash = await fileHash(`${__dirname}/test-files/jpeg-file.jpeg`);
+        assert.equal(actualHash, expecteHash);
+    });
+
+    it('Block download small jpeg file (with all metadata set)', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.jpeg";
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .replyWithFile(200,
+                `${__dirname}/test-files/jpeg-file.jpeg`,
+                {
+                    'content-type': 'image/jpeg',
+                    'content-length': 2024,
+                    'content-disposition': 'attachment; filename="image-file-1.jpeg"',
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'etag': ''
+                }
+            );
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.jpeg";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileToDownload,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 2024,
+                contentType: "image/jpeg"
             }],
             concurrent: true,
             maxConcurrent: 4
