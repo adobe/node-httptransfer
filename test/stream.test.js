@@ -243,6 +243,7 @@ describe('stream', function () {
             }
         });
     });
+
     describe('upload', function () {
         afterEach(function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
@@ -400,6 +401,7 @@ describe('stream', function () {
             }
         });
     });
+    
     describe('transfer', function () {
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');

@@ -107,6 +107,7 @@ describe('headers', function() {
             assert.strictEqual(actual, undefined);
         });
     });
+
     describe('parseResourceHeaders', function() {
         it('content-disposition-none', function() {
             const result = parse({});
@@ -169,6 +170,7 @@ describe('headers', function() {
             assert.strictEqual(result.size, 100);
         });
     });
+    
     describe('getResourceHeaders', function() {
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
