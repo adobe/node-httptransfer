@@ -312,6 +312,85 @@ describe('file', function () {
                 console.log(e);
             }
         });
+        it('status-200-no-head-req', async function () {
+            nock('http://test-status-200')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world', {
+                    'content-type': 'image/jpeg',
+                    'content-length': 11
+                });
+
+            await downloadFileConcurrently('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file-status-200.dat'), {
+                contentType: 'image/jpeg',
+                fileSize: 11
+            });
+            const result = await fs.readFile(path.resolve('./test-transfer-file-status-200.dat'), 'utf8');
+            assert.strictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        it('status-200-no-content-type', async function () {
+            nock('http://test-status-200')
+                .head('/path/to/file.ext')
+                .reply(200, "OK", {
+                    'content-type': 'image/jpeg',
+                    'content-length': 11,
+                    'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'etag': ''
+                });
+            nock('http://test-status-200')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world', {
+                    'content-type': 'image/jpeg',
+                    'content-length': 11
+                });
+
+            await downloadFileConcurrently('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file-status-200.dat'), {
+                fileSize: 11
+            });
+            const result = await fs.readFile(path.resolve('./test-transfer-file-status-200.dat'), 'utf8');
+            assert.strictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        it('status-200-no-file-size', async function () {
+            nock('http://test-status-200')
+                .head('/path/to/file.ext')
+                .reply(200, "OK", {
+                    'content-type': 'image/jpeg',
+                    'content-length': 11,
+                    'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'etag': ''
+                });
+            nock('http://test-status-200')
+                .get('/path/to/file.ext')
+                .reply(200, 'hello world', {
+                    'content-type': 'image/jpeg',
+                    'content-length': 11
+                });
+
+            await downloadFileConcurrently('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file-status-200.dat'), {
+                contentType: 'image/jpeg'
+            });
+            const result = await fs.readFile(path.resolve('./test-transfer-file-status-200.dat'), 'utf8');
+            assert.strictEqual(result, 'hello world');
+
+            try {
+                await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
+            } catch (e) {
+                console.log(e);
+            }
+        });
 
         it('status-200-mkdir', async function () {
             nock('http://test-status-200')
