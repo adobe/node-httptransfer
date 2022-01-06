@@ -12,6 +12,8 @@ The higher-level file API abstracts away the streams and allows you to transfer 
 
 The `node-httptransfer` package requires the async/await features and is built using the [node-fetch-npm](https://www.npmjs.com/package/node-fetch-npm) package.
 
+To use block transfer capabilities, the upload/download servers must support the range header.
+
 ## Installation
 
 ```bash
