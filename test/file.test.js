@@ -312,6 +312,7 @@ describe('file', function () {
                 console.log(e);
             }
         });
+
         it('status-200-no-head-req', async function () {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
@@ -333,6 +334,31 @@ describe('file', function () {
                 console.log(e);
             }
         });
+
+        it('status-200-no-head-req (repeated)', async function () {
+            for (let i = 0; i < 3; i++) {
+                nock('http://test-status-200')
+                    .get('/path/to/file.ext')
+                    .reply(200, 'hello world', {
+                        'content-type': 'image/jpeg',
+                        'content-length': 11
+                    });
+
+                await downloadFileConcurrently('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file-status-200.dat'), {
+                    contentType: 'image/jpeg',
+                    fileSize: 11
+                });
+                const result = await fs.readFile(path.resolve('./test-transfer-file-status-200.dat'), 'utf8');
+                assert.strictEqual(result, 'hello world');
+
+                try {
+                    await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+        });
+
         it('status-200-no-content-type', async function () {
             nock('http://test-status-200')
                 .head('/path/to/file.ext')
@@ -362,6 +388,7 @@ describe('file', function () {
                 console.log(e);
             }
         });
+
         it('status-200-no-file-size', async function () {
             nock('http://test-status-200')
                 .head('/path/to/file.ext')
@@ -502,6 +529,38 @@ describe('file', function () {
                 await fs.unlink(path.resolve('./test-transfer-file-filestream.dat'));
             } catch (e) {
                 console.log(e);
+            }
+        });
+
+        it('status-200-stream-retry (repeated)', async function () {
+            for (let i = 0; i < 3; i++) {
+                nock('http://test-status-200-stream-retry')
+                    .head('/path/to/file.ext')
+                    .reply(200, "OK", {
+                        'content-type': 'image/jpeg',
+                        'content-length': 11,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'etag': ''
+                    });
+                nock('http://test-status-200-stream-retry')
+                    .get('/path/to/file.ext')
+                    .twice()
+                    .reply(200, 'hello world', {
+                        'content-type': 'image/jpeg',
+                        'content-length': 11
+                    });
+
+                testSetResponseBodyOverride("GET", createErrorReadable(Error('read error')));
+                await downloadFileConcurrently('http://test-status-200-stream-retry/path/to/file.ext', path.resolve('./test-transfer-file-filestream.dat'));
+                const result = await fs.readFile(path.resolve('./test-transfer-file-filestream.dat'), 'utf8');
+                assert.strictEqual(result, 'hello world');
+
+                try {
+                    await fs.unlink(path.resolve('./test-transfer-file-filestream.dat'));
+                } catch (e) {
+                    console.log(e);
+                }
             }
         });
 
@@ -896,6 +955,24 @@ describe('file', function () {
             }
         });
 
+        it('status-201 (repeated)', async function () {
+            for (let i = 0; i < 3; i++) {
+                nock('http://test-status-201')
+                    .matchHeader('content-length', 15)
+                    .put('/path/to/file.ext', 'hello world 123')
+                    .reply(201);
+
+                await fs.writeFile(path.resolve('./test-transfer-file-up-status-201.dat'), 'hello world 123', 'utf8');
+                await uploadFileConcurrently(path.resolve('./test-transfer-file-up-status-201.dat'), 'http://test-status-201/path/to/file.ext');
+
+                try {
+                    await fs.unlink(path.resolve('./test-transfer-file-up-status-201.dat'));
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+        });
+
         it('status-201-header', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 15)
@@ -1134,6 +1211,35 @@ describe('multipart upload concurrently', function () {
                 await fs.unlink('test-transfer-file-5.dat');
             } catch (e) { // ignore cleanup failures
                 console.log(e);
+            }
+        });
+
+        it('status-201-2urls (repeated)', async function () {
+            for (let i = 0; i < 3; i++) {
+                await fs.writeFile('test-transfer-file-5.dat', 'hello world 123', 'utf8');
+
+                nock('http://test-status-201')
+                    .matchHeader('content-length', 8)
+                    .put('/path/to/file-1.ext', 'hello wo')
+                    .reply(201);
+                nock('http://test-status-201')
+                    .matchHeader('content-length', 7)
+                    .put('/path/to/file-2.ext', 'rld 123')
+                    .reply(201);
+
+                await uploadMultiPartFileConcurrently('test-transfer-file-5.dat', {
+                    urls: [
+                        'http://test-status-201/path/to/file-1.ext',
+                        'http://test-status-201/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8
+                });
+
+                try {
+                    await fs.unlink('test-transfer-file-5.dat');
+                } catch (e) { // ignore cleanup failures
+                    console.log(e);
+                }
             }
         });
 
@@ -1499,6 +1605,37 @@ describe('multipart upload concurrently', function () {
                 await fs.unlink('test-transfer-file-19.dat');
             } catch (e) { // ignore cleanup failures
                 console.log(e);
+            }
+        });
+
+        it('method-post (repeated)', async function () {
+            for (let i = 0; i < 5; i++) {
+                await fs.writeFile('test-transfer-file-19.dat', 'hello world 123', 'utf8');
+
+                nock('http://test-method-post')
+                    .matchHeader('content-length', 8)
+                    .post('/path/to/file-1.ext', 'hello wo')
+                    .reply(201);
+                nock('http://test-method-post')
+                    .matchHeader('content-length', 7)
+                    .post('/path/to/file-2.ext', 'rld 123')
+                    .reply(201);
+
+                await uploadMultiPartFileConcurrently('test-transfer-file-19.dat', {
+                    urls: [
+                        'http://test-method-post/path/to/file-1.ext',
+                        'http://test-method-post/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8,
+                }, {
+                    method: 'POST'
+                });
+
+                try {
+                    await fs.unlink('test-transfer-file-19.dat');
+                } catch (e) { // ignore cleanup failures
+                    console.log(e);
+                }
             }
         });
 
