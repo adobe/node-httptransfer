@@ -30,8 +30,6 @@ describe('Block Upload', function () {
     });
 
     it('Block upload smoke test', async function () {
-        console.log("block upload test");
-
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
@@ -105,8 +103,6 @@ describe('Block Upload', function () {
     });
 
     it('Block upload smoke test, 1 max concurrency', async function () {
-        console.log("block upload test");
-
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
@@ -181,9 +177,6 @@ describe('Block Upload', function () {
 
     it('Block upload smoke test (repeated uploads)', async function () {
         for (let i = 0; i < 3; i++) {
-
-            console.log("block upload test");
-
             const HOST = 'http://test-aem-upload-201';
             const testFile = Path.join(__dirname, 'file-1.jpg');
             await fs.writeFile(testFile, 'hello world 123', 'utf8');
@@ -261,9 +254,6 @@ describe('Block Upload', function () {
         const uploadTasks = [];
 
         for (let i = 0; i < 3; i++) {
-
-            console.log("block upload test");
-
             const HOST = 'http://test-aem-upload-201';
             const testFile = Path.join(__dirname, `file-1-${i}.jpg`);
             await fs.writeFile(testFile, `hello world 123 ${i}`, 'utf8');
@@ -322,9 +312,6 @@ describe('Block Upload', function () {
         const uploadTasks = [];
 
         for (let i = 0; i < 3; i++) {
-
-            console.log("block upload test");
-
             const HOST = 'http://test-aem-upload-201';
             const testFile = Path.join(__dirname, `file-1-${i}.jpg`);
             await fs.writeFile(testFile, `hello world 123 ${i}`, 'utf8');
@@ -383,9 +370,6 @@ describe('Block Upload', function () {
         const uploadTasks = [];
 
         for (let i = 0; i < 3; i++) {
-
-            console.log("block upload test");
-
             const HOST = 'http://test-aem-upload-201';
             const testFile = Path.join(__dirname, `file-1-${i}.jpg`);
             await fs.writeFile(testFile, `hello world 123 ${i}`, 'utf8');
@@ -441,8 +425,6 @@ describe('Block Upload', function () {
     });
 
     it('Block upload smoke test (multiple urls)', async function () {
-        console.log("block upload test");
-
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
@@ -537,8 +519,6 @@ describe('Block Upload', function () {
     });
 
     it('Block upload test fails with source too large (not enough urls)', async function() {
-        console.log("block upload test");
-
         const testFile = Path.join(__dirname, 'file-1-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
 
@@ -600,8 +580,6 @@ describe('Block Upload', function () {
     });
 
     it('Block upload smoke test (multiple urls, 1 max concurrency)', async function () {
-        console.log("block upload test");
-
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
