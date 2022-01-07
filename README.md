@@ -73,6 +73,56 @@ async main() {
     });
 }
 ```
+## Using block upload/downland to upload/download files concurrently
+```javascript
+const { downloadFileConcurrently } = require('@adobe/httptransfer');
+async main() {
+    await downloadFile('http://my.server.com/test.png', 'test.png');
+}
+```
+
+Upload a file using PUT:
+
+```javascript
+const { uploadFileConcurrently } = require('@adobe/httptransfer');
+async main() {
+    await uploadFile('test.png', 'http://my.server.com/test.png');
+}
+```
+
+Upload a file to multiple URLs using PUT (used by AEM multi-part upload):
+
+```javascript
+const { uploadMultiPartFileConcurrently } = require('@adobe/httptransfer');
+async main() {
+    await uploadMultiPartFileConcurrently('test.png', {
+        urls: [ "http://my.server.com/test.png.1", "http://my.server.com/test.png.2" ],
+        maxPartSize: 1000000
+    });
+}
+```
+
+
+Upload multiple files to multiple URLs using PUT:
+
+```javascript
+const { uploadFilesConcurrently } = require('@adobe/httptransfer');
+async main() {
+    await uploadFilesConcurrently([{
+        filepath: 'file1.png',
+        target: {
+            urls: [ "http://my.server.com/file1.png.1", "http://my.server.com/file1.png.2" ],
+            maxPartSize: 1000000
+        }
+    }], {
+        filepath: 'file2.png',
+        target: {
+            urls: [ "http://my.server.com/file2.png.1", "http://my.server.com/file2.png.2" ],
+            maxPartSize: 1000000
+        }
+    }]);
+}
+```
 
 Assuming `test.png` is 1,800,000 bytes this will upload the first 1,000,000 bytes to `http://my.server.com/test.png.1` and the next 800,000 bytes to `http://my.server.com/test.png.2`.
 

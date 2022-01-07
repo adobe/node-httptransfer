@@ -2475,6 +2475,35 @@ describe('multipart upload concurrently -- multiple files', function () {
                 console.log(e);
             }
         });
+        it('status-201-1url-each-50-files', async function () {
+            const uploadFiles = [];
+            for (let i=0; i<50; i++) {
+                await fs.writeFile(`test-transfer-file-${i}.dat`, 'hello world 123', 'utf8');
+                nock('http://test-status-201')
+                    .matchHeader('content-length', 15)
+                    .put(`/path/to/file-${i}.ext`, 'hello world 123')
+                    .reply(201);
+                uploadFiles.push({
+                    filepath: `test-transfer-file-${i}.dat`, 
+                    target: {
+                        urls: [
+                            `http://test-status-201/path/to/file-${i}.ext`
+                        ],
+                        maxPartSize: 15
+                    }
+                });
+            }
+
+            await uploadFilesConcurrently(uploadFiles);
+
+            try {
+                for (let i=0; i<50; i++) {
+                    await fs.unlink(`test-transfer-file-${i}.dat`);
+                }
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
 
         it('status-201-2urls', async function () {
             await fs.writeFile('test-transfer-file-1.dat', 'hello world 123', 'utf8');
@@ -2526,6 +2555,70 @@ describe('multipart upload concurrently -- multiple files', function () {
                 console.log(e);
             }
         });
+    });
+
+    it('one file fails', async function () {
+        await fs.writeFile('test-transfer-file-success.dat', 'hello world 123', 'utf8');
+        await fs.writeFile('test-transfer-file-failure.dat', 'hello world 123', 'utf8');
+
+        try {
+            nock('http://test-status-201')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://test-status-201')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-1-2.ext', 'rld 123')
+                .reply(201);
+
+            nock('http://timeout-error')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-2-1.ext', 'hello wo')
+                .delayConnection(700)
+                .reply(201);
+            nock('http://timeout-error')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadFilesConcurrently([{
+                filepath: 'test-transfer-file-success.dat', 
+                target: {
+                    urls: [
+                        'http://test-status-201/path/to/file-1-1.ext',
+                        'http://test-status-201/path/to/file-1-2.ext'
+                    ],
+                    maxPartSize: 8
+                }
+            },{
+                filepath: 'test-transfer-file-failure.dat', 
+                target: {
+                    urls: [
+                        'http://timeout-error/path/to/file-2-1.ext',
+                        'http://timeout-error/path/to/file-2-2.ext'
+                    ],
+                    maxPartSize: 8,
+                }
+            }], {
+                timeout: 200,
+                retryEnabled: false
+            });
+
+            assert.fail('failure expected');
+        } catch (e) {
+            assert.ok(e.message.includes('PUT'));
+            assert.ok(e.message.includes('connect failed'));
+            assert.ok(e.message.includes('network timeout'));
+            // since all nocks are done, we know the successful one uploaded regardless of the other files failure
+            assert.ok(nock.isDone());
+        }
+
+        try {
+            await fs.unlink('test-transfer-file-success.dat');
+            await fs.unlink('test-transfer-file-failure.dat');
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
     });
 });
 
