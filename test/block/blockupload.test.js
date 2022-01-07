@@ -875,6 +875,129 @@ describe('Block Upload', function () {
         });
     });
 
+    it('Block upload smoke test (multiple uploads, multiple urls, multipart, 1 max concurrency)', async function () {
+        const HOST = 'http://test-aem-upload-201';
+        const testFile = Path.join(__dirname, 'file-1-1.jpg');
+        await fs.writeFile(testFile, 'hello world 123', 'utf8');
+
+        nock(HOST, {
+            reqheaders: {
+                'content-length': 10,
+                'content-type': 'image/jpeg'
+            }
+        })
+            .put('/path/to/file-1-1.jpg', 'hello worl')
+            .reply(201);
+        nock(HOST, {
+            reqheaders: {
+                'content-length': 5,
+                'content-type': 'image/jpeg'
+            }
+        })
+            .put('/path/to/file-1-2.jpg', 'd 123')
+            .reply(201);
+
+        nock(HOST, {
+            reqheaders: {
+                'content-length': 10,
+                'content-type': 'image/jpeg'
+            }
+        })
+            .put('/path/to/file-2-1.jpg', 'hello worl')
+            .reply(201);
+        nock(HOST, {
+            reqheaders: {
+                'content-length': 5,
+                'content-type': 'image/jpeg'
+            }
+        })
+            .put('/path/to/file-2-2.jpg', 'd 123')
+            .reply(201);
+
+        const blockUpload = new BlockUpload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: []
+        };
+        blockUpload.on('transferPart', (data) => {
+            events.filestart.push(data);
+        });
+        blockUpload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockUpload.on('aftertransfer', (data) => {
+            events.fileend.push(data);
+        });
+        const targetUrls = [
+            'http://test-aem-upload-201/path/to/file-1-1.jpg',
+            'http://test-aem-upload-201/path/to/file-1-2.jpg'
+        ];
+        const targetUrls2 = [
+            'http://test-aem-upload-201/path/to/file-2-1.jpg',
+            'http://test-aem-upload-201/path/to/file-2-2.jpg'
+        ];
+
+        await blockUpload.uploadFiles({
+            uploadFiles: [{
+                fileUrl: targetUrls,
+                filePath: testFile,
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            },
+            {
+                fileUrl: targetUrls2,
+                filePath: testFile,
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            }],
+            headers: {
+                'content-type': 'image/jpeg',
+            },
+            concurrent: true,
+            maxConcurrent: 1,
+            preferredPartSize: 7
+        });
+
+        try {
+            await fs.unlink(testFile);
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
+
+        const fileEventData = {
+            fileName: 'file-1-1.jpg',
+            fileSize: 15,
+            targetFolder: '/path/to',
+            targetFile: '/path/to/file-1-1.jpg',
+            mimeType: "image/jpeg",
+            sourceFolder: __dirname,
+            sourceFile: testFile,
+        };
+
+        assert.deepStrictEqual(events.filestart[0], fileEventData);
+        assert.deepStrictEqual(events.fileprogress[0], {
+            ...fileEventData,
+            mimeType: "image/jpeg",
+            transferred: 10
+        });
+        assert.deepStrictEqual(events.fileprogress[1], {
+            ...fileEventData,
+            mimeType: "image/jpeg",
+            transferred: 15
+        });
+        assert.deepStrictEqual(events.fileend[0], {
+            ...fileEventData,
+            mimeType: "image/jpeg",
+        });
+
+        assert(events.filestart.length, 4);
+        assert(events.fileprogress.length, 4);
+        assert(events.fileend.length, 4);
+    });
+
     it('Block upload smoke test (multiple urls, repeated uploads)', async function () {
         for (let i = 0; i < 3; i++) {
             const HOST = 'http://test-aem-upload-201';
