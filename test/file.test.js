@@ -18,8 +18,7 @@ const assert = require('assert');
 const fs = require('fs').promises;
 const nock = require('nock');
 const path = require('path');
-const crypto = require('crypto');
-const { downloadFile, uploadFile, downloadFileConcurrently, uploadFileConcurrently, uploadMultiPartFileConcurrently, uploadFilesConcurrently } = require('../lib/file');
+const { downloadFile, uploadFile } = require('../lib/file');
 const { testSetResponseBodyOverride, testHasResponseBodyOverrides } = require('../lib/fetch');
 const { createErrorReadable } = require('./streams');
 

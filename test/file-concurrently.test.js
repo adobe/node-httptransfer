@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Adobe. All rights reserved.
+ * Copyright 2022 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -725,7 +725,7 @@ describe('multipart upload concurrently', function () {
             try {
                 await uploadMultiPartFileConcurrently('test-transfer-file-2.dat', {});
             } catch (e) {
-                assert.strictEqual(e.message, '\'target.urls\' but be a non-empty array: undefined');
+                assert.strictEqual(e.message, '\'target.urls\' must be a non-empty array: undefined');
             }
 
             try {
@@ -1561,7 +1561,7 @@ describe('multipart upload concurrently -- multiple files', function () {
                     target: {}
                 }]);
             } catch (e) {
-                assert.strictEqual(e.message, '\'target.urls\' but be a non-empty array: undefined');
+                assert.strictEqual(e.message, '\'target.urls\' must be a non-empty array: undefined');
             }
 
             try {
@@ -1745,13 +1745,16 @@ describe('multipart upload concurrently -- multiple files', function () {
             await fs.writeFile('test-transfer-file-7.dat', 'hello world 123', 'utf8');
 
             try {
-                await uploadMultiPartFileConcurrently('test-transfer-file-7.dat', {
-                    maxPartSize: 7,
-                    urls: [
-                        'http://test-status-201/path/to/file-1.ext',
-                        'http://test-status-201/path/to/file-2.ext'
-                    ]
-                });
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-7.dat', 
+                    target: {
+                        urls: [
+                            'http://test-status-201/path/to/file-1.ext',
+                            'http://test-status-201/path/to/file-2.ext'
+                        ],
+                        maxPartSize: 7
+                    }
+                }]);
                 assert.fail('expected to fail');
             } catch (e) {
                 assert.ok(e.message.includes('too large to upload'));
@@ -1764,618 +1767,668 @@ describe('multipart upload concurrently -- multiple files', function () {
             }
         });
 
-    //     it('status-201-10urls-fits2', async function () {
-    //         await fs.writeFile('test-transfer-file-9.dat', 'hello world 123', 'utf8');
-
-    //         nock('http://test-status-201')
-    //             .matchHeader('content-length', 8)
-    //             .put('/path/to/file-1.ext', 'hello wo')
-    //             .reply(201);
-    //         nock('http://test-status-201')
-    //             .matchHeader('content-length', 7)
-    //             .put('/path/to/file-2.ext', 'rld 123')
-    //             .reply(201);
-
-    //         await uploadMultiPartFileConcurrently('test-transfer-file-9.dat', {
-    //             maxPartSize: 8,
-    //             urls: [
-    //                 'http://test-status-201/path/to/file-1.ext',
-    //                 'http://test-status-201/path/to/file-2.ext',
-    //                 'http://test-status-201/path/to/file-3.ext',
-    //                 'http://test-status-201/path/to/file-4.ext',
-    //                 'http://test-status-201/path/to/file-5.ext',
-    //                 'http://test-status-201/path/to/file-6.ext',
-    //                 'http://test-status-201/path/to/file-7.ext',
-    //                 'http://test-status-201/path/to/file-8.ext',
-    //                 'http://test-status-201/path/to/file-9.ext',
-    //                 'http://test-status-201/path/to/file-10.ext',
-    //             ]
-    //         });
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-9.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('status-201-2urls-preferred-smallermaxsize', async function () {
-    //         await fs.writeFile('test-transfer-file-15.dat', 'hello world 123', 'utf8');
-
-    //         // minPartSize smaller than preferred has no effect
-    //         nock('http://test-status-201')
-    //             .matchHeader('content-length', 8)
-    //             .put('/path/to/file-1.ext', 'hello wo')
-    //             .reply(201);
-    //         nock('http://test-status-201')
-    //             .matchHeader('content-length', 7)
-    //             .put('/path/to/file-2.ext', 'rld 123')
-    //             .reply(201);
-
-    //         await uploadMultiPartFileConcurrently('test-transfer-file-15.dat', {
-    //             maxPartSize: 8,
-    //             urls: [
-    //                 'http://test-status-201/path/to/file-1.ext',
-    //                 'http://test-status-201/path/to/file-2.ext'
-    //             ]
-    //         }, {
-    //             partSize: 9,
-    //         });
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-15.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('status-201-2urls-preferred-largermaxsize', async function () {
-    //         await fs.writeFile('test-transfer-file-16.dat', 'hello world 123', 'utf8');
-
-    //         // preferred is limited on the lower-bound by minPartSize, so
-    //         // the picked part size is the minPartSize
-    //         nock('http://test-status-201')
-    //             .matchHeader('content-length', 8)
-    //             .put('/path/to/file-1.ext', 'hello wo')
-    //             .reply(201);
-    //         nock('http://test-status-201')
-    //             .matchHeader('content-length', 7)
-    //             .put('/path/to/file-2.ext', 'rld 123')
-    //             .reply(201);
-
-    //         await uploadMultiPartFileConcurrently('test-transfer-file-16.dat', {
-    //             maxPartSize: 8,
-    //             urls: [
-    //                 'http://test-status-201/path/to/file-1.ext',
-    //                 'http://test-status-201/path/to/file-2.ext'
-    //             ]
-    //         }, {
-    //             partSize: 7,
-    //         });
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-16.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('status-404-url1', async function () {
-    //         await fs.writeFile('test-transfer-file-17.dat', 'hello world 123', 'utf8');
-
-    //         try {
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 8)
-    //                 .put('/path/to/file-1.ext', 'hello wo')
-    //                 .reply(404);
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 7)
-    //                 .put('/path/to/file-2.ext', 'rld 123')
-    //                 .reply(200);
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-17.dat', {
-    //                 urls: [
-    //                     'http://test-status-404/path/to/file-1.ext',
-    //                     'http://test-status-404/path/to/file-2.ext'
-    //                 ],
-    //                 maxPartSize: 8,
-    //             });
-    //         } catch (e) {
-    //             assert.ok(e.message.includes('PUT'));
-    //             assert.ok(e.message.includes('failed with status 404'));
-    //         }
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-17.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('status-404-url1-concurrency-1', async function () {
-    //         await fs.writeFile('test-transfer-file-17.dat', 'hello world 123', 'utf8');
-
-    //         try {
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 3)
-    //                 .put('/path/to/file-1.ext', 'hel')
-    //                 .reply(404);
-
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 3)
-    //                 .put('/path/to/file-2.ext', 'lo ')
-    //                 .reply(200);
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 3)
-    //                 .put('/path/to/file-3.ext', 'wor')
-    //                 .reply(200);
-    //             // TODO, look into why this is happening
-    //             // first URL fails first
-    //             // two (out of 4 remaining) urls get executed before the filter function causes the request to end due to an error
-
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-17.dat', {
-    //                 urls: [
-    //                     'http://test-status-404/path/to/file-1.ext',
-    //                     'http://test-status-404/path/to/file-2.ext',
-    //                     'http://test-status-404/path/to/file-3.ext',
-    //                     'http://test-status-404/path/to/file-4.ext',
-    //                     'http://test-status-404/path/to/file-5.ext',
-    //                 ],
-    //                 maxPartSize: 3,
-    //             }, {
-    //                 maxConcurrent: 1
-    //             });
-    //         } catch (e) {
-    //             assert.ok(e.message.includes('PUT'));
-    //             assert.ok(e.message.includes('failed with status 404'));
-    //         }
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-17.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('status-404-url1-concurrency-5', async function () {
-    //         await fs.writeFile('test-transfer-file-17.dat', 'hello world 123', 'utf8');
-
-    //         try {
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 3)
-    //                 .put('/path/to/file-1.ext', 'hel')
-    //                 .reply(404);
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 3)
-    //                 .put('/path/to/file-2.ext', 'lo ')
-    //                 .reply(200);
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 3)
-    //                 .put('/path/to/file-3.ext', 'wor')
-    //                 .reply(200);
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 3)
-    //                 .put('/path/to/file-4.ext', 'ld ')
-    //                 .reply(200);
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 3)
-    //                 .put('/path/to/file-5.ext', '123')
-    //                 .reply(200);
-    //             // since the 5 chunk requests happen concurrently, if one fails, the rest still continue
-
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-17.dat', {
-    //                 urls: [
-    //                     'http://test-status-404/path/to/file-1.ext',
-    //                     'http://test-status-404/path/to/file-2.ext',
-    //                     'http://test-status-404/path/to/file-3.ext',
-    //                     'http://test-status-404/path/to/file-4.ext',
-    //                     'http://test-status-404/path/to/file-5.ext',
-    //                 ],
-    //                 maxPartSize: 3,
-    //             }, {
-    //                 maxConcurrent: 5
-    //             });
-    //         } catch (e) {
-    //             assert.ok(e.message.includes('PUT'));
-    //             assert.ok(e.message.includes('failed with status 404'));
-    //         }
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-17.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('status-404-url2', async function () {
-    //         await fs.writeFile('test-transfer-file-18.dat', 'hello world 123', 'utf8');
-
-    //         try {
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 8)
-    //                 .put('/path/to/file-1.ext', 'hello wo')
-    //                 .reply(201);
-    //             nock('http://test-status-404')
-    //                 .matchHeader('content-length', 7)
-    //                 .put('/path/to/file-2.ext', 'rld 123')
-    //                 .reply(404);
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-18.dat', {
-    //                 urls: [
-    //                     'http://test-status-404/path/to/file-1.ext',
-    //                     'http://test-status-404/path/to/file-2.ext'
-    //                 ],
-    //                 maxPartSize: 8,
-    //             });
-    //         } catch (e) {
-    //             assert.ok(e.message.includes('PUT'));
-    //             assert.ok(e.message.includes('failed with status 404'));
-    //         }
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-18.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('method-post', async function () {
-    //         await fs.writeFile('test-transfer-file-19.dat', 'hello world 123', 'utf8');
-
-    //         nock('http://test-method-post')
-    //             .matchHeader('content-length', 8)
-    //             .post('/path/to/file-1.ext', 'hello wo')
-    //             .reply(201);
-    //         nock('http://test-method-post')
-    //             .matchHeader('content-length', 7)
-    //             .post('/path/to/file-2.ext', 'rld 123')
-    //             .reply(201);
-
-    //         await uploadMultiPartFileConcurrently('test-transfer-file-19.dat', {
-    //             urls: [
-    //                 'http://test-method-post/path/to/file-1.ext',
-    //                 'http://test-method-post/path/to/file-2.ext'
-    //             ],
-    //             maxPartSize: 8,
-    //         }, {
-    //             method: 'POST'
-    //         });
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-19.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('method-post (repeated)', async function () {
-    //         for (let i = 0; i < 5; i++) {
-    //             await fs.writeFile('test-transfer-file-19.dat', 'hello world 123', 'utf8');
-
-    //             nock('http://test-method-post')
-    //                 .matchHeader('content-length', 8)
-    //                 .post('/path/to/file-1.ext', 'hello wo')
-    //                 .reply(201);
-    //             nock('http://test-method-post')
-    //                 .matchHeader('content-length', 7)
-    //                 .post('/path/to/file-2.ext', 'rld 123')
-    //                 .reply(201);
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-19.dat', {
-    //                 urls: [
-    //                     'http://test-method-post/path/to/file-1.ext',
-    //                     'http://test-method-post/path/to/file-2.ext'
-    //                 ],
-    //                 maxPartSize: 8,
-    //             }, {
-    //                 method: 'POST'
-    //             });
-
-    //             try {
-    //                 await fs.unlink('test-transfer-file-19.dat');
-    //             } catch (e) { // ignore cleanup failures
-    //                 console.log(e);
-    //             }
-    //         }
-    //     });
-
-    //     it('timeout-error-1', async function () {
-    //         await fs.writeFile('test-transfer-file-20.dat', 'hello world 123', 'utf8');
-
-    //         try {
-    //             nock('http://timeout-error')
-    //                 .matchHeader('content-length', 8)
-    //                 .put('/path/to/file-1.ext', 'hello wo')
-    //                 .delayConnection(700)
-    //                 .reply(201);
-    //             nock('http://timeout-error')
-    //                 .matchHeader('content-length', 7)
-    //                 .put('/path/to/file-2.ext', 'rld 123')
-    //                 .reply(201);
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-20.dat', {
-    //                 urls: [
-    //                     'http://timeout-error/path/to/file-1.ext',
-    //                     'http://timeout-error/path/to/file-2.ext'
-    //                 ],
-    //                 maxPartSize: 8,
-    //             }, {
-    //                 timeout: 200,
-    //                 retryEnabled: false
-    //             });
-
-    //             assert.fail('failure expected');
-    //         } catch (e) {
-    //             assert.ok(e.message.includes('PUT'));
-    //             assert.ok(e.message.includes('connect failed'));
-    //             assert.ok(e.message.includes('network timeout'));
-    //         }
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-20.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('timeout-error-1-no-retry', async function () {
-    //         await fs.writeFile('test-transfer-file-20.dat', 'hello world 123', 'utf8');
-
-    //         try {
-    //             nock('http://timeout-error')
-    //                 .matchHeader('content-length', 8)
-    //                 .put('/path/to/file-1.ext', 'hello wo')
-    //                 .delayConnection(500)
-    //                 .reply(201);
-    //             nock('http://timeout-error')
-    //                 .matchHeader('content-length', 7)
-    //                 .put('/path/to/file-2.ext', 'rld 123')
-    //                 .reply(201);
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-20.dat', {
-    //                 urls: [
-    //                     'http://timeout-error/path/to/file-1.ext',
-    //                     'http://timeout-error/path/to/file-2.ext'
-    //                 ],
-    //                 maxPartSize: 8,
-    //             }, {
-    //                 timeout: 200,
-    //                 retryEnabled: false
-    //             });
-
-    //             assert.fail('failure expected');
-    //         } catch (e) {
-    //             assert.ok(e.message.includes('PUT'));
-    //             assert.ok(e.message.includes('connect failed'));
-    //             assert.ok(e.message.includes('network timeout'));
-    //         }
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-20.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('timeout-error-1-retry-max-duration', async function () {
-    //         await fs.writeFile('test-transfer-file-20.dat', 'hello world 123', 'utf8');
-
-    //         try {
-    //             nock('http://timeout-error')
-    //                 .matchHeader('content-length', 8)
-    //                 .put('/path/to/file-1.ext', 'hello wo')
-    //                 .delayConnection(500)
-    //                 .reply(201);
-    //             nock('http://timeout-error')
-    //                 .matchHeader('content-length', 7)
-    //                 .put('/path/to/file-2.ext', 'rld 123')
-    //                 .reply(201);
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-20.dat', {
-    //                 urls: [
-    //                     'http://timeout-error/path/to/file-1.ext',
-    //                     'http://timeout-error/path/to/file-2.ext'
-    //                 ],
-    //                 maxPartSize: 8,
-    //             }, {
-    //                 timeout: 200,
-    //                 retryMaxDuration: 1
-    //             });
-
-    //             assert.fail('failure expected');
-    //         } catch (e) {
-    //             assert.ok(e.message.includes('PUT'));
-    //             assert.ok(e.message.includes('connect failed'));
-    //             assert.ok(e.message.includes('network timeout'));
-    //         }
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-20.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('timeout-error-2', async function () {
-    //         await fs.writeFile('test-transfer-file-21.dat', 'hello world 123', 'utf8');
-
-    //         try {
-    //             nock('http://timeout-error')
-    //                 .matchHeader('content-length', 8)
-    //                 .put('/path/to/file-1.ext', 'hello wo')
-    //                 .reply(201);
-    //             nock('http://timeout-error')
-    //                 .matchHeader('content-length', 7)
-    //                 .put('/path/to/file-2.ext', 'rld 123')
-    //                 .delayConnection(500)
-    //                 .reply(201);
-
-    //             await uploadMultiPartFileConcurrently('test-transfer-file-21.dat', {
-    //                 urls: [
-    //                     'http://timeout-error/path/to/file-1.ext',
-    //                     'http://timeout-error/path/to/file-2.ext'
-    //                 ],
-    //                 maxPartSize: 8,
-    //             }, {
-    //                 timeout: 200,
-    //                 retryEnabled: false
-    //             });
-
-    //             assert.fail('failure expected');
-    //         } catch (e) {
-    //             assert.ok(e.message.includes('PUT'));
-    //             assert.ok(e.message.includes('connect failed'));
-    //             assert.ok(e.message.includes('network timeout'));
-    //         }
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-21.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('header-override', async function () {
-    //         await fs.writeFile('test-transfer-file-22.dat', 'hello world 123', 'utf8');
-
-    //         nock('http://header-override')
-    //             .matchHeader('content-length', 8)
-    //             .matchHeader('content-type', 'image/jpeg')
-    //             .put('/path/to/file-1.ext', 'hello wo')
-    //             .reply(201);
-    //         nock('http://header-override')
-    //             .matchHeader('content-length', 7)
-    //             .matchHeader('content-type', 'image/jpeg')
-    //             .put('/path/to/file-2.ext', 'rld 123')
-    //             .reply(201);
-
-    //         await uploadMultiPartFileConcurrently('test-transfer-file-22.dat', {
-    //             urls: [
-    //                 'http://header-override/path/to/file-1.ext',
-    //                 'http://header-override/path/to/file-2.ext'
-    //             ],
-    //             maxPartSize: 8,
-    //         }, {
-    //             headers: {
-    //                 "content-type": "image/jpeg"
-    //             }
-    //         });
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-22.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('status-404-retry', async function () {
-    //         await fs.writeFile('test-transfer-file-23.dat', 'hello world 123', 'utf8');
-
-    //         nock('http://status-404-retry')
-    //             .matchHeader('content-length', 8)
-    //             .put('/path/to/file-1.ext', 'hello wo')
-    //             .reply(404);
-    //         nock('http://status-404-retry')
-    //             .matchHeader('content-length', 8)
-    //             .put('/path/to/file-1.ext', 'hello wo')
-    //             .reply(201);
-    //         nock('http://status-404-retry')
-    //             .matchHeader('content-length', 7)
-    //             .put('/path/to/file-2.ext', 'rld 123')
-    //             .reply(404);
-    //         nock('http://status-404-retry')
-    //             .matchHeader('content-length', 7)
-    //             .put('/path/to/file-2.ext', 'rld 123')
-    //             .reply(201);
-
-    //         await uploadMultiPartFileConcurrently('test-transfer-file-23.dat', {
-    //             urls: [
-    //                 'http://status-404-retry/path/to/file-1.ext',
-    //                 'http://status-404-retry/path/to/file-2.ext'
-    //             ],
-    //             maxPartSize: 8,
-    //         }, {
-    //             retryAllErrors: true
-    //         });
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-23.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     });
-
-    //     it('status-503-retry', async function () {
-    //         await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
-
-    //         nock('http://status-503-retry')
-    //             .matchHeader('content-length', 8)
-    //             .put('/path/to/file-1.ext', 'hello wo')
-    //             .reply(503);
-    //         nock('http://status-503-retry')
-    //             .matchHeader('content-length', 8)
-    //             .put('/path/to/file-1.ext', 'hello wo')
-    //             .reply(201);
-    //         nock('http://status-503-retry')
-    //             .matchHeader('content-length', 7)
-    //             .put('/path/to/file-2.ext', 'rld 123')
-    //             .reply(503);
-    //         nock('http://status-503-retry')
-    //             .matchHeader('content-length', 7)
-    //             .put('/path/to/file-2.ext', 'rld 123')
-    //             .reply(201);
-
-    //         await uploadMultiPartFileConcurrently('test-transfer-file-24.dat', {
-    //             urls: [
-    //                 'http://status-503-retry/path/to/file-1.ext',
-    //                 'http://status-503-retry/path/to/file-2.ext'
-    //             ],
-    //             maxPartSize: 8,
-    //         });
-
-    //         try {
-    //             await fs.unlink('test-transfer-file-24.dat');
-    //         } catch (e) { // ignore cleanup failures
-    //             console.log(e);
-    //         }
-    //     }).timeout(10000);
-    // });
-
-    // it('status-connect-error-retry', async function () {
-    //     await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
-
-    //     nock('http://status-503-retry')
-    //         .matchHeader('content-length', 8)
-    //         .put('/path/to/file-1.ext', 'hello wo')
-    //         .replyWithError({
-    //             code: 'ECONNRESET',
-    //             message: 'Connection Reset'
-    //         });
-    //     nock('http://status-503-retry')
-    //         .matchHeader('content-length', 8)
-    //         .put('/path/to/file-1.ext', 'hello wo')
-    //         .reply(201);
-    //     nock('http://status-503-retry')
-    //         .matchHeader('content-length', 7)
-    //         .put('/path/to/file-2.ext', 'rld 123')
-    //         .reply(201);
-
-    //     await uploadMultiPartFileConcurrently('test-transfer-file-24.dat', {
-    //         urls: [
-    //             'http://status-503-retry/path/to/file-1.ext',
-    //             'http://status-503-retry/path/to/file-2.ext'
-    //         ],
-    //         maxPartSize: 8,
-    //     });
-    //     console.log(nock.pendingMocks());
-    //     assert(nock.isDone());
-    //     try {
-    //         await fs.unlink('test-transfer-file-24.dat');
-    //     } catch (e) { // ignore cleanup failures
-    //         console.log(e);
-    //     }
+        it('status-201-10urls-fits2', async function () {
+            await fs.writeFile('test-transfer-file-9.dat', 'hello world 123', 'utf8');
+
+            nock('http://test-status-201')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://test-status-201')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadFilesConcurrently([{
+                filepath: 'test-transfer-file-9.dat', 
+                target: {
+                    urls: [
+                        'http://test-status-201/path/to/file-1.ext',
+                        'http://test-status-201/path/to/file-2.ext',
+                        'http://test-status-201/path/to/file-3.ext',
+                        'http://test-status-201/path/to/file-4.ext',
+                        'http://test-status-201/path/to/file-5.ext',
+                        'http://test-status-201/path/to/file-6.ext',
+                        'http://test-status-201/path/to/file-7.ext',
+                        'http://test-status-201/path/to/file-8.ext',
+                        'http://test-status-201/path/to/file-9.ext',
+                        'http://test-status-201/path/to/file-10.ext',
+                    ],
+                    maxPartSize: 8
+                }
+            }]);
+
+            try {
+                await fs.unlink('test-transfer-file-9.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('status-201-2urls-preferred-smallermaxsize', async function () {
+            await fs.writeFile('test-transfer-file-15.dat', 'hello world 123', 'utf8');
+
+            // minPartSize smaller than preferred has no effect
+            nock('http://test-status-201')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://test-status-201')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadFilesConcurrently([{
+                filepath: 'test-transfer-file-15.dat', 
+                target: {
+                    urls: [
+                        'http://test-status-201/path/to/file-1.ext',
+                        'http://test-status-201/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8
+                }
+            }],
+            {
+                partSize: 9,
+            });
+
+            try {
+                await fs.unlink('test-transfer-file-15.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('status-201-2urls-preferred-largermaxsize', async function () {
+            await fs.writeFile('test-transfer-file-16.dat', 'hello world 123', 'utf8');
+
+            // preferred is limited on the lower-bound by minPartSize, so
+            // the picked part size is the minPartSize
+            nock('http://test-status-201')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://test-status-201')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadFilesConcurrently([{
+                filepath: 'test-transfer-file-16.dat', 
+                target: {
+                    urls: [
+                        'http://test-status-201/path/to/file-1.ext',
+                        'http://test-status-201/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8
+                }
+            }],
+            {
+                partSize: 7,
+            });
+
+            try {
+                await fs.unlink('test-transfer-file-16.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('status-404-url1', async function () {
+            await fs.writeFile('test-transfer-file-17.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 8)
+                    .put('/path/to/file-1.ext', 'hello wo')
+                    .reply(404);
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 7)
+                    .put('/path/to/file-2.ext', 'rld 123')
+                    .reply(200);
+
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-17.dat', 
+                    target: {
+                        urls: [
+                            'http://test-status-404/path/to/file-1.ext',
+                            'http://test-status-404/path/to/file-2.ext'
+                        ],
+                        maxPartSize: 8
+                    }
+                }]);
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-17.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('status-404-url1-concurrency-1', async function () {
+            await fs.writeFile('test-transfer-file-17.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 3)
+                    .put('/path/to/file-1.ext', 'hel')
+                    .reply(404);
+
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 3)
+                    .put('/path/to/file-2.ext', 'lo ')
+                    .reply(200);
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 3)
+                    .put('/path/to/file-3.ext', 'wor')
+                    .reply(200);
+                // TODO, look into why this is happening
+                // first URL fails first
+                // two (out of 4 remaining) urls get executed before the filter function causes the request to end due to an error
+
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-17.dat', 
+                    target: {
+                        urls: [
+                            'http://test-status-404/path/to/file-1.ext',
+                            'http://test-status-404/path/to/file-2.ext',
+                            'http://test-status-404/path/to/file-3.ext',
+                            'http://test-status-404/path/to/file-4.ext',
+                            'http://test-status-404/path/to/file-5.ext',
+                        ],
+                        maxPartSize: 3,
+                    }
+                }], {
+                    maxConcurrent: 1
+                });
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-17.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('status-404-url1-concurrency-5', async function () {
+            await fs.writeFile('test-transfer-file-17.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 3)
+                    .put('/path/to/file-1.ext', 'hel')
+                    .reply(404);
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 3)
+                    .put('/path/to/file-2.ext', 'lo ')
+                    .reply(200);
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 3)
+                    .put('/path/to/file-3.ext', 'wor')
+                    .reply(200);
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 3)
+                    .put('/path/to/file-4.ext', 'ld ')
+                    .reply(200);
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 3)
+                    .put('/path/to/file-5.ext', '123')
+                    .reply(200);
+                // since the 5 chunk requests happen concurrently, if one fails, the rest still continue
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-17.dat', 
+                    target: {
+                        urls: [
+                            'http://test-status-404/path/to/file-1.ext',
+                            'http://test-status-404/path/to/file-2.ext',
+                            'http://test-status-404/path/to/file-3.ext',
+                            'http://test-status-404/path/to/file-4.ext',
+                            'http://test-status-404/path/to/file-5.ext',
+                        ],
+                        maxPartSize: 3,
+                    }
+                }], {
+                    maxConcurrent: 5
+                });
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-17.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('status-404-url2', async function () {
+            await fs.writeFile('test-transfer-file-18.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 8)
+                    .put('/path/to/file-1.ext', 'hello wo')
+                    .reply(201);
+                nock('http://test-status-404')
+                    .matchHeader('content-length', 7)
+                    .put('/path/to/file-2.ext', 'rld 123')
+                    .reply(404);
+
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-18.dat', 
+                    target: {
+                        urls: [
+                            'http://test-status-404/path/to/file-1.ext',
+                            'http://test-status-404/path/to/file-2.ext'
+                        ],
+                        maxPartSize: 8,
+                    }
+                }]);
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('failed with status 404'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-18.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('method-post', async function () {
+            await fs.writeFile('test-transfer-file-19.dat', 'hello world 123', 'utf8');
+
+            nock('http://test-method-post')
+                .matchHeader('content-length', 8)
+                .post('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://test-method-post')
+                .matchHeader('content-length', 7)
+                .post('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadFilesConcurrently([{
+                filepath: 'test-transfer-file-19.dat', 
+                target: {
+                    urls: [
+                        'http://test-method-post/path/to/file-1.ext',
+                        'http://test-method-post/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8,
+                }
+            }], {
+                method: 'POST'
+            });
+
+            try {
+                await fs.unlink('test-transfer-file-19.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('method-post (repeated)', async function () {
+            for (let i = 0; i < 5; i++) {
+                await fs.writeFile('test-transfer-file-19.dat', 'hello world 123', 'utf8');
+
+                nock('http://test-method-post')
+                    .matchHeader('content-length', 8)
+                    .post('/path/to/file-1.ext', 'hello wo')
+                    .reply(201);
+                nock('http://test-method-post')
+                    .matchHeader('content-length', 7)
+                    .post('/path/to/file-2.ext', 'rld 123')
+                    .reply(201);
+
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-19.dat', 
+                    target: {
+                        urls: [
+                            'http://test-method-post/path/to/file-1.ext',
+                            'http://test-method-post/path/to/file-2.ext'
+                        ],
+                        maxPartSize: 8,
+                    }
+                }], {
+                    method: 'POST'
+                });
+
+                try {
+                    await fs.unlink('test-transfer-file-19.dat');
+                } catch (e) { // ignore cleanup failures
+                    console.log(e);
+                }
+            }
+        });
+
+        it('timeout-error-1', async function () {
+            await fs.writeFile('test-transfer-file-20.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 8)
+                    .put('/path/to/file-1.ext', 'hello wo')
+                    .delayConnection(700)
+                    .reply(201);
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 7)
+                    .put('/path/to/file-2.ext', 'rld 123')
+                    .reply(201);
+
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-20.dat', 
+                    target: {
+                        urls: [
+                            'http://timeout-error/path/to/file-1.ext',
+                            'http://timeout-error/path/to/file-2.ext'
+                        ],
+                        maxPartSize: 8,
+                    }
+                }], {
+                    timeout: 200,
+                    retryEnabled: false
+                });
+
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('network timeout'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-20.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('timeout-error-1-no-retry', async function () {
+            await fs.writeFile('test-transfer-file-20.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 8)
+                    .put('/path/to/file-1.ext', 'hello wo')
+                    .delayConnection(500)
+                    .reply(201);
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 7)
+                    .put('/path/to/file-2.ext', 'rld 123')
+                    .reply(201);
+
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-20.dat', 
+                    target: {
+                        urls: [
+                            'http://timeout-error/path/to/file-1.ext',
+                            'http://timeout-error/path/to/file-2.ext'
+                        ],
+                        maxPartSize: 8,
+                    }
+                }], {
+                    timeout: 200,
+                    retryEnabled: false
+                });
+
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('network timeout'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-20.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('timeout-error-1-retry-max-duration', async function () {
+            await fs.writeFile('test-transfer-file-20.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 8)
+                    .put('/path/to/file-1.ext', 'hello wo')
+                    .delayConnection(500)
+                    .reply(201);
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 7)
+                    .put('/path/to/file-2.ext', 'rld 123')
+                    .reply(201);
+
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-20.dat', 
+                    target: {
+                        urls: [
+                            'http://timeout-error/path/to/file-1.ext',
+                            'http://timeout-error/path/to/file-2.ext'
+                        ],
+                        maxPartSize: 8,
+                    }
+                }], {
+                    timeout: 200,
+                    retryMaxDuration: 1
+                });
+
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('network timeout'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-20.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('timeout-error-2', async function () {
+            await fs.writeFile('test-transfer-file-21.dat', 'hello world 123', 'utf8');
+
+            try {
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 8)
+                    .put('/path/to/file-1.ext', 'hello wo')
+                    .reply(201);
+                nock('http://timeout-error')
+                    .matchHeader('content-length', 7)
+                    .put('/path/to/file-2.ext', 'rld 123')
+                    .delayConnection(500)
+                    .reply(201);
+
+                await uploadFilesConcurrently([{
+                    filepath: 'test-transfer-file-21.dat', 
+                    target: {
+                        urls: [
+                            'http://timeout-error/path/to/file-1.ext',
+                            'http://timeout-error/path/to/file-2.ext'
+                        ],
+                        maxPartSize: 8,
+                    }
+                }], {
+                    timeout: 200,
+                    retryEnabled: false
+                });
+
+                assert.fail('failure expected');
+            } catch (e) {
+                assert.ok(e.message.includes('PUT'));
+                assert.ok(e.message.includes('connect failed'));
+                assert.ok(e.message.includes('network timeout'));
+            }
+
+            try {
+                await fs.unlink('test-transfer-file-21.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('header-override', async function () {
+            await fs.writeFile('test-transfer-file-22.dat', 'hello world 123', 'utf8');
+
+            nock('http://header-override')
+                .matchHeader('content-length', 8)
+                .matchHeader('content-type', 'image/jpeg')
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://header-override')
+                .matchHeader('content-length', 7)
+                .matchHeader('content-type', 'image/jpeg')
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadFilesConcurrently([{
+                filepath: 'test-transfer-file-22.dat', 
+                target: {
+                    urls: [
+                        'http://header-override/path/to/file-1.ext',
+                        'http://header-override/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8,
+                }
+            }], {
+                headers: {
+                    "content-type": "image/jpeg"
+                }
+            });
+
+            try {
+                await fs.unlink('test-transfer-file-22.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('status-404-retry', async function () {
+            await fs.writeFile('test-transfer-file-23.dat', 'hello world 123', 'utf8');
+
+            nock('http://status-404-retry')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(404);
+            nock('http://status-404-retry')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://status-404-retry')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(404);
+            nock('http://status-404-retry')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadFilesConcurrently([{
+                filepath: 'test-transfer-file-23.dat', 
+                target: {
+                    urls: [
+                        'http://status-404-retry/path/to/file-1.ext',
+                        'http://status-404-retry/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8,
+                }
+            }], {
+                retryAllErrors: true
+            });
+
+            try {
+                await fs.unlink('test-transfer-file-23.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        });
+
+        it('status-503-retry', async function () {
+            await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
+
+            nock('http://status-503-retry')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(503);
+            nock('http://status-503-retry')
+                .matchHeader('content-length', 8)
+                .put('/path/to/file-1.ext', 'hello wo')
+                .reply(201);
+            nock('http://status-503-retry')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(503);
+            nock('http://status-503-retry')
+                .matchHeader('content-length', 7)
+                .put('/path/to/file-2.ext', 'rld 123')
+                .reply(201);
+
+            await uploadFilesConcurrently([{
+                filepath: 'test-transfer-file-24.dat', 
+                target: {
+                    urls: [
+                        'http://status-503-retry/path/to/file-1.ext',
+                        'http://status-503-retry/path/to/file-2.ext'
+                    ],
+                    maxPartSize: 8,
+                }
+            }]);
+
+            try {
+                await fs.unlink('test-transfer-file-24.dat');
+            } catch (e) { // ignore cleanup failures
+                console.log(e);
+            }
+        }).timeout(10000);
+    });
+
+    it('status-connect-error-retry', async function () {
+        await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
+
+        nock('http://status-503-retry')
+            .matchHeader('content-length', 8)
+            .put('/path/to/file-1.ext', 'hello wo')
+            .replyWithError({
+                code: 'ECONNRESET',
+                message: 'Connection Reset'
+            });
+        nock('http://status-503-retry')
+            .matchHeader('content-length', 8)
+            .put('/path/to/file-1.ext', 'hello wo')
+            .reply(201);
+        nock('http://status-503-retry')
+            .matchHeader('content-length', 7)
+            .put('/path/to/file-2.ext', 'rld 123')
+            .reply(201);
+
+        await uploadFilesConcurrently([{
+            filepath: 'test-transfer-file-24.dat', 
+            target: {
+                urls: [
+                    'http://status-503-retry/path/to/file-1.ext',
+                    'http://status-503-retry/path/to/file-2.ext'
+                ],
+                maxPartSize: 8,
+            }
+        }]);
+        console.log(nock.pendingMocks());
+        assert(nock.isDone());
+        try {
+            await fs.unlink('test-transfer-file-24.dat');
+        } catch (e) { // ignore cleanup failures
+            console.log(e);
+        }
     }).timeout(10000);
     describe('upload multiple files', function () {
         afterEach(async function () {
