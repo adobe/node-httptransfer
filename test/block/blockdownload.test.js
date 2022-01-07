@@ -63,7 +63,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 15,
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -79,7 +79,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 15,
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -143,7 +143,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 15,
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -207,7 +207,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 12,
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': '',
                         'accept-ranges': 'bytes'
                     }
@@ -351,7 +351,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -367,7 +367,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -432,7 +432,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -448,7 +448,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -513,7 +513,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -529,7 +529,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -595,7 +595,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -661,7 +661,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 12,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': '',
                             'accept-ranges': 'bytes'
                         }
@@ -741,7 +741,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 15,
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -757,7 +757,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 15,
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -773,7 +773,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 10,
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -789,7 +789,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 10,
                         'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -826,7 +826,98 @@ describe('Block Download', function () {
             {
                 fileUrl: `${fileToDownload}2.jpeg`,
                 filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
-                fileSize: 15
+                fileSize: 10
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        });
+
+        await fs.promises.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+        assert.equal(events.filestart.length, 2);
+        assert.equal(events.filestart[0].fileSize, 15);
+        assert.equal(events.filestart[1].fileSize, 10);
+        assert.equal(events.fileprogress.length, 2);
+        assert.equal(events.fileprogress[0].fileSize, 15);
+        assert.equal(events.fileprogress[0].transferred, 15);
+        assert.equal(events.fileprogress[1].fileSize, 10);
+        assert.equal(events.fileprogress[1].transferred, 10);
+        assert.equal(events.fileend.length, 2);
+        assert.equal(events.fileprogress[0].fileSize, 15);
+        assert.equal(events.fileprogress[1].fileSize, 10);
+        assert.equal(events.error.length, 0);
+        assert.ok(nock.isDone(), nock.pendingMocks());
+    });
+
+    it('Block download smoke test (multiple file download, all metadata set)', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file";
+
+        nock(HOST)
+            .get(`${filenameToDownload}1.jpeg`)
+            .reply(() => {
+                return [
+                    200,
+                    "AAAAAAAAAAAAAAA",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 15,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(`${filenameToDownload}2.jpeg`)
+            .reply(() => {
+                return [
+                    200,
+                    "BBBBBBBBBB",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 10,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.jpeg";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: `${fileToDownload}1.jpeg`,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 15,
+                contentType: "image/jpeg"
+            },
+            {
+                fileUrl: `${fileToDownload}2.jpeg`,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 10,
+                contentType: "image/jpeg"
             }],
             concurrent: true,
             maxConcurrent: 4
@@ -862,7 +953,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -878,7 +969,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -894,7 +985,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 10,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -910,7 +1001,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 10,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -947,7 +1038,7 @@ describe('Block Download', function () {
                 {
                     fileUrl: `${fileToDownload}2.jpeg`,
                     filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
-                    fileSize: 15
+                    fileSize: 10
                 }],
                 concurrent: true,
                 maxConcurrent: 4
@@ -984,7 +1075,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -1000,7 +1091,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 15,
                             'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -1015,8 +1106,8 @@ describe('Block Download', function () {
                         {
                             'content-type': 'image/jpeg',
                             'content-length': 10,
-                            'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'content-disposition': 'attachment; filename="image-file-2.jpg"',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -1031,8 +1122,8 @@ describe('Block Download', function () {
                         {
                             'content-type': 'image/jpeg',
                             'content-length': 10,
-                            'content-disposition': 'attachment; filename="image-file-1.jpg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'content-disposition': 'attachment; filename="image-file-2.jpg"',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -1069,7 +1160,7 @@ describe('Block Download', function () {
                 {
                     fileUrl: `${fileToDownload}2.jpeg`,
                     filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
-                    fileSize: 15
+                    fileSize: 10
                 }],
                 concurrent: true,
                 maxConcurrent: 1
@@ -1105,7 +1196,7 @@ describe('Block Download', function () {
                         'content-type': 'image/png',
                         'content-length': 1911,
                         'content-disposition': 'attachment; filename="image-file-1.png"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                     }
                 ];
             });
@@ -1118,7 +1209,7 @@ describe('Block Download', function () {
                     'content-type': 'image/png',
                     'content-length': 1911,
                     'content-disposition': 'attachment; filename="image-file-1.png"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                 }
             );
 
@@ -1176,7 +1267,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 2024,
                         'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -1190,7 +1281,153 @@ describe('Block Download', function () {
                     'content-type': 'image/jpeg',
                     'content-length': 2024,
                     'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
+                    'etag': ''
+                }
+            );
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.jpeg";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileToDownload,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 2024
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        });
+
+        assert.equal(events.error.length, 0);
+        assert.ok(nock.isDone(), nock.pendingMocks());
+
+        const actualHash = await fileHash(mockDownloadFileLocation);
+        await fs.promises.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+        const expecteHash = await fileHash(`${__dirname}/test-files/jpeg-file.jpeg`);
+        assert.equal(actualHash, expecteHash);
+    });
+
+    it('Block download small jpeg file (wrong last modified date)', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.jpeg";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 2024,
+                        'content-disposition': 'attachment; filename="image-file-1.jpeg"',
+                        'last-modified': 'Wed, 21 Oct 2041 09:00:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .replyWithFile(200,
+                `${__dirname}/test-files/jpeg-file.jpeg`,
+                {
+                    'content-type': 'image/jpeg',
+                    'content-length': 2024,
+                    'content-disposition': 'attachment; filename="image-file-1.jpeg"',
+                    'last-modified': 'Wed, 21 Oct 2041 09:00:00 GMT',
+                    'etag': ''
+                }
+            );
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.jpeg";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileToDownload,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 2024
+            }],
+            concurrent: true,
+            maxConcurrent: 4
+        });
+
+        assert.equal(events.error.length, 0);
+        assert.ok(nock.isDone(), nock.pendingMocks());
+
+        const actualHash = await fileHash(mockDownloadFileLocation);
+        await fs.promises.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+        const expecteHash = await fileHash(`${__dirname}/test-files/jpeg-file.jpeg`);
+        assert.equal(actualHash, expecteHash);
+    });
+
+    it('Block download small jpeg file (last modified dates mismatch)', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.jpeg";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 2024,
+                        'content-disposition': 'attachment; filename="image-file-1.jpeg"',
+                        'last-modified': 'Wed, 21 Oct 2017 09:00:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .replyWithFile(200,
+                `${__dirname}/test-files/jpeg-file.jpeg`,
+                {
+                    'content-type': 'image/jpeg',
+                    'content-length': 2024,
+                    'content-disposition': 'attachment; filename="image-file-1.jpeg"',
+                    'last-modified': 'Wed, 21 Feb 2016 09:00:00 GMT',
                     'etag': ''
                 }
             );
@@ -1248,7 +1485,7 @@ describe('Block Download', function () {
                     'content-type': 'image/jpeg',
                     'content-length': 2024,
                     'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                     'etag': ''
                 }
             );
@@ -1308,7 +1545,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 2024,
                         'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -1322,7 +1559,7 @@ describe('Block Download', function () {
                     'content-type': 'image/jpeg',
                     'content-length': 2024,
                     'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                     'etag': ''
                 }
             );
@@ -1338,7 +1575,7 @@ describe('Block Download', function () {
                         'content-type': 'image/png',
                         'content-length': 1911,
                         'content-disposition': 'attachment; filename="image-file-1.png"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                     }
                 ];
             });
@@ -1351,7 +1588,7 @@ describe('Block Download', function () {
                     'content-type': 'image/png',
                     'content-length': 1911,
                     'content-disposition': 'attachment; filename="image-file-1.png"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                 }
             );
 
@@ -1421,7 +1658,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 2024,
                         'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -1435,7 +1672,7 @@ describe('Block Download', function () {
                     'content-type': 'image/jpeg',
                     'content-length': 2024,
                     'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                     'etag': ''
                 }
             );
@@ -1451,7 +1688,7 @@ describe('Block Download', function () {
                         'content-type': 'image/png',
                         'content-length': 1911,
                         'content-disposition': 'attachment; filename="image-file-1.png"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                     }
                 ];
             });
@@ -1464,7 +1701,7 @@ describe('Block Download', function () {
                     'content-type': 'image/png',
                     'content-length': 1911,
                     'content-disposition': 'attachment; filename="image-file-1.png"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                 }
             );
 
@@ -1541,7 +1778,7 @@ describe('Block Download', function () {
                     'content-type': 'image/jpeg',
                     'content-length': 2024,
                     'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                     'etag': ''
                 }
             );
@@ -1557,7 +1794,7 @@ describe('Block Download', function () {
                         'content-type': 'image/png',
                         'content-length': 1911,
                         'content-disposition': 'attachment; filename="image-file-1.png"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                     }
                 ];
             });
@@ -1570,7 +1807,7 @@ describe('Block Download', function () {
                     'content-type': 'image/png',
                     'content-length': 1911,
                     'content-disposition': 'attachment; filename="image-file-1.png"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                 }
             );
 
@@ -1650,7 +1887,7 @@ describe('Block Download', function () {
                             'content-type': 'image/jpeg',
                             'content-length': 2024,
                             'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                             'etag': ''
                         }
                     ];
@@ -1664,7 +1901,7 @@ describe('Block Download', function () {
                         'content-type': 'image/jpeg',
                         'content-length': 2024,
                         'content-disposition': 'attachment; filename="image-file-1.jpeg"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 );
@@ -1680,7 +1917,7 @@ describe('Block Download', function () {
                             'content-type': 'image/png',
                             'content-length': 1911,
                             'content-disposition': 'attachment; filename="image-file-1.png"',
-                            'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                            'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                         }
                     ];
                 });
@@ -1693,7 +1930,7 @@ describe('Block Download', function () {
                         'content-type': 'image/png',
                         'content-length': 1911,
                         'content-disposition': 'attachment; filename="image-file-1.png"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT'
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT'
                     }
                 );
 
@@ -1772,7 +2009,7 @@ describe('Block Download', function () {
                         'content-type': 'image/png',
                         'content-length': 1911,
                         'content-disposition': 'attachment; filename="image-file-1.png"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -1786,7 +2023,7 @@ describe('Block Download', function () {
                     'content-type': 'image/png',
                     'content-length': 2000,
                     'content-disposition': 'attachment; filename="image-file-1.png"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                     'etag': ''
                 }
             );
@@ -1844,7 +2081,7 @@ describe('Block Download', function () {
                         'content-type': 'image/png',
                         'content-length': 1911,
                         'content-disposition': 'attachment; filename="image-file-1.png"',
-                        'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                         'etag': ''
                     }
                 ];
@@ -1919,7 +2156,7 @@ describe('Block Download', function () {
                     'content-type': 'image/png',
                     'content-length': 2000,
                     'content-disposition': 'attachment; filename="image-file-1.png"',
-                    'last-modified': 'Wed, 21 Oct 2015 07:28:00 GMT',
+                    'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
                     'etag': ''
                 }
             );
