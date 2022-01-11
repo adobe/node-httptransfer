@@ -102,6 +102,7 @@ describe('mapconcurrent', function() {
             assert.strictEqual(callbackInvoked, true);
         });
     });
+
     describe('executeBatch', function() {
         it('empty-array', async function() {
             const result = await executeBatch({
@@ -154,6 +155,7 @@ describe('mapconcurrent', function() {
             assert.deepStrictEqual(result, [ 6 ]);
         });
     });
+
     describe('waitResult', function() {
         it('empty-ordered', async function() {
             try {
@@ -198,6 +200,7 @@ describe('mapconcurrent', function() {
             assert.strictEqual(pending.length, 0);
         });
     });
+    
     describe('api', function () {
         it('empty', async function() {
             const countExecuteValues = [];

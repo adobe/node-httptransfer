@@ -15,8 +15,8 @@
 'use strict';
 
 const assert = require("assert");
-const UploadError = require("../../lib/aem/upload-error");
-const errorCodes = require("../../lib/aem/error-codes");
+const UploadError = require("../../lib/block/upload-error");
+const errorCodes = require("../../lib/http-error-codes");
 
 describe('Upload Error', function() {
     function verifyCodes(httpStatus, expectedCode) {
@@ -36,6 +36,7 @@ describe('Upload Error', function() {
         verifyCodes(501, errorCodes.NOT_SUPPORTED);
         verifyCodes(413, errorCodes.TOO_LARGE);
         verifyCodes(500, errorCodes.UNKNOWN);
+        verifyCodes(429, errorCodes.TOO_MANY_REQUESTS);
         assert.strictEqual(UploadError.fromError({ response: { status: 500 } }).getCode(), errorCodes.UNKNOWN);
 
         uploadError = UploadError.fromError({

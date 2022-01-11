@@ -42,6 +42,7 @@ describe("retry", function () {
             assert.ok(ms >= 164 && ms < 265, ms);
         });
     });
+
     describe("retryOn", function () {
         it("connect-error", function () {
             // retry on connect error
@@ -87,10 +88,12 @@ describe("retry", function () {
             }));
         });
     });
+
     describe("retryInit", function () {
         this.beforeEach( () => {
             delete process.env.__OW_ACTION_DEADLINE;
         });
+        
         it("none", function () {
             const options = retryInit();
             assertStartTime(options);
@@ -194,6 +197,7 @@ describe("retry", function () {
             });
         });
     });
+
     describe("filterOptions", function () {
         it("none", function () {
             const args = filterOptions();
@@ -217,6 +221,7 @@ describe("retry", function () {
             });
         });
     });
+
     describe("retry", function () {
         it("empty", async function () {
             const result = await retry(async () => 1);

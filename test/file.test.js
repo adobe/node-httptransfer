@@ -22,14 +22,19 @@ const { downloadFile, uploadFile } = require('../lib/file');
 const { testSetResponseBodyOverride, testHasResponseBodyOverrides } = require('../lib/fetch');
 const { createErrorReadable } = require('./streams');
 
-describe('file', function() {
-    describe('download', function() {
-        afterEach(async function() {
+describe('file', function () {
+    describe('download', function () {
+        beforeEach(async function () {
+            nock.cleanAll();
+        });
+
+        afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
-        it('status-200', async function() {
+
+        it('status-200', async function () {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
@@ -44,7 +49,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('status-200-mkdir', async function() {
+
+        it('status-200-mkdir', async function () {
             nock('http://test-status-200')
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
@@ -55,31 +61,33 @@ describe('file', function() {
             const result = await fs.readFile(path.resolve('./testdir/test-transfer-file-mkdir.dat'), 'utf8');
             assert.strictEqual(result, 'hello world');
 
-            try{
+            try {
                 await fs.unlink(path.resolve('./testdir/test-transfer-file-mkdir.dat'));
-            } catch(e){
+            } catch (e) {
                 // don't fail if it doesn't exist, it's only clean up
                 console.log(e);
             }
 
-            try{
+            try {
                 await fs.rmdir(path.resolve('./testdir'));
-            } catch(e){
+            } catch (e) {
                 // don't fail if it doesn't exist, it's only clean up
                 console.log(e);
             }
         });
-        it('status-200-mkdir-failure', async function() {
+
+        it('status-200-mkdir-failure', async function () {
             try {
                 await downloadFile('http://test-status-200/path/to/file.ext', path.resolve('./index.js/hello.dat'), {
                     mkdirs: true
-                });  
+                });
                 assert.fail('test is supposed to fail');
             } catch (e) {
                 assert.ok(e.message.includes('index.js is not a directory'));
             }
         });
-        it('status-200-truncate-retry', async function() {
+
+        it('status-200-truncate-retry', async function () {
             nock('http://test-status-200-truncate-retry')
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world', {
@@ -102,7 +110,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('status-200-stream-retry', async function() {
+
+        it('status-200-stream-retry', async function () {
             nock('http://test-status-200-stream-retry')
                 .get('/path/to/file.ext')
                 .reply(200, 'hello world');
@@ -122,7 +131,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('status-404', async function() {
+
+        it('status-404', async function () {
             try {
                 nock('http://test-status-404')
                     .get('/path/to/file.ext')
@@ -142,7 +152,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('status-404-retry', async function() {
+
+        it('status-404-retry', async function () {
             nock('http://test-status-404')
                 .get('/path/to/file.ext')
                 .reply(404);
@@ -163,7 +174,8 @@ describe('file', function() {
                 console.log(e);
             }
         }).timeout(20000);
-        it('status-404-stream-retry', async function() {
+
+        it('status-404-stream-retry', async function () {
             try {
                 nock('http://test-status-404-stream-retry')
                     .get('/path/to/file.ext')
@@ -191,7 +203,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('status-503-retry', async function() {
+
+        it('status-503-retry', async function () {
             nock('http://test-status-503')
                 .get('/path/to/file.ext')
                 .reply(503);
@@ -210,7 +223,8 @@ describe('file', function() {
                 console.log(e);
             }
         }).timeout(10000);
-        it('timeout-retry', async function() {
+
+        it('timeout-retry', async function () {
             nock('http://test-status-timeout')
                 .get('/path/to/file.ext')
                 .delayConnection(500)
@@ -232,7 +246,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('badhost-retry-failure (1)', async function() {
+
+        it('badhost-retry-failure (1)', async function () {
             const start = Date.now();
             try {
                 await downloadFile('http://badhost/path/to/file.ext', path.resolve('./test-transfer-file-timeout-retry-1.dat'), {
@@ -246,7 +261,7 @@ describe('file', function() {
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.includes('GET'));
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN')));
                 assert.ok(e.message.includes('badhost'));
             }
 
@@ -257,14 +272,19 @@ describe('file', function() {
             }
         }).timeout(20000);
     });
-    describe('upload', function() {
-        afterEach(async function() {
+
+    describe('upload', function () {
+        beforeEach(async function () {
+            nock.cleanAll();
+        });
+
+        afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
 
-        it('status-201', async function() {
+        it('status-201', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 15)
                 .put('/path/to/file.ext', 'hello world 123')
@@ -279,7 +299,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('status-201-header', async function() {
+
+        it('status-201-header', async function () {
             nock('http://test-status-201')
                 .matchHeader('content-length', 15)
                 .matchHeader('content-type', 'image/jpeg')
@@ -299,7 +320,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('status-404', async function() {
+
+        it('status-404', async function () {
             nock('http://test-status-404')
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(404);
@@ -319,7 +341,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('status-404-retry', async function() {
+
+        it('status-404-retry', async function () {
             nock('http://test-status-404')
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(404);
@@ -339,7 +362,8 @@ describe('file', function() {
                 console.log(e);
             }
         }).timeout(20000);
-        it('status-503-retry', async function() {
+
+        it('status-503-retry', async function () {
             nock('http://test-status-503')
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(503);
@@ -357,7 +381,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('timeout-retry', async function() {
+
+        it('timeout-retry', async function () {
             nock('http://test-status-timeout')
                 .put('/path/to/file.ext', 'hello world 123')
                 .delayConnection(500)
@@ -378,7 +403,8 @@ describe('file', function() {
                 console.log(e);
             }
         });
-        it('badhost-retry-failure (2)', async function() {
+
+        it('badhost-retry-failure (2)', async function () {
             const start = Date.now();
             try {
                 await fs.writeFile(path.resolve('./test-transfer-file-up-badhost-retry-failure-2.dat'), 'hello world 123', 'utf8');
@@ -393,7 +419,7 @@ describe('file', function() {
                 assert.ok(elapsed >= 500, `elapsed time: ${elapsed}`);
                 assert.ok(e.message.includes('PUT'));
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN')));
                 assert.ok(e.message.includes('badhost'));
             }
 
@@ -404,4 +430,6 @@ describe('file', function() {
             }
         }).timeout(20000);
     });
+
+    
 });
