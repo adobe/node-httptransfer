@@ -42,7 +42,22 @@ describe('csrf', function () {
             .get('/libs/granite/csrf/token.json')
             .reply(400, '');
 
-        assert.rejects(getCSRFToken("http://test"),
-            `Error: Fail to get CSRF token with err Error: GET 'http://test/libs/granite/csrf/token.json' failed with status 400`);
+        await assert.rejects(getCSRFToken("http://test"), err => {
+            assert.strictEqual(err.message,
+                `Fail to get CSRF token with err Error: GET 'http://test/libs/granite/csrf/token.json' failed with status 400`);
+            return true;
+        });
+    });
+
+    it('throw expected error with 2xx response other than 200', async function () {
+        nock('http://test')
+            .get('/libs/granite/csrf/token.json')
+            .reply(201, '');
+        
+        await assert.rejects(getCSRFToken("http://test"), err => {
+            assert.strictEqual(err.message,
+                `Fail to get CSRF token with err Error: Bad response from server 201`);
+            return true;
+        });
     });
 });
