@@ -393,6 +393,73 @@ describe("AEMInitiateUpload", () => {
                 assert.strictEqual(done, true);    
             }
         });
+        it("do not request csrf", async () => {
+            const partHeaders = { partHeader: 'testing' };
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png", undefined, partHeaders);
+            let isCalled = false;
+            const spy = () => {
+                isCalled = true;
+                return '{ "token": "test-csrf-token" }';
+            };
+    
+    
+            nock('http://host')
+                .post(
+                    "/path/to.initiateUpload.json", 
+                    "fileName=target.png&fileSize=1234"
+                )
+                .reply(200, JSON.stringify({
+                    files: [{
+                        minPartSize: 1000, 
+                        maxPartSize: 10000, 
+                        uploadURIs: [
+                            "http://host/path/to/target.png/block"
+                        ], 
+                        mimeType: "image/png",
+                        uploadToken: "uploadToken"
+                    }],
+                    completeURI: "/path/to.completeUpload.json"
+                }), {
+                    "content-type": "application/json"
+                });
+
+            nock('http://host')
+                .get('/libs/granite/csrf/token.json')
+                .reply(200, spy);
+                
+            const controller = new ControllerMock();
+            const initiateUpload = new AEMInitiateUpload({
+                retryEnabled: false
+            });
+            const generator = initiateUpload.execute([new TransferAsset(source, target, {
+                metadata: new AssetMetadata("target.png", undefined, 1234)
+            })], controller);
+            
+            // check the first file response
+            {
+                const { value, done } = await generator.next();
+                assert.deepStrictEqual(value, new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.png", "image/png", 1234),
+                    multipartTarget: new AssetMultipart([
+                        "http://host/path/to/target.png/block"
+                    ], 1000, 10000, partHeaders, "http://host/path/to.completeUpload.json", "uploadToken")
+                }));
+                assert.strictEqual(done, false);    
+            }
+    
+            // ensure there are no more files
+            {
+                const { value, done } = await generator.next();
+                assert.strictEqual(value, undefined);
+                assert.strictEqual(done, true);    
+            }
+
+            assert.ok(!isCalled);
+            assert.strictEqual(nock.pendingMocks().length, 1);
+            assert.strictEqual(nock.pendingMocks()[0], 'GET http://host:80/libs/granite/csrf/token.json');
+            nock.cleanAll();
+        });
     });
     describe("error", () => {       
         it("http failure", async () => {
@@ -618,6 +685,77 @@ describe("AEMInitiateUpload", () => {
                 }],
                 completeURI: "/path/to.completeUpload.json"
             }, "invalid uploadToken for http://host/path/to/target.png: {\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":{}}");
+        });
+    });
+    describe("browser", () => {
+        before(() => {
+            global.window = { document: {} };
+        });
+        after(() => {
+            delete global.window;
+        });
+        it("request csrf", async () => {
+            const partHeaders = { partHeader: 'testing' };
+            const source = new Asset("file:///path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png", undefined, partHeaders);
+            let isCalled = false;
+            const spy = () => {
+                isCalled = true;
+                return '{ "token": "test-csrf-token" }';
+            };
+    
+            nock('http://host')
+                .post(
+                    "/path/to.initiateUpload.json",
+                    "fileName=target.png&fileSize=1234"
+                )
+                .reply(200, JSON.stringify({
+                    files: [{
+                        minPartSize: 1000,
+                        maxPartSize: 10000,
+                        uploadURIs: [
+                            "http://host/path/to/target.png/block"
+                        ],
+                        mimeType: "image/png",
+                        uploadToken: "uploadToken"
+                    }],
+                    completeURI: "/path/to.completeUpload.json"
+                }), {
+                    "content-type": "application/json"
+                });
+
+            nock('http://host')
+                .get('/libs/granite/csrf/token.json')
+                .reply(200, spy);
+                
+            const controller = new ControllerMock();
+            const initiateUpload = new AEMInitiateUpload({
+                retryEnabled: false
+            });
+            const generator = initiateUpload.execute([new TransferAsset(source, target, {
+                metadata: new AssetMetadata("target.png", undefined, 1234)
+            })], controller);
+            
+            // check the first file response
+            {
+                const { value, done } = await generator.next();
+                assert.deepStrictEqual(value, new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target.png", "image/png", 1234),
+                    multipartTarget: new AssetMultipart([
+                        "http://host/path/to/target.png/block"
+                    ], 1000, 10000, partHeaders, "http://host/path/to.completeUpload.json", "uploadToken")
+                }));
+                assert.strictEqual(done, false);
+            }
+    
+            // ensure there are no more files
+            {
+                const { value, done } = await generator.next();
+                assert.strictEqual(value, undefined);
+                assert.strictEqual(done, true);
+            }
+
+            assert.ok(isCalled);
         });
     });
 });

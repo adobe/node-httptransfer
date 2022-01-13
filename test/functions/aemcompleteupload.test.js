@@ -310,6 +310,55 @@ describe("AEMCompleteUpload", () => {
                 transferItem: transferAsset
             }]);
         });
+        it("do not request csrf", async () => {
+            const transferAsset = createTransferAsset();
+            let isCalled = false;
+            const spy = () => {
+                isCalled = true;
+                console.log('it is called');
+                
+                return '{ "token": "test-csrf-token" }';
+            };
+    
+            nock('http://host')
+                .post(
+                    "/path/to.completeUpload.json", 
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token"
+                )
+                .reply(200, '{}', {
+                    "content-type": "application/json"
+                });
+
+            nock('http://host')
+                .get('/libs/granite/csrf/token.json')
+                .reply(200, spy);
+    
+            const controller = new ControllerMock();
+            const completeUpload = new AEMCompleteUpload({
+                retryEnabled: false
+            });
+
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
+                assert.deepStrictEqual(asset, transferAsset);
+            }
+
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
+            }, {
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
+            }]);
+            
+            assert.ok(!isCalled);
+            assert.strictEqual(nock.pendingMocks().length, 1);
+            assert.strictEqual(nock.pendingMocks()[0], 'GET http://host:80/libs/granite/csrf/token.json');
+            nock.cleanAll();
+        });
     });
     describe("error", () => {
         it("http error", async () => {
@@ -344,6 +393,58 @@ describe("AEMCompleteUpload", () => {
                 error: "POST 'http://host/path/to.completeUpload.json' failed with status 403",
                 transferItem: transferAsset
             }]);
+        });
+    });
+    describe("browser", () => {
+        before(() => {
+            global.window = { document: {} };
+        });
+        after(() => {
+            delete global.window;
+        });
+        it("request csrf", async () => {
+            const transferAsset = createTransferAsset();
+            let isCalled = false;
+            const spy = () => {
+                isCalled = true;
+                return '{ "token": "test-csrf-token" }';
+            };
+    
+            nock('http://host')
+                .post(
+                    "/path/to.completeUpload.json", 
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token"
+                )
+                .reply(200, '{}', {
+                    "content-type": "application/json"
+                });
+
+            nock('http://host')
+                .get('/libs/granite/csrf/token.json')
+                .reply(200, spy);
+    
+            const controller = new ControllerMock();
+            const completeUpload = new AEMCompleteUpload({
+                retryEnabled: false
+            });
+
+            for await (const asset of completeUpload.execute([ transferAsset ], controller)) {
+                assert.deepStrictEqual(asset, transferAsset);
+            }
+
+            assert.deepStrictEqual(controller.notifications, [{
+                eventName: "AEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
+            }, {
+                eventName: "AfterAEMCompleteUpload",
+                functionName: "AEMCompleteUpload",
+                props: undefined,
+                transferItem: transferAsset
+            }]);
+            
+            assert.ok(isCalled);
         });
     });
 });
