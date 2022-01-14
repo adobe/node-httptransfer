@@ -22,7 +22,7 @@
     "drange": "^2.0.1",
     "file-url": "2.0.2",
     "filter-obj": "^2.0.2",
-    "mime-type": "^4.0.0",
+    "mime-types": "^2.1.34",
     "node-fetch-npm": "^2.0.4",
     "valid-url": "^1.0.9"
   },
