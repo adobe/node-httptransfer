@@ -534,7 +534,7 @@ describe('download concurrently', function () {
             },
         })
             .get('/path/to/file.ext')
-            .reply(200, 'h', {
+            .reply(200, 'c', {
                 'content-type': 'text/plain',
                 'content-length': 1
             });
@@ -552,7 +552,7 @@ describe('download concurrently', function () {
             },
         })
             .get('/path/to/file.ext')
-            .reply(200, 'e', {
+            .reply(200, 'a', {
                 'content-type': 'text/plain',
                 'content-length': 1
             });
@@ -562,41 +562,77 @@ describe('download concurrently', function () {
             },
         })
             .get('/path/to/file.ext')
-            .reply(200, 'l', {
-                'content-type': 'text/plain',
-                'content-length': 1
-            });
-        nock('http://test-status-503', {
-            reqheaders: {
-                'range': 'bytes=3-3'
-            },
-        })
-            .get('/path/to/file.ext')
-            .reply(200, 'l', {
-                'content-type': 'text/plain',
-                'content-length': 1
-            });
-        nock('http://test-status-503', {
-            reqheaders: {
-                'range': 'bytes=4-4'
-            },
-        })
-            .get('/path/to/file.ext')
-            .reply(200, 'o', {
+            .reply(200, 't', {
                 'content-type': 'text/plain',
                 'content-length': 1
             });
 
         await downloadFileConcurrently('http://test-status-503/path/to/file.ext', path.resolve('./test-transfer-file-status-503-retry.dat'),{
             contentType: 'text/plain',
-            fileSize: 5,
+            fileSize: 3,
             preferredPartSize: 1
         });
         const result = await fs.readFile(path.resolve('./test-transfer-file-status-503-retry.dat'), 'utf8');
-        assert.strictEqual(result, 'hello');
+        assert.strictEqual(result, 'cat');
 
         try {
             await fs.unlink(path.resolve('./test-transfer-file-status-503-retry.dat'));
+        } catch (e) {
+            console.log(e);
+        }
+    }).timeout(10000);
+    it('status-etimedout-one-chunk-fails', async function () {
+        nock('http://test-status-etimedout', {
+            reqheaders: {
+                'range': 'bytes=0-0'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(200, 'c', {
+                'content-type': 'text/plain',
+                'content-length': 1
+            });
+        // `e` fails at first with etimedout
+        nock('http://test-status-etimedout', {
+            reqheaders: {
+                'range': 'bytes=1-1'
+            },
+        })
+            .get('/path/to/file.ext')
+            .replyWithError({
+                code: 'ETIMEDOUT'
+            });
+        nock('http://test-status-etimedout', {
+            reqheaders: {
+                'range': 'bytes=1-1'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(200, 'a', {
+                'content-type': 'text/plain',
+                'content-length': 1
+            });
+        nock('http://test-status-etimedout', {
+            reqheaders: {
+                'range': 'bytes=2-2'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(200, 't', {
+                'content-type': 'text/plain',
+                'content-length': 1
+            });
+
+        await downloadFileConcurrently('http://test-status-etimedout/path/to/file.ext', path.resolve('./test-transfer-file-status-etimedout-retry.dat'),{
+            contentType: 'text/plain',
+            fileSize: 3,
+            preferredPartSize: 1
+        });
+        const result = await fs.readFile(path.resolve('./test-transfer-file-status-etimedout-retry.dat'), 'utf8');
+        assert.strictEqual(result, 'cat');
+
+        try {
+            await fs.unlink(path.resolve('./test-transfer-file-status-etimedout-retry.dat'));
         } catch (e) {
             console.log(e);
         }
