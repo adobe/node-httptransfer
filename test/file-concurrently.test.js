@@ -538,7 +538,7 @@ describe('download concurrently', function () {
                 'content-type': 'text/plain',
                 'content-length': 1
             });
-        // `e` fails at first with 503
+        // `a` fails at first with 503
         nock('http://test-status-503', {
             reqheaders: {
                 'range': 'bytes=1-1'
@@ -580,7 +580,7 @@ describe('download concurrently', function () {
         } catch (e) {
             console.log(e);
         }
-    }).timeout(10000);
+    });
     it('status-etimedout-one-chunk-fails', async function () {
         nock('http://test-status-etimedout', {
             reqheaders: {
@@ -592,7 +592,7 @@ describe('download concurrently', function () {
                 'content-type': 'text/plain',
                 'content-length': 1
             });
-        // `e` fails at first with etimedout
+        // `a` fails at first with etimedout
         nock('http://test-status-etimedout', {
             reqheaders: {
                 'range': 'bytes=1-1'
@@ -636,7 +636,7 @@ describe('download concurrently', function () {
         } catch (e) {
             console.log(e);
         }
-    }).timeout(10000);
+    });
 
     it('timeout-retry', async function () {
         nock('http://test-status-timeout')
