@@ -83,6 +83,79 @@ describe('download concurrently', function () {
             console.log(e);
         }
     });
+    it('status-200-multiple-chunks', async function () {
+        nock('http://test-status-200')
+            .get('/path/to/file.ext')
+            .reply(200, 'hello w', {
+                'content-type': 'image/jpeg',
+                'content-length': 7
+            });
+        nock('http://test-status-200')
+            .get('/path/to/file.ext')
+            .reply(200, 'orld', {
+                'content-type': 'image/jpeg',
+                'content-length': 4
+            });
+
+        await downloadFileConcurrently('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file-status-200.dat'), {
+            contentType: 'image/jpeg',
+            fileSize: 11,
+            preferredPartSize: 7
+        });
+        const result = await fs.readFile(path.resolve('./test-transfer-file-status-200.dat'), 'utf8');
+        assert.strictEqual(result, 'hello world');
+
+        try {
+            await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
+        } catch (e) {
+            console.log(e);
+        }
+    });
+    it('status-200-many-chunks', async function () {
+        nock('http://test-status-200')
+            .get('/path/to/file.ext')
+            .reply(200, 'h', {
+                'content-type': 'image/jpeg',
+                'content-length': 1
+            });
+        nock('http://test-status-200')
+            .get('/path/to/file.ext')
+            .reply(200, 'e', {
+                'content-type': 'image/jpeg',
+                'content-length': 1
+            });
+        nock('http://test-status-200')
+            .get('/path/to/file.ext')
+            .reply(200, 'l', {
+                'content-type': 'image/jpeg',
+                'content-length': 1
+            });
+        nock('http://test-status-200')
+            .get('/path/to/file.ext')
+            .reply(200, 'l', {
+                'content-type': 'image/jpeg',
+                'content-length': 1
+            });
+        nock('http://test-status-200')
+            .get('/path/to/file.ext')
+            .reply(200, 'o', {
+                'content-type': 'image/jpeg',
+                'content-length': 1
+            });
+        await downloadFileConcurrently('http://test-status-200/path/to/file.ext', path.resolve('./test-transfer-file-status-200.dat'), {
+            contentType: 'image/jpeg',
+            fileSize: 5,
+            preferredPartSize: 1
+        });
+        const result = await fs.readFile(path.resolve('./test-transfer-file-status-200.dat'), 'utf8');
+        assert.strictEqual(result, 'hello');
+
+        try {
+            await fs.unlink(path.resolve('./test-transfer-file-status-200.dat'));
+        } catch (e) {
+            console.log(e);
+        }
+    });
 
     it('status-200-no-head-req (repeated)', async function () {
         for (let i = 0; i < 3; i++) {
@@ -447,6 +520,80 @@ describe('download concurrently', function () {
         await downloadFileConcurrently('http://test-status-503/path/to/file.ext', path.resolve('./test-transfer-file-status-503-retry.dat'));
         const result = await fs.readFile(path.resolve('./test-transfer-file-status-503-retry.dat'), 'utf8');
         assert.strictEqual(result, 'hello world');
+
+        try {
+            await fs.unlink(path.resolve('./test-transfer-file-status-503-retry.dat'));
+        } catch (e) {
+            console.log(e);
+        }
+    }).timeout(10000);
+    it('status-503-one-chunk-fails', async function () {
+        nock('http://test-status-503', {
+            reqheaders: {
+                'range': 'bytes=0-0'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(200, 'h', {
+                'content-type': 'text/plain',
+                'content-length': 1
+            });
+        // `e` fails at first with 503
+        nock('http://test-status-503', {
+            reqheaders: {
+                'range': 'bytes=1-1'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(503);
+        nock('http://test-status-503', {
+            reqheaders: {
+                'range': 'bytes=1-1'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(200, 'e', {
+                'content-type': 'text/plain',
+                'content-length': 1
+            });
+        nock('http://test-status-503', {
+            reqheaders: {
+                'range': 'bytes=2-2'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(200, 'l', {
+                'content-type': 'text/plain',
+                'content-length': 1
+            });
+        nock('http://test-status-503', {
+            reqheaders: {
+                'range': 'bytes=3-3'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(200, 'l', {
+                'content-type': 'text/plain',
+                'content-length': 1
+            });
+        nock('http://test-status-503', {
+            reqheaders: {
+                'range': 'bytes=4-4'
+            },
+        })
+            .get('/path/to/file.ext')
+            .reply(200, 'o', {
+                'content-type': 'text/plain',
+                'content-length': 1
+            });
+
+        await downloadFileConcurrently('http://test-status-503/path/to/file.ext', path.resolve('./test-transfer-file-status-503-retry.dat'),{
+            contentType: 'text/plain',
+            fileSize: 5,
+            preferredPartSize: 1
+        });
+        const result = await fs.readFile(path.resolve('./test-transfer-file-status-503-retry.dat'), 'utf8');
+        assert.strictEqual(result, 'hello');
 
         try {
             await fs.unlink(path.resolve('./test-transfer-file-status-503-retry.dat'));
