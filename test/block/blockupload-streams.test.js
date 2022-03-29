@@ -552,6 +552,7 @@ describe.only('Block Upload (stream based)', function () {
         })
             .put('/path/to/file-1-1.jpg', 'hello worl')
             .reply(201);
+
         nock(HOST, {
             reqheaders: {
                 'content-length': 5,
