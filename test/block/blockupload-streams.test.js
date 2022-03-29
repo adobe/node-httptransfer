@@ -23,7 +23,7 @@ const { BlockUpload } = require('../../lib/block/blockupload');
 const debug = require('debug');
 debug.enable('httptransfer*');
 
-describe.only('Block Upload (stream based)', function () {
+describe('Block Upload (stream based)', function () {
     beforeEach(async function () {
         process.env.USE_STREAM = true;
     });
