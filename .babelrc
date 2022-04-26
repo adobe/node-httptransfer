@@ -5,7 +5,7 @@
         "node": "6.10.3"
       },
       "useBuiltIns": "entry",
-      "corejs": "3",
+      "corejs": "3.7.0",
       "modules": false
     }]
   ],
