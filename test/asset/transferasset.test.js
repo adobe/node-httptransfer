@@ -462,4 +462,15 @@ describe("TransferAsset", function() {
             });
         });
     });
+
+    describe("Duration", function () {
+        it("test duration accessors", function () {
+            const source = new Asset("file:///C:/path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+            const transferAsset = new TransferAsset(source, target);
+            assert.strictEqual(transferAsset.uploadDuration, 0);
+            transferAsset.setUploadDuration(100);
+            assert.strictEqual(transferAsset.uploadDuration, 100);
+        });
+    });
 });

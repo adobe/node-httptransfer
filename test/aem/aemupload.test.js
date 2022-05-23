@@ -63,7 +63,22 @@ describe('AEM Upload', function() {
             .reply(201);
 
         nock(HOST)
-            .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=image%2Fjpeg&createVersion=true&versionLabel=versionLabel&versionComment=versionComment&replace=false&uploadToken=upload-token')
+            .post('/path/to.completeUpload.json', (body) => {
+                const {
+                    fileName,
+                    fileSize,
+                    mimeType,
+                    createVersion,
+                    versionLabel,
+                    versionComment,
+                    replace,
+                    uploadToken,
+                    uploadDuration
+                } = body;
+                return fileName === "file-1.jpg" && fileSize === "15" && mimeType === "image/jpeg" &&
+                    createVersion === "true" && versionLabel === "versionLabel" && versionComment === "versionComment" &&
+                    replace === "false" && uploadToken === "upload-token" && uploadDuration;
+            })
             .reply(200, '{}');
 
         const aemUpload = new AEMUpload();
@@ -232,7 +247,20 @@ describe('AEM Upload', function() {
             .reply(201);
 
         nock(HOST)
-            .post('/path/to.completeUpload.json', 'fileName=file-1.jpg&fileSize=15&mimeType=image%2Fjpeg&createVersion=false&replace=false&uploadToken=upload-token')
+            .post('/path/to.completeUpload.json', (body) => {
+                const {
+                    fileName,
+                    fileSize,
+                    mimeType,
+                    createVersion,
+                    replace,
+                    uploadToken,
+                    uploadDuration
+                } = body;
+                return fileName === "file-1.jpg" && fileSize === "15" && mimeType === "image/jpeg" &&
+                    createVersion === "false" && replace === "false" && uploadToken === "upload-token" &&
+                    uploadDuration;
+            })
             .reply(200, '{}');
 
         const aemUpload = new AEMUpload();
