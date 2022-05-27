@@ -998,8 +998,8 @@ describe('Block Upload', function () {
         assert(events.fileend.length, 4);
     });
 
-    it('Block upload smoke test (multiple urls, repeated uploads)', async function () {
-        for (let i = 0; i < 3; i++) {
+    it.only('Block upload smoke test (multiple urls, repeated uploads)', async function () {
+        for (let i = 0; i < 1; i++) {
             const HOST = 'http://test-aem-upload-201';
             const testFile = Path.join(__dirname, 'file-1-1.jpg');
             await fs.writeFile(testFile, 'hello world 123', 'utf8');
