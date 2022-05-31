@@ -998,7 +998,7 @@ describe('Block Upload', function () {
         assert(events.fileend.length, 4);
     });
 
-    it.only('Block upload smoke test (multiple urls, repeated uploads)', async function () {
+    it('Block upload smoke test (multiple urls, repeated uploads)', async function () {
         for (let i = 0; i < 1; i++) {
             const HOST = 'http://test-aem-upload-201';
             const testFile = Path.join(__dirname, 'file-1-1.jpg');

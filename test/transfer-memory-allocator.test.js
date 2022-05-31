@@ -14,7 +14,12 @@
 
 'use strict';
 
-describe('', function () {
-    it('instantiate', async function() {
+const assert = require('assert');
+const { TransferMemoryBuffer } = require('../lib/transfer-memory-allocator');
+
+describe.only('transfer-memory-allocator', function () {
+    it('can create memory allocator', async function() {
+        const memoryAllocator = new TransferMemoryBuffer();
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
     });
 });
