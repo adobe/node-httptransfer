@@ -96,8 +96,8 @@ describe('transfer-memory-allocator', function () {
         assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
     });
 
-    it.only('can allocate two blocks of memory from the buffer pool', async function() {
-        const suggestedSize = 100; // 1Kb
+    it('can allocate two blocks of memory from the buffer pool', async function() {
+        const suggestedSize = 100; // bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
         assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
@@ -128,5 +128,61 @@ describe('transfer-memory-allocator', function () {
         assert.strictEqual(anotherAllocatedMemoryBlock.size, secondBlockSize);
         assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, allocatedMemory.endIndex+1);
         assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex+secondBlockSize-1);
+    });
+
+    it.only('can allocate continuous blocks of memory from the buffer pool', async function() {
+        const suggestedSize = 100; // bytes
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+
+        // first memory block
+        const initialBlockSize = 2;
+        const allocatedMemory = memoryAllocator.obtainBuffer(initialBlockSize); 
+        assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
+        assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
+        assert.strictEqual(allocatedMemory.size, initialBlockSize);
+        assert.strictEqual(allocatedMemory.startIndex, 0);
+        assert.strictEqual(allocatedMemory.endIndex, allocatedMemory.startIndex+initialBlockSize-1);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 1);
+        assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
+
+        // second memory block
+        const secondBlockSize = 12;
+        let anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(secondBlockSize);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 2);
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, secondBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, allocatedMemory.endIndex+1);
+        assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex+secondBlockSize-1);
+
+        // other continuous memory blocks
+        let otherBlockSize = 5;
+        let previousAllocatedBlock = anotherAllocatedMemoryBlock;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, previousAllocatedBlock.endIndex+1);
+        assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex+otherBlockSize-1);
+
+        otherBlockSize = 3;
+        previousAllocatedBlock = anotherAllocatedMemoryBlock;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, previousAllocatedBlock.endIndex+1);
+        assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex+otherBlockSize-1);
+
+        otherBlockSize = 2;
+        previousAllocatedBlock = anotherAllocatedMemoryBlock;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, previousAllocatedBlock.endIndex+1);
+        assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex+otherBlockSize-1);
     });
 });
