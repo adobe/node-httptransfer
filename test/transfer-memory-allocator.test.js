@@ -17,7 +17,7 @@
 const assert = require('assert');
 const { TransferMemoryBuffer } = require('../lib/transfer-memory-allocator');
 
-describe.only('transfer-memory-allocator', function () {
+describe('transfer-memory-allocator', function () {
     it('can create memory allocator (buffer pool)', async function() {
         const memoryAllocator = new TransferMemoryBuffer();
         assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
@@ -26,5 +26,19 @@ describe.only('transfer-memory-allocator', function () {
         assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0, "After instantiation, allocated blocks length should be 0 but it isn't");
         assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
         assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+    });
+
+    it.only('can create memory allocator (buffer pool) using a suggested size of 1024 bytes', async function() {
+        const suggestedSize = 1024; // 1Kb
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined, "After instantiation, there should be no allocated block but there are");
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0, "After instantiation, allocated blocks length should be 0 but it isn't");
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
     });
 });
