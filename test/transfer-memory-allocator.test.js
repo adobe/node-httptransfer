@@ -96,8 +96,8 @@ describe('transfer-memory-allocator', function () {
         assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
     });
 
-    it.only('can allocate more than one block of memory from the buffer pool', async function() {
-        const suggestedSize = 1024; // 1Kb
+    it.only('can allocate two blocks of memory from the buffer pool', async function() {
+        const suggestedSize = 100; // 1Kb
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
         assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
@@ -109,17 +109,24 @@ describe('transfer-memory-allocator', function () {
         assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
 
         // first memory block
-        const initialBlockSize = 256;
+        const initialBlockSize = 2;
         const allocatedMemory = memoryAllocator.obtainBuffer(initialBlockSize); 
         assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
         assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
         assert.strictEqual(allocatedMemory.size, initialBlockSize);
         assert.strictEqual(allocatedMemory.startIndex, 0);
+        assert.strictEqual(allocatedMemory.endIndex, allocatedMemory.startIndex+initialBlockSize-1);
         assert.strictEqual(memoryAllocator.allocatedBlocks.length, 1);
         assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
         assert.ok(memoryAllocator.allocatedBlocks.head !== null);
         assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
 
-        // next memory blocks
+        // second memory block
+        const secondBlockSize = 12;
+        const anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(secondBlockSize);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 2);
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, secondBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, allocatedMemory.endIndex+1);
+        assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex+secondBlockSize-1);
     });
 });
