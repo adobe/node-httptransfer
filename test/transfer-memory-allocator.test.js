@@ -19,7 +19,7 @@ const { TransferMemoryBuffer } = require('../lib/transfer-memory-allocator');
 
 describe('transfer-memory-allocator', function () {
     it('can create memory allocator (buffer pool)', async function() {
-        const memoryAllocator = new TransferMemoryBuffer();
+        const memoryAllocator = new TransferMemoryBuffer(); // use default suggested Buffer size
         assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
 
         assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined, "After instantiation, there should be no allocated block but there are");
@@ -28,7 +28,7 @@ describe('transfer-memory-allocator', function () {
         assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
     });
 
-    it.only('can create memory allocator (buffer pool) using a suggested size of 1024 bytes', async function() {
+    it('can create memory allocator (buffer pool) using a suggested size of 1024 bytes', async function() {
         const suggestedSize = 1024; // 1Kb
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
@@ -40,5 +40,48 @@ describe('transfer-memory-allocator', function () {
         assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
 
         assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+    });
+
+    it('can allocate a first block of memory (256 bytes) from the buffer pool', async function() {
+        const suggestedSize = 1024; // 1Kb
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+
+        const initialBlockSize = 256;
+        const allocatedMemory = memoryAllocator.obtainBuffer(initialBlockSize); 
+        assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
+        assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
+        assert.strictEqual(allocatedMemory.size, initialBlockSize);
+        assert.strictEqual(allocatedMemory.startIndex, 0);
+    });
+
+    it.only('can allocate more than one block of memory from the buffer pool', async function() {
+        const suggestedSize = 1024; // 1Kb
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+
+        // first memory block
+        const initialBlockSize = 256;
+        const allocatedMemory = memoryAllocator.obtainBuffer(initialBlockSize); 
+        assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
+        assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
+        assert.strictEqual(allocatedMemory.size, initialBlockSize);
+        assert.strictEqual(allocatedMemory.startIndex, 0);
+
+        // next memory blocks
     });
 });
