@@ -80,7 +80,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=application%2Foctet-stream&createVersion=false&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=application%2Foctet-stream&createVersion=false&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
@@ -114,7 +114,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
@@ -148,7 +148,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=true&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=true&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
@@ -182,7 +182,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=true&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=true&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
@@ -216,7 +216,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=true&versionLabel=version-label&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=true&versionLabel=version-label&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
@@ -250,7 +250,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=true&versionComment=version-comment&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=true&versionComment=version-comment&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
@@ -284,7 +284,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=true&versionLabel=version-label&versionComment=version-comment&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=true&versionLabel=version-label&versionComment=version-comment&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
@@ -323,7 +323,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
@@ -367,7 +367,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(403);
     
@@ -413,7 +413,7 @@ describe("AEMCompleteUpload", () => {
             nock('http://host')
                 .post(
                     "/path/to.completeUpload.json", 
-                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token"
+                    "fileName=target.png&fileSize=1234&mimeType=image%2Fpng&createVersion=false&replace=false&uploadToken=upload-token&uploadDuration=0"
                 )
                 .reply(200, '{}', {
                     "content-type": "application/json"
