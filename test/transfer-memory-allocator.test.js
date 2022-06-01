@@ -17,7 +17,7 @@
 const assert = require('assert');
 const { TransferMemoryBuffer } = require('../lib/transfer-memory-allocator');
 
-describe.only('transfer-memory-allocator', function () {
+describe('transfer-memory-allocator (sync)', function () {
     it('can create memory allocator (buffer pool)', async function () {
         const memoryAllocator = new TransferMemoryBuffer(); // use default suggested Buffer size
         assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
@@ -813,7 +813,9 @@ describe.only('transfer-memory-allocator', function () {
         assert.strictEqual(block5.startIndex, -1);
         assert.strictEqual(block5.buffer, null);
     });
+});
 
+describe('transfer-memory-allocator (async)', function () {
     it.only('can allocate a first block of memory from the buffer pool, and wait for enough memory to be free to allocate another', async function () {
         const suggestedSize = 10; // 1Kb
 
@@ -838,23 +840,40 @@ describe.only('transfer-memory-allocator', function () {
         assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
 
 
+        // next block is too large to fit in buffer pool memory blocks with current usage
+        // so this will return an allocation promise
         const largerBlockSize = 9;
         const memoryAllocationPromise = memoryAllocator.obtainBuffer(largerBlockSize);
 
+        let expectedMemoryState = [
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 1
+            }
+        ];
+        let expectedWaitingAllocations = [{ requestedSize: 9 }];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedWaitingAllocations);
+
+        // release previously used allocated memory, so the `memoryAllocationPromise` can
+        // resolve, since there is enough memory for the allocation to happen
         memoryAllocator.releaseBuffer(allocatedMemory);
-        // assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
-        // assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
-        // assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
-        // assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
-
-        console.log("~~~~~~~~~~~~~~~ Memory state (last):")
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
-        console.log("~~~~~~~~~~~~~~~ Waiting allocations (last):")
-        console.log(memoryAllocator.dumpWaitingAllocations());
-
         const allocationPromiseResult = await memoryAllocationPromise;
-        console.log("========")
-        console.log(allocationPromiseResult)
-        console.log("========")
+        assert.strictEqual(allocationPromiseResult.size, 9);
+        assert.strictEqual(allocationPromiseResult.startIndex, 0);
+        assert.strictEqual(allocationPromiseResult.endIndex, 8);
+        assert.ok(allocationPromiseResult.buffer !== undefined && allocationPromiseResult.buffer !== null);
+
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 9,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 8
+            }
+        ];
+        expectedWaitingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedWaitingAllocations);
     });
 });
