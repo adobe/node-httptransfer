@@ -462,4 +462,22 @@ describe("TransferAsset", function() {
             });
         });
     });
+
+    describe("Accessors", function () {
+        it("test transfer start, end, and duration", function () {
+            const source = new Asset("file:///C:/path/to/source.png");
+            const target = new Asset("http://host/path/to/target.png");
+            const transferAsset = new TransferAsset(source, target);
+            assert.strictEqual(transferAsset.transferStartTime, 0);
+            assert.strictEqual(transferAsset.uploadDuration, 0);
+            transferAsset.transferStartTime = 100;
+            assert.strictEqual(transferAsset.transferStartTime, 100);
+            assert.strictEqual(transferAsset.uploadDuration, 0);
+            transferAsset.transferEndTime = 250;
+            assert.strictEqual(transferAsset.transferEndTime, 250);
+            assert.strictEqual(transferAsset.uploadDuration, 150);
+            transferAsset.transferStartTime = 0;
+            assert.strictEqual(transferAsset.uploadDuration, 0);
+        });
+    });
 });
