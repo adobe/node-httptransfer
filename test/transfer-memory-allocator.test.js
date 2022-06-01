@@ -447,4 +447,370 @@ describe.only('transfer-memory-allocator', function () {
         ];
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
     });
+
+    it.only('can release all memory allocated from the buffer pool back to the buffer pool', async function () {
+        const suggestedSize = 100; // bytes
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+
+        // first memory block
+        const initialBlockSize = 2;
+        const allocatedMemory = memoryAllocator.obtainBuffer(initialBlockSize);
+        const block1 = allocatedMemory;
+        assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
+        assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
+        assert.strictEqual(allocatedMemory.size, initialBlockSize);
+        assert.strictEqual(allocatedMemory.startIndex, 0);
+        assert.strictEqual(allocatedMemory.endIndex, allocatedMemory.startIndex + initialBlockSize - 1);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 1);
+        assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
+
+        const secondBlockSize = 12;
+        let anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(secondBlockSize);
+        const block2 = anotherAllocatedMemoryBlock;
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 2);
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, secondBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, allocatedMemory.endIndex + 1);
+        assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex + secondBlockSize - 1);
+
+        let otherBlockSize = 5;
+        let previousAllocatedBlock = anotherAllocatedMemoryBlock;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        // we'll use this block to release it later and create a "hole" in the contiguous used memory blocks
+
+        const block3 = anotherAllocatedMemoryBlock;
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, previousAllocatedBlock.endIndex + 1);
+        assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex + otherBlockSize - 1);
+
+        otherBlockSize = 4;
+        previousAllocatedBlock = anotherAllocatedMemoryBlock;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        const block4 = anotherAllocatedMemoryBlock;
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(anotherAllocatedMemoryBlock.startIndex, previousAllocatedBlock.endIndex + 1);
+        assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex + otherBlockSize - 1);
+
+        // release block of size 5 to create a "hole" in allocated buffer blocks
+        memoryAllocator.releaseBuffer(block3);
+        assert.strictEqual(block3.size, 0);
+        assert.strictEqual(block3.startIndex, -1);
+        assert.strictEqual(block3.buffer, null);
+        const usedSize = initialBlockSize + secondBlockSize + otherBlockSize;
+        assert.strictEqual(memoryAllocator.availablePoolSize, (suggestedSize - usedSize));
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 3);
+        assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head !== memoryAllocator.allocatedBlocks.tail);
+
+        // allocated a new memory block of size 1, which should fit in the "hole" left by memory which was just released
+        otherBlockSize = 1;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        const block5 = anotherAllocatedMemoryBlock;
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 4);
+        let expectedMemoryStructure = [
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 1
+            },
+            {
+                memoryBlockSize: 12,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 13
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 4,
+                memoryBlockStartIndex: 19,
+                memoryBlockEndIndex: 22
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        otherBlockSize = 3;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        const block6 = anotherAllocatedMemoryBlock;
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 5);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 1
+            },
+            {
+                memoryBlockSize: 12,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 13
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 15,
+                memoryBlockEndIndex: 17
+            },
+            {
+                memoryBlockSize: 4,
+                memoryBlockStartIndex: 19,
+                memoryBlockEndIndex: 22
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        otherBlockSize = 3;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        const block7 = anotherAllocatedMemoryBlock;
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 6);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 1
+            },
+            {
+                memoryBlockSize: 12,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 13
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 15,
+                memoryBlockEndIndex: 17
+            },
+            {
+                memoryBlockSize: 4,
+                memoryBlockStartIndex: 19,
+                memoryBlockEndIndex: 22
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 23,
+                memoryBlockEndIndex: 25
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        otherBlockSize = 17;
+        anotherAllocatedMemoryBlock = memoryAllocator.obtainBuffer(otherBlockSize);
+        const block8 = anotherAllocatedMemoryBlock;
+        assert.strictEqual(anotherAllocatedMemoryBlock.size, otherBlockSize);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 7);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 1
+            },
+            {
+                memoryBlockSize: 12,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 13
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 15,
+                memoryBlockEndIndex: 17
+            },
+            {
+                memoryBlockSize: 4,
+                memoryBlockStartIndex: 19,
+                memoryBlockEndIndex: 22
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 23,
+                memoryBlockEndIndex: 25
+            },
+            {
+                memoryBlockSize: 17,
+                memoryBlockStartIndex: 26,
+                memoryBlockEndIndex: 42
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        memoryAllocator.releaseBuffer(block1);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 12,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 13
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 15,
+                memoryBlockEndIndex: 17
+            },
+            {
+                memoryBlockSize: 4,
+                memoryBlockStartIndex: 19,
+                memoryBlockEndIndex: 22
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 23,
+                memoryBlockEndIndex: 25
+            },
+            {
+                memoryBlockSize: 17,
+                memoryBlockStartIndex: 26,
+                memoryBlockEndIndex: 42
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+        assert.strictEqual(block1.size, 0);
+        assert.strictEqual(block1.startIndex, -1);
+        assert.strictEqual(block1.buffer, null);
+
+        memoryAllocator.releaseBuffer(block4);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 12,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 13
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 15,
+                memoryBlockEndIndex: 17
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 23,
+                memoryBlockEndIndex: 25
+            },
+            {
+                memoryBlockSize: 17,
+                memoryBlockStartIndex: 26,
+                memoryBlockEndIndex: 42
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+        memoryAllocator.releaseBuffer(block4);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+        memoryAllocator.releaseBuffer(block4);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        memoryAllocator.releaseBuffer(block8);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 12,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 13
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 15,
+                memoryBlockEndIndex: 17
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 23,
+                memoryBlockEndIndex: 25
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        memoryAllocator.releaseBuffer(block2);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 15,
+                memoryBlockEndIndex: 17
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 23,
+                memoryBlockEndIndex: 25
+            }
+        ]
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        memoryAllocator.releaseBuffer(block6);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 23,
+                memoryBlockEndIndex: 25
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        memoryAllocator.releaseBuffer(block7);
+        expectedMemoryStructure = [
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 14,
+                memoryBlockEndIndex: 14
+            }
+        ];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
+
+        memoryAllocator.releaseBuffer(block5);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), []);
+        assert.strictEqual(block5.size, 0);
+        assert.strictEqual(block5.startIndex, -1);
+        assert.strictEqual(block5.buffer, null);
+
+        memoryAllocator.releaseBuffer(block5);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), []);
+        assert.strictEqual(block5.size, 0);
+        assert.strictEqual(block5.startIndex, -1);
+        assert.strictEqual(block5.buffer, null);
+    });
 });
