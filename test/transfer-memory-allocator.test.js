@@ -840,7 +840,7 @@ describe('transfer-memory-allocator (async)', function () {
         assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
 
         const largerBlockSize = 9;
-        process.nextTick(() => { 
+        process.nextTick(() => {
             const expectedMemoryState = [
                 {
                     memoryBlockSize: 2,
@@ -852,7 +852,7 @@ describe('transfer-memory-allocator (async)', function () {
             assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
             assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedWaitingAllocations);
 
-            memoryAllocator.releaseBuffer(allocatedMemory); 
+            memoryAllocator.releaseBuffer(allocatedMemory);
         });
 
         const allocationResult = await memoryAllocator.obtainBuffer(largerBlockSize);
@@ -956,7 +956,7 @@ describe('transfer-memory-allocator (async)', function () {
         assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
 
         const largerBlockSize = 9;
-        process.nextTick(() => { 
+        process.nextTick(() => {
             const expectedMemoryState = [
                 {
                     memoryBlockSize: 2,
@@ -968,7 +968,7 @@ describe('transfer-memory-allocator (async)', function () {
             assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
             assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedWaitingAllocations);
 
-            memoryAllocator.releaseBuffer(allocatedMemory); 
+            memoryAllocator.releaseBuffer(allocatedMemory);
         });
 
         const allocationResult = await memoryAllocator.obtainBuffer(largerBlockSize);
@@ -987,10 +987,272 @@ describe('transfer-memory-allocator (async)', function () {
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedResultingMemoryState);
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedResultingWaitingAllocations);
 
-        memoryAllocator.releaseBuffer(allocationResult); 
+        memoryAllocator.releaseBuffer(allocationResult);
         expectedResultingMemoryState = [];
         expectedResultingWaitingAllocations = [];
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedResultingMemoryState);
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedResultingWaitingAllocations);
+    });
+
+    it('gets allocated memory blocks from buffer pool, and releases it later, with multiple releases having no effect', async function () {
+        const suggestedSize = 10; // 10 bytes
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+
+        const initialBlockSize = 2;
+        const allocatedMemory = await memoryAllocator.obtainBuffer(initialBlockSize);
+        assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
+        assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
+        assert.strictEqual(allocatedMemory.size, initialBlockSize);
+        assert.strictEqual(allocatedMemory.startIndex, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 1);
+        assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
+
+        const largerBlockSize = 9;
+        process.nextTick(() => {
+            const expectedMemoryState = [
+                {
+                    memoryBlockSize: 2,
+                    memoryBlockStartIndex: 0,
+                    memoryBlockEndIndex: 1
+                }
+            ];
+            const expectedWaitingAllocations = [{ requestedSize: 9 }];
+            assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+            assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedWaitingAllocations);
+
+            memoryAllocator.releaseBuffer(allocatedMemory);
+        });
+
+        process.nextTick(() => {
+            memoryAllocator.releaseBuffer(allocatedMemory);
+        });
+        process.nextTick(() => {
+            memoryAllocator.releaseBuffer(allocatedMemory);
+        });
+        process.nextTick(() => {
+            memoryAllocator.releaseBuffer(allocatedMemory);
+        });
+
+        const allocationResult = await memoryAllocator.obtainBuffer(largerBlockSize);
+        assert.strictEqual(allocationResult.size, 9);
+        assert.strictEqual(allocationResult.startIndex, 0);
+        assert.strictEqual(allocationResult.endIndex, 8);
+        assert.ok(allocationResult.buffer !== undefined && allocationResult.buffer !== null);
+        let expectedResultingMemoryState = [
+            {
+                memoryBlockSize: 9,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 8
+            }
+        ];
+        let expectedResultingWaitingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedResultingMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedResultingWaitingAllocations);
+
+        memoryAllocator.releaseBuffer(allocationResult);
+        expectedResultingMemoryState = [];
+        expectedResultingWaitingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedResultingMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedResultingWaitingAllocations);
+
+        memoryAllocator.releaseBuffer(allocationResult);
+        expectedResultingMemoryState = [];
+        expectedResultingWaitingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedResultingMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedResultingWaitingAllocations);
+
+        memoryAllocator.releaseBuffer(allocationResult);
+        expectedResultingMemoryState = [];
+        expectedResultingWaitingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedResultingMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedResultingWaitingAllocations);
+    });
+
+    it('gets allocated memory blocks from buffer pool when possible, waits otherwise', async function () {
+        const suggestedSize = 10; // 10 bytes
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+
+        const initialBlockSize = 4;
+        const allocatedMemory = await memoryAllocator.obtainBuffer(initialBlockSize);
+        assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
+        assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
+        assert.strictEqual(allocatedMemory.size, initialBlockSize);
+        assert.strictEqual(allocatedMemory.startIndex, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 1);
+        assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
+
+        const largerBlockSize = 7;
+        process.nextTick(() => {
+            memoryAllocator.releaseBuffer(allocatedMemory);
+        });
+        await memoryAllocator.obtainBuffer(largerBlockSize);
+        let expectedMemoryState = [
+            {
+                memoryBlockSize: 7,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 6
+            }
+        ];
+        let expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
+
+        let anotherBlockSize = 2;
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 7,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 6
+            },
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 7,
+                memoryBlockEndIndex: 8
+            }
+        ];
+        await memoryAllocator.obtainBuffer(anotherBlockSize);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
+
+
+        anotherBlockSize = 1;
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 7,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 6
+            },
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 7,
+                memoryBlockEndIndex: 8
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 9,
+                memoryBlockEndIndex: 9
+            }
+        ];
+        await memoryAllocator.obtainBuffer(anotherBlockSize);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
+    });
+
+    it.only('gets allocated memory blocks from buffer pool when possible, waits otherwise', async function () {
+        const suggestedSize = 10; // 10 bytes
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+
+        const initialBlockSize = 4;
+        const allocatedMemory = await memoryAllocator.obtainBuffer(initialBlockSize);
+        assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
+        assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
+        assert.strictEqual(allocatedMemory.size, initialBlockSize);
+        assert.strictEqual(allocatedMemory.startIndex, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 1);
+        assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
+
+        const largerBlockSize = 7;
+        process.nextTick(() => {
+            memoryAllocator.releaseBuffer(allocatedMemory);
+        });
+        const allocationResult = await memoryAllocator.obtainBuffer(largerBlockSize);
+        let expectedMemoryState = [
+            {
+                memoryBlockSize: 7,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 6
+            }
+        ];
+        let expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
+
+        let anotherBlockSize = 2;
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 7,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 6
+            },
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 7,
+                memoryBlockEndIndex: 8
+            }
+        ];
+        const anotherAllocatedMemoryBlock = await memoryAllocator.obtainBuffer(anotherBlockSize);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
+
+
+        anotherBlockSize = 1;
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 7,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 6
+            },
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 7,
+                memoryBlockEndIndex: 8
+            },
+            {
+                memoryBlockSize: 1,
+                memoryBlockStartIndex: 9,
+                memoryBlockEndIndex: 9
+            }
+        ];
+        const anotherAllocatedMemoryBlock2 = await memoryAllocator.obtainBuffer(anotherBlockSize);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
+
+        anotherBlockSize = 5;
+        expectedPendingAllocations = [];
+        const anotherAllocatedMemoryBlock3 = await memoryAllocator.obtainBuffer(anotherBlockSize);
+        console.log(memoryAllocator.dumpWaitingAllocations());
+        assert.fail();
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
+
+        anotherBlockSize = 4;
+        const anotherAllocatedMemoryBlock4 = await memoryAllocator.obtainBuffer(anotherBlockSize);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
+
+        anotherBlockSize = 1;
+        const anotherAllocatedMemoryBlock5 = await memoryAllocator.obtainBuffer(anotherBlockSize);
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
 });
