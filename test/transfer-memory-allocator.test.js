@@ -448,7 +448,7 @@ describe.only('transfer-memory-allocator', function () {
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
     });
 
-    it.only('can release all memory allocated from the buffer pool back to the buffer pool', async function () {
+    it('can release all memory allocated from the buffer pool back to the buffer pool', async function () {
         const suggestedSize = 100; // bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
@@ -773,7 +773,7 @@ describe.only('transfer-memory-allocator', function () {
                 memoryBlockStartIndex: 23,
                 memoryBlockEndIndex: 25
             }
-        ]
+        ];
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryStructure);
 
         memoryAllocator.releaseBuffer(block6);
