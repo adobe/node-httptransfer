@@ -817,7 +817,7 @@ describe('transfer-memory-allocator (sync)', function () {
 
 describe('transfer-memory-allocator (async)', function () {
     it.only('can allocate a first block of memory from the buffer pool, and wait for enough memory to be free to allocate another', async function () {
-        const suggestedSize = 10; // 1Kb
+        const suggestedSize = 10; // 10 bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
         assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
@@ -838,7 +838,6 @@ describe('transfer-memory-allocator (async)', function () {
         assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
         assert.ok(memoryAllocator.allocatedBlocks.head !== null);
         assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
-
 
         // next block is too large to fit in buffer pool memory blocks with current usage
         // so this will return an allocation promise
