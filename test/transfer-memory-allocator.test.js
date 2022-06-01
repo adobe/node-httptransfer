@@ -186,7 +186,7 @@ describe.only('transfer-memory-allocator', function () {
         assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex + otherBlockSize - 1);
     });
 
-    it('can allocate release a memory block anywhere from allocated memory blocks to the buffer pool', async function () {
+    it('can release a memory block anywhere from allocated memory blocks to the buffer pool', async function () {
         const suggestedSize = 100; // bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
