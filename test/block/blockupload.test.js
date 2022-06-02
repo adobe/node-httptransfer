@@ -781,7 +781,7 @@ describe('Block Upload', function () {
         }
     });
 
-    it.only('Block upload smoke test (multiple urls, multipart, 1 max concurrency)', async function () {
+    it('Block upload smoke test (multiple urls, multipart, 1 max concurrency)', async function () {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
@@ -875,7 +875,7 @@ describe('Block Upload', function () {
         });
     });
 
-    it('Block upload smoke test (multiple uploads, multiple urls, multipart, 1 max concurrency)', async function () {
+    it.only('Block upload smoke test (multiple uploads, multiple urls, multipart, 1 max concurrency)', async function () {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
