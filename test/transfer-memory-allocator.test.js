@@ -815,7 +815,7 @@ describe('transfer-memory-allocator (sync)', function () {
     });
 });
 
-describe.only('transfer-memory-allocator (async)', function () {
+describe('transfer-memory-allocator (async)', function () {
     it('canonical use to asynchronously get allocated memory blocks from buffer pool', async function () {
         const suggestedSize = 10; // 10 bytes
 
@@ -1362,31 +1362,67 @@ describe.only('transfer-memory-allocator (async)', function () {
         const allocatedMemoryBlock1 = await memoryAllocator.obtainBuffer(memoryBlockSize1);
 
         const memoryBlockSize2 = 6;
-        const allocatedMemoryBlock2 = await memoryAllocator.obtainBuffer(memoryBlockSize2);
+        await memoryAllocator.obtainBuffer(memoryBlockSize2);
 
         const memoryBlockSize3 = 2;
         const allocatedMemoryBlock3 = await memoryAllocator.obtainBuffer(memoryBlockSize3);
 
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
-
         memoryAllocator.releaseBuffer(allocatedMemoryBlock1);
         memoryAllocator.releaseBuffer(allocatedMemoryBlock3);
 
-        // TMN TODO - Write proper asserts
-        console.log('=========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+        let expectedMemoryState = [
+            {
+                memoryBlockSize: 6,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 7
+            }
+        ];
+        let expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
         const memoryBlockSize4 = 2;
-        const allocatedMemoryBlock4Task = await memoryAllocator.obtainBuffer(memoryBlockSize4);
+        await memoryAllocator.obtainBuffer(memoryBlockSize4);
 
-        console.log('=========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 6,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 7
+            },
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 8,
+                memoryBlockEndIndex: 9
+            }
+        ];
+        expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
         const memoryBlockSize5 = 2;
-        const allocatedMemoryBlock5Task = await memoryAllocator.obtainBuffer(memoryBlockSize5);
+        await memoryAllocator.obtainBuffer(memoryBlockSize5);
 
-        console.log('=========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 1
+            },
+            {
+                memoryBlockSize: 6,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 7
+            },
+            {
+                memoryBlockSize: 2,
+                memoryBlockStartIndex: 8,
+                memoryBlockEndIndex: 9
+            }
+        ];
+        expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
 
     it('can handle some fragmentation (fragmentation at low and end indices (head and tail))', async function () {
@@ -1413,26 +1449,44 @@ describe.only('transfer-memory-allocator (async)', function () {
         memoryAllocator.releaseBuffer(allocatedMemoryBlock1);
         memoryAllocator.releaseBuffer(allocatedMemoryBlock3);
 
-        // TMN TODO - Write proper asserts
-        console.log('= 1 ========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+        let expectedMemoryState = [
+            {
+                memoryBlockSize: 6,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 7
+            }
+        ];
+        let expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
         const memoryBlockSize4 = 3;
         const allocatedMemoryBlock4Task = memoryAllocator.obtainBuffer(memoryBlockSize4);
 
-        console.log('= 2 ========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
-        console.log(memoryAllocator.dumpWaitingAllocations());
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 6,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 7
+            }
+        ];
+        expectedPendingAllocations = [{ requestedSize: 3 }];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
-        console.log('=========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
-        console.log(memoryAllocator.dumpWaitingAllocations());
 
         memoryAllocator.releaseBuffer(allocatedMemoryBlock2);
 
-        console.log('=========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
-        console.log(memoryAllocator.dumpWaitingAllocations());
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 2
+            }
+        ];
+        expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
 
     it('can handle some fragmentation (fragmentation at low and end indices (head and tail)) with multiple waiting allocations', async function () {
@@ -1459,32 +1513,57 @@ describe.only('transfer-memory-allocator (async)', function () {
         memoryAllocator.releaseBuffer(allocatedMemoryBlock1);
         memoryAllocator.releaseBuffer(allocatedMemoryBlock3);
 
-        // TMN TODO - Write proper asserts
-        console.log('= 1 ========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+        let expectedMemoryState = [
+            {
+                memoryBlockSize: 6,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 7
+            }
+        ];
+        let expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
         const memoryBlockSize4 = 3;
         const allocatedMemoryBlock4Task = memoryAllocator.obtainBuffer(memoryBlockSize4);
 
-        console.log('= 2 ========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
-        console.log(memoryAllocator.dumpWaitingAllocations());
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 6,
+                memoryBlockStartIndex: 2,
+                memoryBlockEndIndex: 7
+            }
+        ];
+        expectedPendingAllocations = [{ requestedSize: 3 }];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
         const memoryBlockSize5 = 3;
         const allocatedMemoryBlock5Task = memoryAllocator.obtainBuffer(memoryBlockSize5);
 
-        console.log('=========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
-        console.log(memoryAllocator.dumpWaitingAllocations());
+        expectedPendingAllocations = [{ requestedSize: 3 }, { requestedSize: 3 }];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
         memoryAllocator.releaseBuffer(allocatedMemoryBlock2);
 
-        console.log('=========')
-        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
-        console.log(memoryAllocator.dumpWaitingAllocations());
+        expectedMemoryState = [
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 0,
+                memoryBlockEndIndex: 2
+            },
+            {
+                memoryBlockSize: 3,
+                memoryBlockStartIndex: 3,
+                memoryBlockEndIndex: 5
+            }
+        ];
+        expectedPendingAllocations = [];
+        assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
+        assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
-        /*
         await allocatedMemoryBlock4Task;
-        await allocatedMemoryBlock5Task; */
+        await allocatedMemoryBlock5Task;
     });
 });
