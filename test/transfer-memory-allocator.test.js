@@ -1158,7 +1158,7 @@ describe('transfer-memory-allocator (async)', function () {
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
 
-    it.only('gets allocated memory blocks from buffer pool when possible, waits until enough contiguous memory is available in the buffer pool otherwise', async function () {
+    it('gets allocated memory blocks from buffer pool when possible, waits until enough contiguous memory is available in the buffer pool otherwise', async function () {
         const suggestedSize = 10; // 10 bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
@@ -1328,7 +1328,6 @@ describe('transfer-memory-allocator (async)', function () {
 
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
-
 
         const anotherAllocatedMemoryBlock3 = await anotherAllocatedMemoryBlock3Task;
         memoryAllocator.releaseBuffer(anotherAllocatedMemoryBlock3);
