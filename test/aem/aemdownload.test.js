@@ -43,7 +43,7 @@ describe('AEM Download', function() {
         }
     }
 
-    it.only('AEM download smoke test', async function() {
+    it('AEM download smoke test', async function() {
         const testFile = Path.join(__dirname, 'file-1.jpg');
         nock('http://test-aem-download-200')
             .matchHeader('range', 'bytes=0-6')
