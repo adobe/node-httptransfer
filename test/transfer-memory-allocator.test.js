@@ -1242,7 +1242,6 @@ describe('transfer-memory-allocator (async)', function () {
         anotherBlockSize = 5;
         expectedPendingAllocations = [];
         const anotherAllocatedMemoryBlock3Task = memoryAllocator.obtainBuffer(anotherBlockSize);
-        console.log(memoryAllocator.dumpWaitingAllocations());
 
         expectedPendingAllocations = [{ requestedSize: 5 }];
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
@@ -1256,7 +1255,6 @@ describe('transfer-memory-allocator (async)', function () {
 
         anotherBlockSize = 1;
         const anotherAllocatedMemoryBlock5Task = memoryAllocator.obtainBuffer(anotherBlockSize);
-        console.log(memoryAllocator.dumpWaitingAllocations())
         expectedPendingAllocations = [{ requestedSize: 5 }, { requestedSize: 4 }, { requestedSize: 1 }];
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
