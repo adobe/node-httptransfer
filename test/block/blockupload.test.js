@@ -29,7 +29,7 @@ describe('Block Upload', function () {
         nock.cleanAll();
     });
 
-    it.only('Block upload smoke test', async function () {
+    it('Block upload smoke test', async function () {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
