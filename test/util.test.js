@@ -21,7 +21,7 @@ const path = require('path');
 const { EventEmitter } = require("events");
 
 describe("util", function() {
-    it("createReadStream-error", async function() {
+    it('createReadStream-error', async function() {
         try {
             await util.createReadStream("badfile");
             assert.fail("failure expected");
@@ -30,7 +30,7 @@ describe("util", function() {
         }
     });
 
-    it("creates a read stream", async function() {
+    it('creates a read stream', async function() {
         await fs.writeFile(path.resolve('./test-transfer-file-read-1.dat'), 'hello world 123', 'utf8');
         const readStream = await util.createReadStream(path.resolve('./test-transfer-file-read-1.dat'));
 
@@ -47,7 +47,7 @@ describe("util", function() {
         }
     });
 
-    it("createWriteStream-error", async function() {
+    it('createWriteStream-error', async function() {
         try {
             await util.createWriteStream("badfolder/badfile");
             assert.fail("failure expected");
@@ -56,7 +56,7 @@ describe("util", function() {
         }
     });
 
-    it("creates a write stream", async function() {
+    it('creates a write stream', async function() {
         //await fs.writeFile(path.resolve('./test-transfer-file.dat'), 'hello world 123', 'utf8');
         const writeStream = await util.createWriteStream(path.resolve('./test-transfer-file-write-1.dat'));
 
@@ -106,9 +106,12 @@ describe("util", function() {
             stream.emit('data', Buffer.from('orld!'));
             stream.emit('end');
         });
+
         const buffer = await util.streamToBuffer("get", "url", 200, stream, 12);
         assert.deepEqual(buffer.toString(), 'Hello World!');
     });
+
+
     it('stream-to-error-buffer', function() {
         const stream = configureStream((stream) => {
             stream.emit('error', 'there was an error!');
