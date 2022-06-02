@@ -76,15 +76,19 @@ describe("util", function() {
     it('file-protocol-string', function() {
         assert.ok(util.isFileProtocol('file:///path/to/file'));
     });
+
     it('file-protocol-url', function() {
         assert.ok(util.isFileProtocol(new URL('file:///path/to/file')));
     });
+
     it('file-protocol-undefined', function() {
         assert.ok(!util.isFileProtocol());
     });
+
     it('file-protocol-string-http', function() {
         assert.ok(!util.isFileProtocol('http://www.host.com'));
     });
+
     it('file-protocol-url-http', function() {
         assert.ok(!util.isFileProtocol(new URL('http://www.host.com')));
     });
@@ -111,13 +115,13 @@ describe("util", function() {
         assert.deepEqual(buffer.toString(), 'Hello World!');
     });
 
-
     it('stream-to-error-buffer', function() {
         const stream = configureStream((stream) => {
             stream.emit('error', 'there was an error!');
         });
         assert.rejects(util.streamToBuffer("get", "url", 200, stream, 12));
     });
+    
     it('stream-to-unexpectedlength-buffer', function() {
         const stream = configureStream((stream) => {
             stream.emit('data', 'test');
