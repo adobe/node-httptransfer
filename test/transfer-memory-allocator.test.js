@@ -1159,7 +1159,7 @@ describe.only('transfer-memory-allocator (async)', function () {
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
 
-    it.only('gets allocated memory blocks from buffer pool when possible, waits until enough contiguous memory is available in the buffer pool otherwise', async function () {
+    it('gets allocated memory blocks from buffer pool when possible, waits until enough contiguous memory is available in the buffer pool otherwise', async function () {
         const suggestedSize = 10; // 10 bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
@@ -1321,9 +1321,14 @@ describe.only('transfer-memory-allocator (async)', function () {
                 memoryBlockSize: 5,
                 memoryBlockStartIndex: 0,
                 memoryBlockEndIndex: 4
+            },
+            {
+                memoryBlockSize: 4,
+                memoryBlockStartIndex: 5,
+                memoryBlockEndIndex: 8
             }
         ];
-        expectedPendingAllocations = [{ requestedSize: 4 }];
+        expectedPendingAllocations = [];
 
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
@@ -1348,7 +1353,7 @@ describe.only('transfer-memory-allocator (async)', function () {
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
 
-    it('can handle some fragmentation (fragmentation at low indices (head))', async function(){
+    it('can handle some fragmentation (fragmentation at low indices (head))', async function () {
         const suggestedSize = 10; // 10 bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
@@ -1384,7 +1389,7 @@ describe.only('transfer-memory-allocator (async)', function () {
         console.log(memoryAllocator.dumpBufferBlockUsedMemory());
     });
 
-    it('can handle some fragmentation (fragmentation at low and end indices (head and tail))', async function(){
+    it('can handle some fragmentation (fragmentation at low and end indices (head and tail))', async function () {
         const suggestedSize = 10; // 10 bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
@@ -1430,7 +1435,7 @@ describe.only('transfer-memory-allocator (async)', function () {
         console.log(memoryAllocator.dumpWaitingAllocations());
     });
 
-    it('can handle some fragmentation (fragmentation at low and end indices (head and tail)) with multiple waiting allocations', async function(){
+    it('can handle some fragmentation (fragmentation at low and end indices (head and tail)) with multiple waiting allocations', async function () {
         const suggestedSize = 10; // 10 bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
