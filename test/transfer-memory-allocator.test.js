@@ -1346,4 +1346,87 @@ describe('transfer-memory-allocator (async)', function () {
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
+
+    it.only('can handle some fragmentation (fragmentation at low indices (head))', async function(){
+        const suggestedSize = 10; // 10 bytes
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+
+        const memoryBlockSize1 = 2;
+        const allocatedMemoryBlock1 = await memoryAllocator.obtainBuffer(memoryBlockSize1);
+
+        const memoryBlockSize2 = 6;
+        const allocatedMemoryBlock2 = await memoryAllocator.obtainBuffer(memoryBlockSize2);
+
+        const memoryBlockSize3 = 2;
+        const allocatedMemoryBlock3 = await memoryAllocator.obtainBuffer(memoryBlockSize3);
+
+        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+
+        memoryAllocator.releaseBuffer(allocatedMemoryBlock1);
+        memoryAllocator.releaseBuffer(allocatedMemoryBlock3);
+
+        console.log('=========')
+        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+
+        const memoryBlockSize4 = 2;
+        const allocatedMemoryBlock4Task = await memoryAllocator.obtainBuffer(memoryBlockSize4);
+
+        console.log('=========')
+        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+
+        console.log("BUGGGGYYYYYY-------")
+        const memoryBlockSize5 = 2;
+        const allocatedMemoryBlock5Task = await memoryAllocator.obtainBuffer(memoryBlockSize5);
+
+        console.log('=========')
+        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+    });
+
+    it.skip('can handle some fragmentation (2)', async function(){
+        const suggestedSize = 10; // 10 bytes
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+        assert.strictEqual(memoryAllocator.poolSize, suggestedSize);
+
+        const memoryBlockSize1 = 2;
+        const allocatedMemoryBlock1 = await memoryAllocator.obtainBuffer(memoryBlockSize1);
+
+        const memoryBlockSize2 = 6;
+        const allocatedMemoryBlock2 = await memoryAllocator.obtainBuffer(memoryBlockSize2);
+
+        const memoryBlockSize3 = 2;
+        const allocatedMemoryBlock3 = await memoryAllocator.obtainBuffer(memoryBlockSize3);
+
+        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+
+        memoryAllocator.releaseBuffer(allocatedMemoryBlock1);
+        memoryAllocator.releaseBuffer(allocatedMemoryBlock3);
+
+        console.log('=========')
+        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+
+        const memoryBlockSize4 = 3;
+        const allocatedMemoryBlock4Task = memoryAllocator.obtainBuffer(memoryBlockSize4);
+
+        const memoryBlockSize5 = 3;
+        const allocatedMemoryBlock5Task = memoryAllocator.obtainBuffer(memoryBlockSize5);
+
+        console.log('=========')
+        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+
+        memoryAllocator.releaseBuffer(allocatedMemoryBlock2);
+
+        console.log('=========')
+        console.log(memoryAllocator.dumpBufferBlockUsedMemory());
+
+        await allocatedMemoryBlock4Task;
+        await allocatedMemoryBlock5Task;
+    });
 });
