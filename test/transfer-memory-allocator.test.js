@@ -815,7 +815,7 @@ describe('transfer-memory-allocator (sync)', function () {
     });
 });
 
-describe('transfer-memory-allocator (async)', function () {
+describe.only('transfer-memory-allocator (async)', function () {
     it('canonical use to asynchronously get allocated memory blocks from buffer pool', async function () {
         const suggestedSize = 10; // 10 bytes
 
@@ -1154,6 +1154,7 @@ describe('transfer-memory-allocator (async)', function () {
             }
         ];
         await memoryAllocator.obtainBuffer(anotherBlockSize);
+
         assert.deepStrictEqual(memoryAllocator.dumpBufferBlockUsedMemory(), expectedMemoryState);
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
@@ -1347,7 +1348,7 @@ describe('transfer-memory-allocator (async)', function () {
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
 
-    it.only('can handle some fragmentation (fragmentation at low indices (head))', async function(){
+    it('can handle some fragmentation (fragmentation at low indices (head))', async function(){
         const suggestedSize = 10; // 10 bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
