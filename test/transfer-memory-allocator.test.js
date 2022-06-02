@@ -1461,7 +1461,7 @@ describe('transfer-memory-allocator (async)', function () {
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
 
         const memoryBlockSize4 = 3;
-        const allocatedMemoryBlock4Task = memoryAllocator.obtainBuffer(memoryBlockSize4);
+        memoryAllocator.obtainBuffer(memoryBlockSize4);
 
         expectedMemoryState = [
             {
