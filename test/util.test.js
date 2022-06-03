@@ -19,6 +19,7 @@ const util = require("../lib/util");
 const fs = require('fs').promises;
 const path = require('path');
 const { EventEmitter } = require("events");
+const { TransferMemoryBuffer } = require('../lib/transfer-memory-allocator');
 
 describe("util", function() {
     it('createReadStream-error', async function() {
@@ -104,6 +105,7 @@ describe("util", function() {
         };
         return stream;
     }
+
     it('stream-to-buffer', async function() {
         const stream = configureStream((stream) => {
             stream.emit('data', Buffer.from('Hello W'));
@@ -112,7 +114,7 @@ describe("util", function() {
         });
 
         const buffer = await util.streamToBuffer("get", "url", 200, stream, 12);
-        assert.deepEqual(buffer.toString(), 'Hello World!');
+        assert.deepStrictEqual(buffer.toString(), 'Hello World!');
     });
 
     it('stream-to-error-buffer', function() {
@@ -128,6 +130,35 @@ describe("util", function() {
             stream.emit('end');
         });
         assert.rejects(util.streamToBuffer("get", "url", 200, stream, 12));
+    });
+
+    it('stream-to-pooled-buffer', async function() {
+        const stream = configureStream((stream) => {
+            stream.emit('data', Buffer.from('Hello W'));
+            stream.emit('data', Buffer.from('orld!'));
+            stream.emit('end');
+        });
+
+        const memoryAllocator = new TransferMemoryBuffer(20);
+        const memoryBufferBlock = await util.streamToPooledBuffer("get", "url", 200, stream, 12, memoryAllocator);
+        assert.deepStrictEqual(memoryBufferBlock.buffer.toString(), 'Hello World!');
+    });
+
+    it('stream-to-error-pooled-buffer', function() {
+        const stream = configureStream((stream) => {
+            stream.emit('error', 'there was an error!');
+        });
+        const memoryAllocator = new TransferMemoryBuffer(15);
+        assert.rejects(util.streamToPooledBuffer("get", "url", 200, stream, 12, memoryAllocator));
+    });
+    
+    it('stream-to-unexpectedlength-pooled-buffer', function() {
+        const stream = configureStream((stream) => {
+            stream.emit('data', 'test');
+            stream.emit('end');
+        });
+        const memoryAllocator = new TransferMemoryBuffer(14);
+        assert.rejects(util.streamToPooledBuffer("get", "url", 200, stream, 12, memoryAllocator));
     });
 
     it('stream-to-buffer (stream to pooled buffer fallback when no memory allocator)', async function() {
