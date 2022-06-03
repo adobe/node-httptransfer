@@ -1489,7 +1489,7 @@ describe('transfer-memory-allocator (async)', function () {
         assert.deepStrictEqual(memoryAllocator.dumpWaitingAllocations(), expectedPendingAllocations);
     });
 
-    it('can handle some fragmentation (fragmentation at low and end indices (head and tail)) with multiple waiting allocations', async function () {
+    it('can handle some fragmentation (fragmentation at low and high indices (head and tail)) with multiple waiting allocations', async function () {
         const suggestedSize = 10; // 10 bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
