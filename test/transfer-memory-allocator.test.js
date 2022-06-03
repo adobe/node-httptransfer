@@ -31,7 +31,15 @@ describe('transfer-memory-allocator (sync)', function () {
     it('does not allow negative buffer pool sizes', async function () {
         const expectedException = new Error("Transfer Memory Buffer total suggested size must be larger than 0");
         assert.throws(() => {
-            const memoryAllocator = new TransferMemoryBuffer(-1);
+            new TransferMemoryBuffer(-1);
+        }, expectedException);
+    });
+
+    it('does not allow obtaining memory blocks with negative sizes', async function () {
+        const expectedException = new Error("Requested buffer size must be larger than 0");
+        assert.rejects(() => {
+            const memoryAllocator = new TransferMemoryBuffer(10);
+            memoryAllocator.obtainBuffer(-6);
         }, expectedException);
     });
 
