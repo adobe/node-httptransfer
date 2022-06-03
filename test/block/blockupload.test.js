@@ -534,7 +534,7 @@ describe('Block Upload', function () {
         }
     });
 
-    it('Block upload smoke test (multiple urls, more urls than needed)', async function () {
+    it.only('Block upload smoke test (multiple urls, more urls than needed)', async function () {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
