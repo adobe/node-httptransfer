@@ -130,6 +130,32 @@ describe("util", function() {
         assert.rejects(util.streamToBuffer("get", "url", 200, stream, 12));
     });
 
+    it('stream-to-buffer (stream to pooled buffer fallback when no memory allocator)', async function() {
+        const stream = configureStream((stream) => {
+            stream.emit('data', Buffer.from('Hello W'));
+            stream.emit('data', Buffer.from('orld!'));
+            stream.emit('end');
+        });
+
+        const buffer = await util.streamToPooledBuffer("get", "url", 200, stream, 12);
+        assert.deepEqual(buffer.toString(), 'Hello World!');
+    });
+
+    it('stream-to-error-buffer (stream to pooled buffer fallback when no memory allocator)', function() {
+        const stream = configureStream((stream) => {
+            stream.emit('error', 'there was an error!');
+        });
+        assert.rejects(util.streamToPooledBuffer("get", "url", 200, stream, 12));
+    });
+    
+    it('stream-to-unexpectedlength-buffer (stream to pooled buffer fallback when no memory allocator)', function() {
+        const stream = configureStream((stream) => {
+            stream.emit('data', 'test');
+            stream.emit('end');
+        });
+        assert.rejects(util.streamToPooledBuffer("get", "url", 200, stream, 12));
+    });
+
     it('url to path', function() {
         assert.deepStrictEqual(util.urlToPath('http://host/test%20space/path'), {
             path: '/test space/path',
