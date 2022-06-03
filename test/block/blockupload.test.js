@@ -612,12 +612,8 @@ describe('Block Upload', function () {
         };
 
         assert.deepStrictEqual(events.filestart[0], fileEventData);
-        assert.deepStrictEqual(events.fileprogress[0], {
-            ...fileEventData,
-            mimeType: "image/jpeg",
-            transferred: 10
-        });
-        assert.deepStrictEqual(events.fileprogress[1], {
+        assert.deepStrictEqual(events.fileprogress.length, 2);
+        assert.deepStrictEqual(events.fileprogress[events.fileprogress.length-1], {
             ...fileEventData,
             mimeType: "image/jpeg",
             transferred: 15
