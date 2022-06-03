@@ -28,6 +28,13 @@ describe('transfer-memory-allocator (sync)', function () {
         assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
     });
 
+    it('does not allow negative buffer pool sizes', async function () {
+        const expectedException = new Error("Transfer Memory Buffer total suggested size must be larger than 0");
+        assert.throws(() => {
+            const memoryAllocator = new TransferMemoryBuffer(-1);
+        }, expectedException);
+    });
+
     it('can create memory allocator (buffer pool) using a suggested size of 1024 bytes', async function () {
         const suggestedSize = 1024; // 1Kb
 
