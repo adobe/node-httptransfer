@@ -211,4 +211,138 @@ describe("util", function() {
         assert.strictEqual(util.urlPathDirname('/my/test/path'), '/my/test');
         assert.strictEqual(util.urlPathDirname('/my/test/file.jpg'), '/my/test');
     });
+
+    it('get minimum needed part size from multipart (min multipart size must fit in one memory transfer block)', function() {
+        const options = {
+            uploadFiles: [{
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            }],
+            headers: {
+                // Asset Compute passes through content-type header
+                'content-type': 'image/jpeg',
+            },
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 7
+        };
+
+        const result = util.getMinimumMultipartPartSizeForTransfer(options, options.preferredPartSize);
+        assert.ok(result, 10);
+    });
+
+    it('get minimum needed part size from multipart (min multipart size must fit in one memory transfer block, can use preferredPartSize)', function() {
+        const options = {
+            uploadFiles: [{
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            }],
+            headers: {
+                // Asset Compute passes through content-type header
+                'content-type': 'image/jpeg',
+            },
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 11
+        };
+
+        const result = util.getMinimumMultipartPartSizeForTransfer(options, options.preferredPartSize);
+        assert.ok(result, 11);
+    });
+
+    it('get minimum needed part size from multipart (min multipart size must fit in one memory transfer block, exact fit)', function() {
+        const options = {
+            uploadFiles: [{
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            }],
+            headers: {
+                // Asset Compute passes through content-type header
+                'content-type': 'image/jpeg',
+            },
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 11
+        };
+
+        const result = util.getMinimumMultipartPartSizeForTransfer(options, options.preferredPartSize);
+        assert.ok(result, 10);
+    });
+
+    it('get minimum needed part size from multipart (min multipart size must fit in one memory transfer block, multiple files)', function() {
+        const options = {
+            uploadFiles: [{
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            }, {
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 12,
+                maxPartSize: 25
+            }],
+            headers: {
+                // Asset Compute passes through content-type header
+                'content-type': 'image/jpeg',
+            },
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 7
+        };
+
+        const result = util.getMinimumMultipartPartSizeForTransfer(options, options.preferredPartSize);
+        assert.ok(result, 12);
+    });
+
+    it('get minimum needed part size from multipart (min multipart size must fit in one memory transfer block, can use preferred part size, multiple files)', function() {
+        const options = {
+            uploadFiles: [{
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 10,
+                maxPartSize: 25
+            }, {
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 12,
+                maxPartSize: 25
+            }, {
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 2,
+                maxPartSize: 25
+            }, {
+                fileUrl: [],
+                filePath: "a-path",
+                multipartHeaders: { partHeader: 'test' },
+                minPartSize: 5,
+                maxPartSize: 25
+            }],
+            headers: {
+                // Asset Compute passes through content-type header
+                'content-type': 'image/jpeg',
+            },
+            concurrent: true,
+            maxConcurrent: 5,
+            preferredPartSize: 15
+        };
+
+        const result = util.getMinimumMultipartPartSizeForTransfer(options, options.preferredPartSize);
+        assert.ok(result, 15);
+    });
 });

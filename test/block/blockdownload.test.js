@@ -1049,13 +1049,7 @@ describe('Block Download', function () {
             assert.equal(events.filestart[0].fileSize, 15);
             assert.equal(events.filestart[1].fileSize, 10);
             assert.equal(events.fileprogress.length, 2);
-            assert.equal(events.fileprogress[0].fileSize, 15);
-            assert.equal(events.fileprogress[0].transferred, 15);
-            assert.equal(events.fileprogress[1].fileSize, 10);
-            assert.equal(events.fileprogress[1].transferred, 10);
             assert.equal(events.fileend.length, 2);
-            assert.equal(events.fileprogress[0].fileSize, 15);
-            assert.equal(events.fileprogress[1].fileSize, 10);
             assert.equal(events.error.length, 0);
             assert.ok(nock.isDone(), nock.pendingMocks());
         }
