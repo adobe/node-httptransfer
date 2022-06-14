@@ -1749,7 +1749,7 @@ describe('transfer-memory-allocator (async)', function () {
     });
 
     it('throws if suggested buffer size is not an integer', async function () {
-        const expectedException = new Error("Suggested Transfer Memory Buffer toal suggested size must be an integer");
+        const expectedException = new Error("Suggested Transfer Memory Buffer total suggested size must be an integer");
         
         let suggestedSize = Number.POSITIVE_INFINITY;
         assert.throws(() => {
