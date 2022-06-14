@@ -1724,6 +1724,29 @@ describe('transfer-memory-allocator (async)', function () {
         await allocatedMemoryBlock4Task;
         await allocatedMemoryBlock5Task;
     });
+
+    it('falls back on using a percentage of available memory if requested value is too large', async function () {
+        const suggestedSize = Number.MAX_SAFE_INTEGER; 
+
+        const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
+        assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
+
+        assert.ok(memoryAllocator.allocatedBlocks !== null && memoryAllocator.allocatedBlocks !== undefined);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.tail, null);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.head, null);
+
+        const initialBlockSize = 2;
+        const allocatedMemory = await memoryAllocator.obtainBuffer(initialBlockSize);
+        assert.ok(allocatedMemory !== null && allocatedMemory !== undefined);
+        assert.ok(Buffer.isBuffer(allocatedMemory.buffer));
+        assert.strictEqual(allocatedMemory.size, initialBlockSize);
+        assert.strictEqual(allocatedMemory.startIndex, 0);
+        assert.strictEqual(memoryAllocator.allocatedBlocks.length, 1);
+        assert.ok(memoryAllocator.allocatedBlocks.tail !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head !== null);
+        assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
+    });
 });
 
 describe('transfer-memory-allocator (transfer memory block)', function () {
