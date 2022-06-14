@@ -1747,6 +1747,35 @@ describe('transfer-memory-allocator (async)', function () {
         assert.ok(memoryAllocator.allocatedBlocks.head !== null);
         assert.ok(memoryAllocator.allocatedBlocks.head === memoryAllocator.allocatedBlocks.tail);
     });
+
+    it('throws if suggested buffer size is not an integer', async function () {
+        const expectedException = new Error("Suggested Transfer Memory Buffer toal suggested size must be an integer");
+        
+        let suggestedSize = Number.POSITIVE_INFINITY;
+        assert.throws(() => {
+            new TransferMemoryBuffer(suggestedSize);
+        }, expectedException);
+
+        suggestedSize = Number.NEGATIVE_INFINITY;
+        assert.throws(() => {
+            new TransferMemoryBuffer(suggestedSize);
+        }, expectedException);
+
+        suggestedSize = "not a number";
+        assert.throws(() => {
+            new TransferMemoryBuffer(suggestedSize);
+        }, expectedException);
+
+        suggestedSize = {};
+        assert.throws(() => {
+            new TransferMemoryBuffer(suggestedSize);
+        }, expectedException);
+
+        suggestedSize = [];
+        assert.throws(() => {
+            new TransferMemoryBuffer(suggestedSize);
+        }, expectedException);
+    });
 });
 
 describe('transfer-memory-allocator (transfer memory block)', function () {
