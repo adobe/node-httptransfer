@@ -15,7 +15,9 @@
 'use strict';
 
 const assert = require('assert');
-const { TransferMemoryBuffer, TransferMemoryBlock } = require('../lib/transfer-memory-allocator');
+const rewire = require('rewire');
+const { TransferMemoryBuffer } = require('../lib/transfer-memory-allocator');
+const rewiredMemoryAllocator = rewire('../lib/transfer-memory-allocator');
 
 describe('transfer-memory-allocator (sync)', function () {
     it('can create memory allocator (buffer pool)', async function () {
@@ -1726,6 +1728,8 @@ describe('transfer-memory-allocator (async)', function () {
 
 describe('transfer-memory-allocator (transfer memory block)', function () {
     it('throws on size mismatch', async function () {
+        const TransferMemoryBlock = rewiredMemoryAllocator.__get__("TransferMemoryBlock"); 
+
         let bufferSize = 10;
         let buffer = Buffer.allocUnsafe(bufferSize - 3);
         let expectedException = new Error("Requested buffer memory block size mismatch. Could not allocate Transfer Memory Block (requested: 10, allocated: 7)");
