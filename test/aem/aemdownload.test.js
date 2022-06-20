@@ -38,12 +38,12 @@ describe('AEM Download', function() {
                 ...fileEventData,
                 transferred: 12
             });
-        } else if (event.transferred === 5) {
+        } /*else if (event.transferred === 5) {
             assert.deepStrictEqual(event, {
                 ...fileEventData,
                 transferred: 5
             });
-        } else {
+        } */else {
             assert(false, `unexpected transferred amount [${event.transferred}]`);
         }
     }
@@ -117,8 +117,8 @@ describe('AEM Download', function() {
         };
 
         assert.deepStrictEqual(events.filestart[0], fileEventData);
-        verifyProgressEvent(events.fileprogress[0], fileEventData, `Failed progress event 0, got ${JSON.stringify(events.fileprogress[0])}`);
-        verifyProgressEvent(events.fileprogress[1], fileEventData, `Failed progress event 1, got ${JSON.stringify(events.fileprogress[1])}`);
+        verifyProgressEvent(events.fileprogress[0], fileEventData, `Failed progress event 0, got ${JSON.stringify(events.fileprogress)}`);
+        verifyProgressEvent(events.fileprogress[1], fileEventData, `Failed progress event 1, got ${JSON.stringify(events.fileprogress)}`);
         assert.deepStrictEqual(events.fileend[0], fileEventData);
     });
 
