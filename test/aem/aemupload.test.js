@@ -27,7 +27,7 @@ describe('AEM Upload', function() {
         nock.cleanAll();
     });
 
-    it('AEM upload smoke test', async function() { // TypeError: Cannot read property 'obtainBuffer' of null
+    it('AEM upload smoke test', async function() {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
