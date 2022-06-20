@@ -720,7 +720,7 @@ describe('Block Download', function () {
             assert.equal(events.filestart[0].fileSize, 12);
             assert.equal(events.fileprogress.length, 2);
             assert.equal(events.fileprogress[0].fileSize, 12);
-            assert.equal(events.fileprogress[0].transferred, 7);
+            assert.ok(events.fileprogress[0].transferred === 7 || events.fileprogress[0].transferred === 5); // depends which part finishes transferring first
             assert.equal(events.fileend.length, 1);
             assert.equal(events.fileprogress[0].fileSize, 12);
             assert.equal(events.error.length, 0);
