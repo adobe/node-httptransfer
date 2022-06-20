@@ -38,6 +38,11 @@ describe('AEM Download', function() {
                 ...fileEventData,
                 transferred: 12
             });
+        } else if (event.transferred === 5) {
+            assert.deepStrictEqual(event, {
+                ...fileEventData,
+                transferred: 5
+            });
         } else {
             assert(false, `unexpected transferred amount [${event.transferred}]`);
         }
