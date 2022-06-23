@@ -19,7 +19,15 @@ const rewire = require('rewire');
 const { TransferMemoryBuffer } = require('../lib/transfer-memory-allocator');
 const rewiredMemoryAllocator = rewire('../lib/transfer-memory-allocator');
 
-describe('transfer-memory-allocator (sync)', function () {
+describe('transfer-memory-allocator (sync, with deferred allocations)', function () {
+    beforeEach(function () {
+        process.env.NODE_HTTPTRANSFER_ALLOW_ALLOCATIONS_TO_WAIT = true;
+    });
+
+    afterEach(function () {
+        delete process.env.NODE_HTTPTRANSFER_ALLOW_ALLOCATIONS_TO_WAIT;
+    });
+
     it('can create memory allocator (buffer pool)', async function () {
         const memoryAllocator = new TransferMemoryBuffer(); // use default suggested Buffer size
         assert.ok(memoryAllocator !== null && memoryAllocator !== undefined);
@@ -840,7 +848,15 @@ describe('transfer-memory-allocator (sync)', function () {
     });
 });
 
-describe('transfer-memory-allocator (async)', function () {
+describe('transfer-memory-allocator (async, with deferred allocations)', function () {
+    beforeEach(function () {
+        process.env.NODE_HTTPTRANSFER_ALLOW_ALLOCATIONS_TO_WAIT = true;
+    });
+
+    afterEach(function () {
+        delete process.env.NODE_HTTPTRANSFER_ALLOW_ALLOCATIONS_TO_WAIT;
+    });
+
     it('canonical use to asynchronously get allocated memory blocks from buffer pool', async function () {
         const suggestedSize = 10; // 10 bytes
 
