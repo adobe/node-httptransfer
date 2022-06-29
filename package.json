@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.18.3",
+    "cgroup-metrics": "^2.0.0",
     "content-disposition": "^0.5.4",
     "content-range": "^2.0.2",
     "content-type": "^1.0.4",
