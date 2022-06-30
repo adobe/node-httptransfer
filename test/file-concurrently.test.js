@@ -528,7 +528,7 @@ describe('download concurrently', function () {
         }
     }).timeout(10000);
 
-    it.only('status-503-one-chunk-fails', async function () {
+    it('status-503-one-chunk-fails', async function () {
         nock('http://test-status-503', {
             reqheaders: {
                 'range': 'bytes=0-0'
@@ -574,6 +574,7 @@ describe('download concurrently', function () {
             preferredPartSize: 1
         });
         const result = await fs.readFile(path.resolve('./test-transfer-file-status-503-retry.dat'), 'utf8');
+        console.log("Read result is", result);
         assert.strictEqual(result, 'cat');
 
         try {
@@ -582,7 +583,7 @@ describe('download concurrently', function () {
             console.log(e);
         }
     });
-    
+
     it('status-etimedout-one-chunk-fails', async function () {
         nock('http://test-status-etimedout', {
             reqheaders: {
