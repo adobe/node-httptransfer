@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.18.3",
-    "cgroup-metrics": "git+ssh://git@github.com:adobe/node-cgroup-metrics.git#add-functions",
+    "@adobe/httptransfer": "git+https://github.com/adobe/node-httptransfer.git#switch-to-reduce-memory-usage",
     "content-disposition": "^0.5.4",
     "content-range": "^2.0.2",
     "content-type": "^1.0.4",
