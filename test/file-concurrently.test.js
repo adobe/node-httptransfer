@@ -527,7 +527,8 @@ describe('download concurrently', function () {
             console.log(e);
         }
     }).timeout(10000);
-    it('status-503-one-chunk-fails', async function () {
+
+    it.only('status-503-one-chunk-fails', async function () {
         nock('http://test-status-503', {
             reqheaders: {
                 'range': 'bytes=0-0'
@@ -581,6 +582,7 @@ describe('download concurrently', function () {
             console.log(e);
         }
     });
+    
     it('status-etimedout-one-chunk-fails', async function () {
         nock('http://test-status-etimedout', {
             reqheaders: {
