@@ -992,7 +992,7 @@ describe('transfer-memory-allocator (sync, no deferred allocations)', function (
         assert.strictEqual(anotherAllocatedMemoryBlock.endIndex, anotherAllocatedMemoryBlock.startIndex + secondBlockSize - 1);
     });
 
-    it('can allocate contiguous blocks of memory from the buffer pool', async function () {
+    it.only('can allocate contiguous blocks of memory from the buffer pool', async function () {
         const suggestedSize = 100; // bytes
 
         const memoryAllocator = new TransferMemoryBuffer(suggestedSize);
