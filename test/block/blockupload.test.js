@@ -20,10 +20,10 @@ const nock = require('nock');
 const Path = require('path');
 const { BlockUpload } = require('../../lib/block/blockupload');
 
-const debug = require('debug');
-debug.enable('httptransfer*');
+// const debug = require('debug');
+// debug.enable('httptransfer*');
 
-describe('Block Upload', function () {
+describe.skip('Block Upload', function () {
     afterEach(async function () {
         assert.ok(nock.isDone(), nock.pendingMocks(), 'check if all nocks have been used');
         nock.cleanAll();

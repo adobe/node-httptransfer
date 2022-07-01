@@ -21,8 +21,8 @@ const { BlockDownload } = require('../../lib/block/blockdownload');
 const fs = require('fs');
 const crypto = require('crypto');
 
-const debug = require('debug');
-debug.enable('httptransfer*');
+// const debug = require('debug');
+// debug.enable('httptransfer*');
 
 function fileHash(filename, algorithm = "sha1") {
     return new Promise((resolve, reject) => {

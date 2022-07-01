@@ -421,7 +421,7 @@ describe('download concurrently', function () {
         }
     });
 
-    it('status-404-retry', async function () {
+    it('status-404-retry (file-concurrently 1)', async function () {
         nock('http://test-status-404')
             .head('/path/to/file.ext')
             .reply(200, "OK", {
@@ -792,13 +792,13 @@ describe('upload concurrently', function () {
         }
     });
 
-    it('status-404-retry', async function () {
+    it.only('status-404-retry (file-concurrently 2)', async function () {
         nock('http://test-status-404')
-            .put('/path/to/file.ext', 'hello world 123')
+            .put('/path/to/file.ext')
             .reply(404);
 
         nock('http://test-status-404')
-            .put('/path/to/file.ext', 'hello world 123')
+            .put('/path/to/file.ext')
             .reply(201);
 
         await fs.writeFile(path.resolve('./test-transfer-file-up-status-404-retry.dat'), 'hello world 123', 'utf8');
@@ -1604,7 +1604,7 @@ describe('multipart upload concurrently', function () {
             }
         });
 
-        it('status-404-retry', async function () {
+        it('status-404-retry (file-concurrently 3)', async function () {
             await fs.writeFile('test-transfer-file-23.dat', 'hello world 123', 'utf8');
 
             nock('http://status-404-retry')
@@ -1677,7 +1677,7 @@ describe('multipart upload concurrently', function () {
         }).timeout(10000);
     });
 
-    it('status-connect-error-retry', async function () {
+    it('status-connect-error-retry (file concurrently 1)', async function () {
         await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
 
         nock('http://status-503-retry')
@@ -2500,7 +2500,7 @@ describe('multipart upload concurrently -- multiple files', function () {
             }
         });
 
-        it('status-404-retry', async function () {
+        it('status-404-retry (file-concurrently 4)', async function () {
             await fs.writeFile('test-transfer-file-23.dat', 'hello world 123', 'utf8');
 
             nock('http://status-404-retry')
@@ -2579,7 +2579,7 @@ describe('multipart upload concurrently -- multiple files', function () {
         }).timeout(10000);
     });
 
-    it('status-connect-error-retry', async function () {
+    it('status-connect-error-retry (file concurrently 2)', async function () {
         await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
 
         nock('http://status-503-retry')

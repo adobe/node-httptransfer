@@ -153,7 +153,7 @@ describe('file', function () {
             }
         });
 
-        it('status-404-retry', async function () {
+        it('status-404-retry (file 1)', async function () {
             nock('http://test-status-404')
                 .get('/path/to/file.ext')
                 .reply(404);
@@ -342,7 +342,7 @@ describe('file', function () {
             }
         });
 
-        it('status-404-retry', async function () {
+        it('status-404-retry (file 2)', async function () {
             nock('http://test-status-404')
                 .put('/path/to/file.ext', 'hello world 123')
                 .reply(404);

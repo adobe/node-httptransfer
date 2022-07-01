@@ -20,18 +20,13 @@ const nock = require('nock');
 const Path = require('path');
 const { BlockUpload } = require('../../lib/block/blockupload');
 
-const debug = require('debug');
-debug.enable('httptransfer*');
+// const debug = require('debug');
+// debug.enable('httptransfer*');
 
 describe('Block Upload (stream based)', function () {
-    beforeEach(async function () {
-        process.env.USE_STREAM = true;
-    });
-
     afterEach(async function () {
         assert.ok(nock.isDone(), nock.pendingMocks(), 'check if all nocks have been used');
         nock.cleanAll();
-        delete process.env.USE_STREAM;
     });
 
     it('Block upload smoke test', async function () {
