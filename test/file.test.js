@@ -224,7 +224,7 @@ describe('file', function () {
             }
         }).timeout(10000);
 
-        it('timeout-retry', async function () {
+        it('timeout-retry (file 1)', async function () {
             nock('http://test-status-timeout')
                 .get('/path/to/file.ext')
                 .delayConnection(500)
@@ -382,7 +382,7 @@ describe('file', function () {
             }
         });
 
-        it('timeout-retry', async function () {
+        it('timeout-retry (file 2)', async function () {
             nock('http://test-status-timeout')
                 .put('/path/to/file.ext', 'hello world 123')
                 .delayConnection(500)

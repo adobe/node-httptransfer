@@ -495,7 +495,7 @@ describe('download concurrently', function () {
         }
     });
 
-    it('status-503-retry', async function () {
+    it('status-503-retry (file concurrently 1)', async function () {
         nock('http://test-status-503')
             .head('/path/to/file.ext')
             .reply(200, "OK", {
@@ -641,7 +641,7 @@ describe('download concurrently', function () {
         }
     });
 
-    it('timeout-retry', async function () {
+    it('timeout-retry (file concurrently 1)', async function () {
         nock('http://test-status-timeout')
             .head('/path/to/file.ext')
             .reply(200, "OK", {
@@ -792,7 +792,7 @@ describe('upload concurrently', function () {
         }
     });
 
-    it.only('status-404-retry (file-concurrently 2)', async function () {
+    it('status-404-retry (file-concurrently 2)', async function () {
         nock('http://test-status-404')
             .put('/path/to/file.ext')
             .reply(404);
@@ -813,13 +813,13 @@ describe('upload concurrently', function () {
         }
     }).timeout(20000);
 
-    it('status-503-retry', async function () {
+    it('status-503-retry (file concurrently 2)', async function () {
         nock('http://test-status-503')
-            .put('/path/to/file.ext', 'hello world 123')
+            .put('/path/to/file.ext')
             .reply(503);
 
         nock('http://test-status-503')
-            .put('/path/to/file.ext', 'hello world 123')
+            .put('/path/to/file.ext')
             .reply(201);
 
         await fs.writeFile(path.resolve('./test-transfer-file-up-status-503-retry.dat'), 'hello world 123', 'utf8');
@@ -832,14 +832,14 @@ describe('upload concurrently', function () {
         }
     });
 
-    it('timeout-retry', async function () {
+    it('timeout-retry (file concurrently 2)', async function () {
         nock('http://test-status-timeout')
-            .put('/path/to/file.ext', 'hello world 123')
+            .put('/path/to/file.ext')
             .delayConnection(1000)
             .reply(201);
 
         nock('http://test-status-timeout')
-            .put('/path/to/file.ext', 'hello world 123')
+            .put('/path/to/file.ext')
             .reply(201);
 
         await fs.writeFile(path.resolve('./test-transfer-file-up-timeout-retry.dat'), 'hello world 123', 'utf8');
@@ -1609,25 +1609,25 @@ describe('multipart upload concurrently', function () {
 
             nock('http://status-404-retry')
                 .matchHeader('content-length', 8)
-                .put('/path/to/file-1.ext', 'hello wo')
+                .put('/path/to/file-1c.ext')
                 .reply(404);
             nock('http://status-404-retry')
                 .matchHeader('content-length', 8)
-                .put('/path/to/file-1.ext', 'hello wo')
+                .put('/path/to/file-1c.ext')
                 .reply(201);
             nock('http://status-404-retry')
                 .matchHeader('content-length', 7)
-                .put('/path/to/file-2.ext', 'rld 123')
+                .put('/path/to/file-2c.ext')
                 .reply(404);
             nock('http://status-404-retry')
                 .matchHeader('content-length', 7)
-                .put('/path/to/file-2.ext', 'rld 123')
+                .put('/path/to/file-2c.ext')
                 .reply(201);
 
             await uploadMultiPartFileConcurrently('test-transfer-file-23.dat', {
                 urls: [
-                    'http://status-404-retry/path/to/file-1.ext',
-                    'http://status-404-retry/path/to/file-2.ext'
+                    'http://status-404-retry/path/to/file-1c.ext',
+                    'http://status-404-retry/path/to/file-2c.ext'
                 ],
                 maxPartSize: 8,
             }, {
@@ -1641,36 +1641,36 @@ describe('multipart upload concurrently', function () {
             }
         });
 
-        it('status-503-retry', async function () {
-            await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
+        it('status-503-retry (file concurrently 3)', async function () {
+            await fs.writeFile('test-transfer-file-24d.dat', 'hello world 123', 'utf8');
 
             nock('http://status-503-retry')
                 .matchHeader('content-length', 8)
-                .put('/path/to/file-1.ext', 'hello wo')
+                .put('/path/to/file-1b.ext')
                 .reply(503);
             nock('http://status-503-retry')
                 .matchHeader('content-length', 8)
-                .put('/path/to/file-1.ext', 'hello wo')
+                .put('/path/to/file-1b.ext')
                 .reply(201);
             nock('http://status-503-retry')
                 .matchHeader('content-length', 7)
-                .put('/path/to/file-2.ext', 'rld 123')
+                .put('/path/to/file-2b.ext')
                 .reply(503);
             nock('http://status-503-retry')
                 .matchHeader('content-length', 7)
-                .put('/path/to/file-2.ext', 'rld 123')
+                .put('/path/to/file-2b.ext')
                 .reply(201);
 
-            await uploadMultiPartFileConcurrently('test-transfer-file-24.dat', {
+            await uploadMultiPartFileConcurrently('test-transfer-file-24d.dat', {
                 urls: [
-                    'http://status-503-retry/path/to/file-1.ext',
-                    'http://status-503-retry/path/to/file-2.ext'
+                    'http://status-503-retry/path/to/file-1b.ext',
+                    'http://status-503-retry/path/to/file-2b.ext'
                 ],
                 maxPartSize: 8,
             });
 
             try {
-                await fs.unlink('test-transfer-file-24.dat');
+                await fs.unlink('test-transfer-file-24d.dat');
             } catch (e) { // ignore cleanup failures
                 console.log(e);
             }
@@ -1682,18 +1682,18 @@ describe('multipart upload concurrently', function () {
 
         nock('http://status-503-retry')
             .matchHeader('content-length', 8)
-            .put('/path/to/file-1.ext', 'hello wo')
+            .put('/path/to/file-1.ext')
             .replyWithError({
                 code: 'ECONNRESET',
                 message: 'Connection Reset'
             });
         nock('http://status-503-retry')
             .matchHeader('content-length', 8)
-            .put('/path/to/file-1.ext', 'hello wo')
+            .put('/path/to/file-1.ext')
             .reply(201);
         nock('http://status-503-retry')
             .matchHeader('content-length', 7)
-            .put('/path/to/file-2.ext', 'rld 123')
+            .put('/path/to/file-2.ext')
             .reply(201);
 
         await uploadMultiPartFileConcurrently('test-transfer-file-24.dat', {
@@ -1712,7 +1712,6 @@ describe('multipart upload concurrently', function () {
         }
     }).timeout(10000);
 });
-
 
 describe('multipart upload concurrently -- multiple files', function () {
     describe('upload single file', function () {
@@ -2501,31 +2500,31 @@ describe('multipart upload concurrently -- multiple files', function () {
         });
 
         it('status-404-retry (file-concurrently 4)', async function () {
-            await fs.writeFile('test-transfer-file-23.dat', 'hello world 123', 'utf8');
+            await fs.writeFile('test-transfer-file-23e.dat', 'hello world 123', 'utf8');
 
             nock('http://status-404-retry')
                 .matchHeader('content-length', 8)
-                .put('/path/to/file-1.ext', 'hello wo')
+                .put('/path/to/file-1e.ext')
                 .reply(404);
             nock('http://status-404-retry')
                 .matchHeader('content-length', 8)
-                .put('/path/to/file-1.ext', 'hello wo')
+                .put('/path/to/file-1e.ext')
                 .reply(201);
             nock('http://status-404-retry')
                 .matchHeader('content-length', 7)
-                .put('/path/to/file-2.ext', 'rld 123')
+                .put('/path/to/file-2e.ext')
                 .reply(404);
             nock('http://status-404-retry')
                 .matchHeader('content-length', 7)
-                .put('/path/to/file-2.ext', 'rld 123')
+                .put('/path/to/file-2e.ext')
                 .reply(201);
 
             await uploadFilesConcurrently([{
-                filepath: 'test-transfer-file-23.dat', 
+                filepath: 'test-transfer-file-23e.dat', 
                 target: {
                     urls: [
-                        'http://status-404-retry/path/to/file-1.ext',
-                        'http://status-404-retry/path/to/file-2.ext'
+                        'http://status-404-retry/path/to/file-1e.ext',
+                        'http://status-404-retry/path/to/file-2e.ext'
                     ],
                     maxPartSize: 8,
                 }
@@ -2534,45 +2533,45 @@ describe('multipart upload concurrently -- multiple files', function () {
             });
 
             try {
-                await fs.unlink('test-transfer-file-23.dat');
+                await fs.unlink('test-transfer-file-23e.dat');
             } catch (e) { // ignore cleanup failures
                 console.log(e);
             }
         });
 
-        it('status-503-retry', async function () {
-            await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
+        it('status-503-retry (file concurrently 4)', async function () {
+            await fs.writeFile('test-transfer-file-24h.dat', 'hello world 123', 'utf8');
 
             nock('http://status-503-retry')
                 .matchHeader('content-length', 8)
-                .put('/path/to/file-1.ext', 'hello wo')
+                .put('/path/to/file-1h.ext')
                 .reply(503);
             nock('http://status-503-retry')
                 .matchHeader('content-length', 8)
-                .put('/path/to/file-1.ext', 'hello wo')
+                .put('/path/to/file-1h.ext')
                 .reply(201);
             nock('http://status-503-retry')
                 .matchHeader('content-length', 7)
-                .put('/path/to/file-2.ext', 'rld 123')
+                .put('/path/to/file-2h.ext')
                 .reply(503);
             nock('http://status-503-retry')
                 .matchHeader('content-length', 7)
-                .put('/path/to/file-2.ext', 'rld 123')
+                .put('/path/to/file-2h.ext')
                 .reply(201);
 
             await uploadFilesConcurrently([{
-                filepath: 'test-transfer-file-24.dat', 
+                filepath: 'test-transfer-file-24h.dat', 
                 target: {
                     urls: [
-                        'http://status-503-retry/path/to/file-1.ext',
-                        'http://status-503-retry/path/to/file-2.ext'
+                        'http://status-503-retry/path/to/file-1h.ext',
+                        'http://status-503-retry/path/to/file-2h.ext'
                     ],
                     maxPartSize: 8,
                 }
             }]);
 
             try {
-                await fs.unlink('test-transfer-file-24.dat');
+                await fs.unlink('test-transfer-file-24h.dat');
             } catch (e) { // ignore cleanup failures
                 console.log(e);
             }
@@ -2580,30 +2579,30 @@ describe('multipart upload concurrently -- multiple files', function () {
     });
 
     it('status-connect-error-retry (file concurrently 2)', async function () {
-        await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
+        await fs.writeFile('test-transfer-file-24a.dat', 'hello world 123', 'utf8');
 
         nock('http://status-503-retry')
             .matchHeader('content-length', 8)
-            .put('/path/to/file-1.ext', 'hello wo')
+            .put('/path/to/file-1a.ext')
             .replyWithError({
                 code: 'ECONNRESET',
                 message: 'Connection Reset'
             });
         nock('http://status-503-retry')
             .matchHeader('content-length', 8)
-            .put('/path/to/file-1.ext', 'hello wo')
+            .put('/path/to/file-1a.ext')
             .reply(201);
         nock('http://status-503-retry')
             .matchHeader('content-length', 7)
-            .put('/path/to/file-2.ext', 'rld 123')
+            .put('/path/to/file-2a.ext')
             .reply(201);
 
         await uploadFilesConcurrently([{
-            filepath: 'test-transfer-file-24.dat', 
+            filepath: 'test-transfer-file-24a.dat', 
             target: {
                 urls: [
-                    'http://status-503-retry/path/to/file-1.ext',
-                    'http://status-503-retry/path/to/file-2.ext'
+                    'http://status-503-retry/path/to/file-1a.ext',
+                    'http://status-503-retry/path/to/file-2a.ext'
                 ],
                 maxPartSize: 8,
             }
@@ -2611,17 +2610,19 @@ describe('multipart upload concurrently -- multiple files', function () {
         console.log(nock.pendingMocks());
         assert(nock.isDone());
         try {
-            await fs.unlink('test-transfer-file-24.dat');
+            await fs.unlink('test-transfer-file-24a.dat');
         } catch (e) { // ignore cleanup failures
             console.log(e);
         }
     }).timeout(10000);
+
     describe('upload multiple files', function () {
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
             assert.ok(nock.isDone(), 'check if all nocks have been used');
             nock.cleanAll();
         });
+
         it('status-201-1url-each', async function () {
             await fs.writeFile('test-transfer-file-1.dat', 'hello world 123', 'utf8');
             await fs.writeFile('test-transfer-file-2.dat', 'hello world 123', 'utf8');
@@ -2661,6 +2662,7 @@ describe('multipart upload concurrently -- multiple files', function () {
                 console.log(e);
             }
         });
+
         it('status-201-1url-each-50-files', async function () {
             const uploadFiles = [];
             for (let i=0; i<50; i++) {

@@ -558,7 +558,7 @@ describe('multipart', function () {
                 console.log(e);
             }
         });
-        it('status-503-retry', async function () {
+        it('status-503-retry (aem multipart)', async function () {
             await fs.writeFile('test-transfer-file-24.dat', 'hello world 123', 'utf8');
 
             nock('http://status-503-retry')
