@@ -145,7 +145,7 @@ describe('stream', function () {
             } catch (e) {
                 assert.ok(e.message.includes('GET'), e.message);
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN')));
                 assert.ok(e.message.includes('badhost'));
             }
         }).timeout(20000);
@@ -320,7 +320,7 @@ describe('stream', function () {
             } catch (e) {
                 assert.ok(e.message.includes('PUT'), e.message);
                 assert.ok(e.message.includes('connect failed'));
-                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN'))); 
+                assert.ok((e.message.includes('ENOTFOUND') || e.message.includes('EAI_AGAIN')));
                 assert.ok(e.message.includes('badhost'));
             }
         }).timeout(20000);
@@ -383,16 +383,18 @@ describe('stream', function () {
                 assert.ok(e.message.includes('read failure'));
             }
         });
+
         // node-fetch doesn't handle stream errors well, they are not caught
         // eslint-disable-next-line mocha/no-exclusive-tests
         it.skip('201-stream-read-error', async function () {
-            try {
-                nock('http://test-201-stream-read-error')
-                    .put('/path/to/file.ext', 'hello world 123')
-                    .reply(201, 'hello world');
 
-                const readStream = createErrorReadable(Error('201 read failure'));
-                await uploadStream(readStream, 'http://test-201-stream-read-error/path/to/file.ext');
+            nock('http://test-201-stream-read-error')
+                .put('/path/to/filej.ext')
+                .reply(201, 'hello world');
+
+            const readStream = createErrorReadable(Error('201 read failure'));
+            try {
+                await uploadStream(readStream, 'http://test-201-stream-read-error/path/to/filej.ext');
                 assert.fail('failure expected');
             } catch (e) {
                 assert.ok(e.message.includes('PUT'));
@@ -401,7 +403,7 @@ describe('stream', function () {
             }
         });
     });
-    
+
     describe('transfer', function () {
         afterEach(async function () {
             assert.ok(!testHasResponseBodyOverrides(), 'ensure no response body overrides are in place');
@@ -498,8 +500,8 @@ describe('stream', function () {
             await transferStream(
                 'http://test-transfer-404/path/to/source.ext',
                 'http://test-transfer-404/path/to/target.ext', {
-                    retryAllErrors: true
-                }
+                retryAllErrors: true
+            }
             );
         });
     });
