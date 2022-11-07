@@ -147,4 +147,36 @@ describe("util", function() {
         assert.strictEqual(util.urlPathDirname('/my/test/path'), '/my/test');
         assert.strictEqual(util.urlPathDirname('/my/test/file.jpg'), '/my/test');
     });
+
+    it('encode url path', function() {
+        const HOST = 'https://myinstance';
+        assert.strictEqual(util.encodeUrlPath(`${HOST}/path/with-no-special-characters/myasset.jpg`), `${HOST}/path/with-no-special-characters/myasset.jpg`);
+
+        // special characters
+        assert.strictEqual(util.encodeUrlPath(`${HOST}/path/with special #characters&/my&&asset+.jpg`), `${HOST}/path/with%20special%20%23characters%26/my%26%26asset%2B.jpg`);
+        // parenthese are not URL encoded
+        assert.strictEqual(util.encodeUrlPath(`${HOST}/path/with-(special)-#characters&/my&&asset+.jpg`), `${HOST}/path/with-(special)-%23characters%26/my%26%26asset%2B.jpg`);
+
+        // query strings
+        assert.strictEqual(util.encodeUrlPath(`${HOST}/path/with#query+string/myasset.jpg?search=asset`), `${HOST}/path/with%23query%2Bstring/myasset.jpg`);
+        assert.strictEqual(util.encodeUrlPath(`${HOST}/path/with#query+string/myasset.jpg?search=asset?two=questionmarks`), `${HOST}/path/with%23query%2Bstring/myasset.jpg`);
+
+        // already encoded
+        assert.strictEqual(util.encodeUrlPath(`${HOST}/path/with-(special)-%23characters%26/my%26%26asset%2B.jpg`), `${HOST}/path/with-(special)-%23characters%26/my%26%26asset%2B.jpg`);
+
+        // unicode
+        assert.strictEqual(util.encodeUrlPath(`${HOST}/path/with-奈懶癩羅蘿-characters/✾✿❀myAsset✽❁.jpg`), `${HOST}/path/with-%EF%A4%8C%EF%A4%8D%EF%A4%8E%EF%A4%8F%EF%A4%90-characters/%E2%9C%BE%E2%9C%BF%E2%9D%80myAsset%E2%9C%BD%E2%9D%81.jpg`);
+    });
+
+    it('encode url path - only http/https URLs supported', function() {
+        assert.strict.throws(() => {
+            util.encodeUrlPath('file://path/to/myFile.jpg');
+        }, Error('File cannot be uploaded: only http/https urls are supported; url: file://path/to/myFile.jpg'));
+    });
+
+    it('encode url path - non-absolute URL throws error', function() {
+        assert.strict.throws(() => {
+            util.encodeUrlPath('/path/to/myFile.jpg');
+        });
+    });
 });

@@ -393,6 +393,63 @@ describe("AEMInitiateUpload", () => {
                 assert.strictEqual(done, true);    
             }
         });
+        it("single asset, special characters in path and name", async () => {
+            const source = new Asset("file:///path/to/#source.jpg");
+            const target = new Asset("http://host/path/%28with%29%20special%20%2Bcharacters%23/target%26.jpg");
+
+            nock('http://host')
+                .post(
+                    "/path/%28with%29%20special%20%2Bcharacters%23.initiateUpload.json",
+                    "fileName=target%26.jpg&fileSize=1234"
+                )
+                .reply(200, JSON.stringify({
+                    files: [{
+                        minPartSize: 1,
+                        maxPartSize: 1,
+                        uploadURIs: [
+                            "http://host/path/%28with%29%20special%20%2Bcharacters%23/target%26.jpg/block"
+                        ],
+                        uploadToken: "uploadToken"
+                    }],
+                    completeURI: "/path/(with) special +characters#.completeUpload.json"
+                }), {
+                    "content-type": "application/json"
+                });
+
+            const controller = new ControllerMock();
+            const initiateUpload = new AEMInitiateUpload({
+                retryEnabled: false,
+                supportSpecialCharacters: true
+            });
+            const generator = initiateUpload.execute([new TransferAsset(source, target, {
+                metadata: new AssetMetadata("target&.jpg", "image/jpg", 1234)
+            })], controller);
+
+            // check the first file response
+            {
+                const { value, done } = await generator.next();
+
+                const newTransferAsset = new TransferAsset(source, target, {
+                    metadata: new AssetMetadata("target&.jpg", "image/jpg", 1234),
+                    multipartTarget: new AssetMultipart([
+                        "http://host/path/%28with%29%20special%20%2Bcharacters%23/target%26.jpg/block"
+                    ], 1, 1, undefined, "http://host/path/(with)%20special%20%2Bcharacters%23.completeUpload.json", "uploadToken")
+                });
+
+                console.log('value', JSON.stringify(value));
+                console.log('newTransferAsset', JSON.stringify(newTransferAsset));
+
+                assert.deepStrictEqual(value, newTransferAsset);
+                assert.strictEqual(done, false);    
+            }
+
+            // ensure there are no more files
+            {
+                const { value, done } = await generator.next();
+                assert.strictEqual(value, undefined);
+                assert.strictEqual(done, true);    
+            }
+        });
         it("do not request csrf", async () => {
             const partHeaders = { partHeader: 'testing' };
             const source = new Asset("file:///path/to/source.png");
