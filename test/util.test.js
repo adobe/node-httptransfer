@@ -171,7 +171,7 @@ describe("util", function() {
     it('encode url path - only http/https URLs supported', function() {
         assert.strict.throws(() => {
             util.encodeUrlPath('file://path/to/myFile.jpg');
-        }, Error('File cannot be uploaded: only http/https urls are supported; url: file://path/to/myFile.jpg'));
+        }, Error('File cannot be uploaded: only http/https urls are supported for encoding; url: file://path/to/myFile.jpg'));
     });
 
     it('encode url path - non-absolute URL throws error', function() {
