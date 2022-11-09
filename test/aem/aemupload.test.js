@@ -338,6 +338,14 @@ describe('AEM Upload', function() {
         assert.strictEqual(errors.length, 1);
         assert.strictEqual(errors[0].message, "File cannot be uploaded: Filename 'file-1&.jpg' has unsupported characters");
     });
+
+    it('AEM upload without options returns error', async function() {
+        const aemUpload = new AEMUpload();
+        await assert.rejects(async () => aemUpload.uploadFiles(), err => {
+            assert.strictEqual(err.message, 'options not provided: undefined');
+            return true;
+        });
+    });
 });
 
 /**
