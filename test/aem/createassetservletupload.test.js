@@ -18,7 +18,8 @@ const assert = require("assert");
 const fs = require("fs").promises;
 const nock = require("nock");
 const Path = require("path");
-const { CreateAssetServletUpload } = require("../../lib/aem/createassetservletupload");
+const { AEMUpload } = require("../../lib/aem/aemupload");
+const { directBinaryAccessNotEnabled } = require("../testutils");
 
 const HOST = "http://somereallyfakedomainfortestingcreateassetuploads.com";
 
@@ -414,7 +415,8 @@ describe("Create Asset Servlet Upload", function() {
     }
 
     it("test asset servlet upload success", async function () {
-        const upload = new CreateAssetServletUpload();
+        const upload = new AEMUpload();
+        directBinaryAccessNotEnabled(nock, HOST, "/content/dam");
         registerEvents(upload);
 
         const fileName1 = "file1.jpg";
@@ -481,7 +483,8 @@ describe("Create Asset Servlet Upload", function() {
     });
 
     it("test asset upload servlet failure", async function () {
-        const upload = new CreateAssetServletUpload();
+        const upload = new AEMUpload();
+        directBinaryAccessNotEnabled(nock, HOST, "/content/dam");
         registerEvents(upload);
         nock(HOST)
             .post("/content/dam.createasset.html")

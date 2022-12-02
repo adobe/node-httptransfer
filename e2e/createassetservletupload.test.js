@@ -17,7 +17,7 @@
 const assert = require("assert");
 const Path = require("path");
 const {
-    CreateAssetServletUpload,
+    AEMUpload
 } = require("../lib/index");
 const {
     getAemEndpointNoDirectBinary,
@@ -34,7 +34,8 @@ describe('Create asset servlet e2e test', function() {
     }
 
     async function doCreateAssetServletUpload(fileUrls, partSize = 0) {
-        const createServletUpload = new CreateAssetServletUpload();
+        // const createServletUpload = new CreateAssetServletUpload();
+        const createServletUpload = new AEMUpload();
         const uploadStarts = [];
         const uploadProgresses = [];
         const uploadErrors = [];
