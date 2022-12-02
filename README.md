@@ -126,6 +126,19 @@ async main() {
 
 Assuming `test.png` is 1,800,000 bytes this will upload the first 1,000,000 bytes to `http://my.server.com/test.png.1` and the next 800,000 bytes to `http://my.server.com/test.png.2`.
 
+Upload files using AEM's create asset servlet:
+
+```
+const createServletUpload = new CreateAssetServletUpload();
+await createServletUpload.uploadFiles({
+    uploadFiles: [{
+        fileUrl: "http://localhost:4502/content/dam/file.jpg,
+        fileSize: 1024,
+        filePath: "/path/to/local/file.jpg"
+    }]
+});
+```
+
 ## Testbed
 
 A CLI tool [testbed](./testbed/index.js) is provided to try out the `node-httptransfer` functionality. It supports uploading, downloading, and transferring file content. It also supports Azure Blob stores through Shared Access Signature (SAS) urls created on the fly.
