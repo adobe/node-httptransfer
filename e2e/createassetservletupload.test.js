@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Adobe. All rights reserved.
+ * Copyright 2022 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -25,10 +25,11 @@ const {
     getUniqueTestId
 } = require("./e2eutils");
 
-const FILE_SIZE = 282584;
+const TIMEOUT = 60000; // 1 minute
+const FILE_SIZE = 282584; // in bytes
 
 describe('Create asset servlet e2e test', function() {
-    this.timeout(60000);
+    this.timeout(TIMEOUT);
     function writeErrors(errors) {
         return errors.map((error) => error.code);
     }
