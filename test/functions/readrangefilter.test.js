@@ -15,6 +15,7 @@
 "use strict";
 
 const assert = require("assert");
+const DRange = require("drange");
 const { IllegalArgumentError } = require("../../lib/error");
 const { ReadRangeFilter } = require("../../lib/functions/readrangefilter");
 
@@ -26,36 +27,36 @@ async function toArray(items) {
     return result;
 }
 
-describe("readrangefilter", () => {
+describe.only("readrangefilter", () => {
     describe("constructor", () => {
         it("invalid streamOffset type", () => {
             assert.throws(() => {
-                new ReadRangeFilter("str", 0, 1);
+                new ReadRangeFilter("str", new DRange(0, 0));
             }, new IllegalArgumentError("streamOffset must be 0 or higher", "str"));
         });
         it("invalid streamOffset value", () => {
             assert.throws(() => {
-                new ReadRangeFilter(-1, 0, 1);
+                new ReadRangeFilter(-1, new DRange(0, 0));
             }, new IllegalArgumentError("streamOffset must be 0 or higher", -1));
         });
         it("invalid readStart type", () => {
             assert.throws(() => {
-                new ReadRangeFilter(0, "str", 1);
+                new ReadRangeFilter(0, new DRange("str", 0));
             }, new IllegalArgumentError("readStart must be 0 or higher", "str"));
         });
         it("invalid readStart value", () => {
             assert.throws(() => {
-                new ReadRangeFilter(0, -1, 1);
+                new ReadRangeFilter(0, new DRange(-1, 0));
             }, new IllegalArgumentError("readStart must be 0 or higher", -1));
         });
         it("invalid readEnd type", () => {
             assert.throws(() => {
-                new ReadRangeFilter(0, 0, "str");
+                new ReadRangeFilter(0, new DRange(0, "str"));
             }, new IllegalArgumentError("readEnd must be 0 or higher", "str"));
         });
         it("invalid readEnd value", () => {
             assert.throws(() => {
-                new ReadRangeFilter(0, 0, -1);
+                new ReadRangeFilter(0, new DRange(0, -1));
             }, new IllegalArgumentError("readEnd must be 0 or higher", -1));
         });
     });
