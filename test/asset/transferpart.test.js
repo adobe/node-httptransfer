@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Adobe. All rights reserved.
+ * Copyright 2021 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -12,52 +12,40 @@
 
 /* eslint-env mocha */
 
-"use strict";
+'use strict';
 
+const assert = require('assert');
 const DRange = require("drange");
 const fileUrl = require("file-url");
-const assert = require("assert");
-const { Blob } = require("blob-polyfill");
-
 const { TransferPart } = require("../../lib/asset/transferpart");
 const { TransferAsset } = require("../../lib/asset/transferasset");
 const { Asset } = require("../../lib/asset/asset");
 const { AssetMetadata } = require("../../lib/asset/assetmetadata");
 
-describe("Transfer Part", function () {
-    function createPart() {
-        const assetName = "asset.jpg";
-        const targetUrl = new URL(`http://sometestdomainthatreallydoesnotexist.com/content/dam/${assetName}`);
-        const source = new Asset(fileUrl("/test/source.jpg"));
-        const target = new Asset(fileUrl("/test/target.jpg"));
-        const transferAsset = new TransferAsset(source, target, {
-            metadata: new AssetMetadata(assetName, "image/jpeg", 1024)
-        });
-        return new TransferPart(transferAsset, [targetUrl], new DRange(0, 1024));
-    }
+function createPart() {
+    const assetName = "asset.jpg";
+    const targetUrl = new URL(`http://sometestdomainthatreallydoesnotexist.com/content/dam/${assetName}`);
+    const source = new Asset(fileUrl("/test/source.jpg"));
+    const target = new Asset(fileUrl("/test/target.jpg"));
+    const transferAsset = new TransferAsset(source, target, {
+        metadata: new AssetMetadata(assetName, "image/jpeg", 1024)
+    });
+    return new TransferPart(transferAsset, [targetUrl], new DRange(0, 1023));
+}
 
-    it("test create transfer part http body", function () {
+describe("TransferPart", function () {
+    it("test total size", function () {
         const part = createPart();
-        assert.strictEqual(part.createPartHttpBody({ partData: "Hello World!" }), "Hello World!");
+        assert.strictEqual(part.totalSize, 1024);
     });
 
-    it("test create transfer part http headers with buffer", function () {
+    it("test content type", function () {
         const part = createPart();
-        assert.deepStrictEqual(part.createPartHttpHeaders({
-            httpBody: Buffer.from("Hello World!")
-        }), {
-            "content-length": 12,
-            "content-type": "image/jpeg"
-        });
+        assert.strictEqual(part.contentType, "image/jpeg");
     });
 
-    it("test create transfer part http headers with blob", function () {
+    it("test target name", function () {
         const part = createPart();
-        assert.deepStrictEqual(part.createPartHttpHeaders({
-            httpBody: new Blob(['hello world 123'])
-        }), {
-            "content-length": 15,
-            "content-type": "image/jpeg"
-        });
+        assert.strictEqual(part.targetName, "target.jpg");
     });
 });

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Adobe. All rights reserved.
+ * Copyright 2021 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -12,17 +12,18 @@
 
 /* eslint-env mocha */
 
-"use strict";
+'use strict';
 
+const assert = require('assert');
 const DRange = require("drange");
 const fileUrl = require("file-url");
-const assert = require("assert");
-const { CreateAssetServletPart } = require("../../lib/asset/createassetservletpart");
+const { TransferPart } = require("../../lib/asset/transferpart");
 const { TransferAsset } = require("../../lib/asset/transferasset");
 const { Asset } = require("../../lib/asset/asset");
 const { AssetMetadata } = require("../../lib/asset/assetmetadata");
+const { CreateAssetServletRequestGenerator } = require("../../lib/aem/createassetservletrequestgenerator");
 
-describe("Create Asset Servlet Part", function () {
+describe('CreateAssetServletRequestGenerator', function() {
     function createPart(contentRange) {
         const assetName = "asset.jpg";
         const targetUrl = new URL(`http://sometestdomainthatreallydoesnotexist.com/content/dam/${assetName}`);
@@ -31,24 +32,25 @@ describe("Create Asset Servlet Part", function () {
         const transferAsset = new TransferAsset(source, target, {
             metadata: new AssetMetadata(assetName, "image/jpeg", 1024)
         });
-        return new CreateAssetServletPart(transferAsset, [targetUrl], contentRange);
+        return new TransferPart(transferAsset, [targetUrl], contentRange);
     }
 
     it("test create part http entities not chunked", function () {
+        const request = new CreateAssetServletRequestGenerator();
         const fullContentRange = new DRange(0, 1023);
         const contentRange = fullContentRange.subranges()[0];
         const part = createPart(fullContentRange);
-        assert.ok(!part.isChunked(contentRange));
-        assert.strictEqual(part.totalSize, 1024);
-        assert.strictEqual(part.contentType, "image/jpeg");
+        assert.ok(!request.isPartChunked(1024, contentRange));
 
-        const httpBody = part.createPartHttpBody({
+        const httpBody = request.createPartHttpBody({
+            transferPart: part,
             partData: 'testing',
             contentRange
         });
         assert.ok(httpBody);
 
-        const httpHeaders = part.createPartHttpHeaders({
+        const httpHeaders = request.createPartHttpHeaders({
+            transferPart: part,
             httpBody,
             contentRange
         });
@@ -59,17 +61,20 @@ describe("Create Asset Servlet Part", function () {
 
 
     it("test create part http entities chunked", function () {
+        const request = new CreateAssetServletRequestGenerator();
         const fullContentRange = new DRange(0, 512);
         const contentRange = fullContentRange.subranges()[0];
         const part = createPart(fullContentRange);
-        assert.ok(part.isChunked(contentRange));
-        const httpBody = part.createPartHttpBody({
+        assert.ok(request.isPartChunked(1024, contentRange));
+        const httpBody = request.createPartHttpBody({
+            transferPart: part,
             partData: 'testing',
             contentRange
         });
         assert.ok(httpBody);
 
-        const httpHeaders = part.createPartHttpHeaders({
+        const httpHeaders = request.createPartHttpHeaders({
+            transferPart: part,
             httpBody,
             contentRange
         });
