@@ -20,6 +20,7 @@ const nock = require('nock');
 const Path = require('path');
 const { AEMUpload } = require('../../lib/aem/aemupload');
 const { Blob } = require('blob-polyfill');
+const { directBinaryAccessEnabled } = require("../testutils");
 
 describe('AEM Upload', function() {
     afterEach(async function () {
@@ -31,6 +32,7 @@ describe('AEM Upload', function() {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
+        directBinaryAccessEnabled(nock, HOST, '/path/to');
         const initResponse = {
             completeURI: `${HOST}/path/to.completeUpload.json`,
             folderPath: '/path/to',
@@ -143,6 +145,7 @@ describe('AEM Upload', function() {
         const HOST = 'http://test-aem-upload-201';
         const testFile = Path.join(__dirname, 'file-1.jpg');
         await fs.writeFile(testFile, 'hello world 123', 'utf8');
+        directBinaryAccessEnabled(nock, HOST, '/path/to');
 
         nock(HOST)
             .post('/path/to.initiateUpload.json', 'fileName=file-1.jpg&fileSize=15')
@@ -216,6 +219,7 @@ describe('AEM Upload', function() {
     it('AEM upload blob smoke test', async function() {
         const blob = new Blob(['hello world 123']);
         const HOST = 'http://test-aem-upload-201';
+        directBinaryAccessEnabled(nock, HOST, '/path/to');
         const initResponse = {
             completeURI: `${HOST}/path/to.completeUpload.json`,
             folderPath: '/path/to',

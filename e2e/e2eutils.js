@@ -63,6 +63,43 @@ module.exports.getAuthorizationHeader = function () {
     throw new Error('Either BASIC_AUTH or LOGIN_TOKEN env variable must be set');
 };
 
+/**
+ * Retrieves the root URL of the AEM endpoint that the test's should
+ * use. This endpoint should not have direct binary access enabled.
+ * @returns {string} URL for an AEM instance.
+ */
+module.exports.getAemEndpointNoDirectBinary = function () {
+    const endpoint = process.env.AEM_ENDPOINT_NO_DIRECT_BINARY;
+
+    if (!endpoint) {
+        throw new Error('AEM_ENDPOINT_NO_DIRECT_BINARY environment variable must be supplied');
+    }
+
+    return endpoint;
+};
+
+/**
+ * Updates the given options to include authentication information required
+ * to communicate with AEM.
+ * @param {DirectBinaryUploadOptions} uploadOptions Will be updated with auth info.
+ */
+module.exports.getAuthorizationHeaderNoDirectBinary = function () {
+    const basic = process.env.BASIC_AUTH_NO_DIRECT_BINARY;
+    const token = process.env.LOGIN_TOKEN_NO_DIRECT_BINARY;
+
+    if (basic) {
+        return {
+            authorization: `Basic ${Buffer.from(basic).toString("base64")}`
+        };
+    } else if (token) {
+        return {
+            'Cookie': token
+        };
+    }
+
+    throw new Error('Either BASIC_AUTH_NO_DIRECT_BINARY or LOGIN_TOKEN_NO_DIRECT_BINARY env variable must be set');
+};
+
 function createAzureCredential(auth) {
     if (!auth || !auth.accountName || !auth.accountKey) {
         throw Error("Azure Storage credentials not provided");
