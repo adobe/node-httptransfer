@@ -509,7 +509,7 @@ describe("AEMInitiateUpload", () => {
         it("files missing", async () => {
             await tryInvalidInitiateUploadResponse({
                 completeURI: "/path/to.completeUpload.json"
-            }, "Target AEM instance must have direct binary upload enabled");
+            }, "Target AEM instance does not have direct binary upload enabled. Falling back to create asset servlet.");
         });
         it("files length mismatch", async () => {
             await tryInvalidInitiateUploadResponse({
@@ -534,7 +534,7 @@ describe("AEMInitiateUpload", () => {
                     mimeType: "image/png",
                     uploadToken: "uploadToken"
                 }]
-            }, "'completeURI' field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}]}");
+            }, "Target AEM instance does not have direct binary upload enabled. Falling back to create asset servlet.");
         });
         it("completeURI not a string", async () => {
             await tryInvalidInitiateUploadResponse({
@@ -548,7 +548,7 @@ describe("AEMInitiateUpload", () => {
                     uploadToken: "uploadToken"
                 }],
                 completeURI: {}
-            }, "'completeURI' field invalid in initiateUpload response: {\"files\":[{\"minPartSize\":1000,\"maxPartSize\":10000,\"uploadURIs\":[\"http://host/path/to/target.png/block\"],\"mimeType\":\"image/png\",\"uploadToken\":\"uploadToken\"}],\"completeURI\":{}}");
+            }, "Target AEM instance does not have direct binary upload enabled. Falling back to create asset servlet.");
         });
         it("minPartSize missing", async () => {
             await tryInvalidInitiateUploadResponse({
