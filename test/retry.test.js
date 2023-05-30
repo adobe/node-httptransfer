@@ -24,6 +24,7 @@ const retryDelay = rewireRetry.__get__("retryDelay");
 const retryOn = rewireRetry.__get__("retryOn");
 const retryInit = rewireRetry.__get__("retryInit");
 const filterOptions = rewireRetry.__get__("filterOptions");
+const filterToRetryOptions = rewireRetry.__get__("filterToRetryOptions");
 
 function assertStartTime(options) {
     const now = Date.now();
@@ -85,6 +86,36 @@ describe("retry", function () {
                 retryMaxDuration: 60000,
                 retryInitialDelay: 100,
                 retryAllErrors: true
+            }));
+        });
+        it("response-error-404 retryOnHttpResponseError function retrying 404s", function () {
+            // should retry based on 404 status as defined in retryOnHttpResponseError
+            assert.ok(retryOn(0, new HttpResponseError("GET", "url", 404, "message"), {
+                startTime: Date.now(),
+                retryMaxDuration: 60000,
+                retryInitialDelay: 100,
+                retryOnHttpResponseError: (httpResponseError) => {
+                    const { status } = httpResponseError;
+                    if (status === 404) {
+                        return true;
+                    }
+                    return false;
+                }
+            }));
+        });
+        it("response-error-404 retryOnHttpResponseError function retrying 400s", function () {
+            // should not retry based on 404 status as defined in retryOnHttpResponseError
+            assert.ok(!retryOn(0, new HttpResponseError("GET", "url", 404, "message"), {
+                startTime: Date.now(),
+                retryMaxDuration: 60000,
+                retryInitialDelay: 100,
+                retryOnHttpResponseError: (httpResponseError) => {
+                    const { status } = httpResponseError;
+                    if (status === 400) {
+                        return true;
+                    }
+                    return false;
+                }
             }));
         });
     });
@@ -224,6 +255,31 @@ describe("retry", function () {
             assert.deepStrictEqual(args, {
                 arg1: "arg1",
                 timeout: 60000
+            });
+        });
+    });
+
+    describe("filterToRetryOptions", function () {
+        it("none", function () {
+            const args = filterToRetryOptions();
+            assert.strictEqual(args, undefined);
+        });
+        it("empty", function () {
+            const args = filterToRetryOptions({});
+            assert.deepStrictEqual(args, {});
+        });
+        it("filter", function () {
+            const args = filterToRetryOptions({
+                arg1: "arg1",
+                retryEnabled: true,
+                retryMaxDuration: 1000,
+                retryInitialDelay: 100,
+                timeout: 60000
+            });
+            assert.deepStrictEqual(args, {
+                retryEnabled: true,
+                retryMaxDuration: 1000,
+                retryInitialDelay: 100
             });
         });
     });
