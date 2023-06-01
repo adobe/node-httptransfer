@@ -118,6 +118,26 @@ describe("retry", function () {
                 }
             }));
         });
+        it("response-error-404 retryOnHttpResponseError non-function should not retry", function () {
+            assert.ok(!retryOn(0, new HttpResponseError("GET", "url", 404, "message"), {
+                startTime: Date.now(),
+                retryMaxDuration: 60000,
+                retryInitialDelay: 100,
+                retryOnHttpResponseError: true
+            }));
+            assert.ok(!retryOn(0, new HttpResponseError("GET", "url", 404, "message"), {
+                startTime: Date.now(),
+                retryMaxDuration: 60000,
+                retryInitialDelay: 100,
+                retryOnHttpResponseError: {}
+            }));
+            assert.ok(!retryOn(0, new HttpResponseError("GET", "url", 404, "message"), {
+                startTime: Date.now(),
+                retryMaxDuration: 60000,
+                retryInitialDelay: 100,
+                retryOnHttpResponseError: 'string'
+            }));
+        });
     });
 
     describe("retryInit", function () {
