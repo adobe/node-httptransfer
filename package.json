@@ -69,4 +69,4 @@
     "testbed": "node testbed/index.js",
     "prepublishOnly": "npm run build-es2015"
   }
-}
+}  
