@@ -13,7 +13,7 @@
     "url": "https://github.com/adobe/node-httptransfer.git"
   },
   "dependencies": {
-    "@babel/runtime": "^7.22.3",
+    "@babel/runtime": "^7.22.0",
     "content-disposition": "^0.5.4",
     "content-range": "^2.0.2",
     "content-type": "^1.0.5",
