@@ -2202,4 +2202,84 @@ describe('Block Download', function () {
             assert.ok(err.message.includes("404"));
         }
     });
+
+    it('Block download confirm requestOptions are passed to fetch (e.g. used for proxy support)', async function () {
+        const HOST = "http://test-aem-download.com";
+        const filenameToDownload = "/path/to/image-file-1.jpeg";
+        nock(HOST)
+            .head(filenameToDownload)
+            .reply(function() {
+                // confirm requestOptions were sent as part of HEAD request
+                assert.strictEqual(this.req.options.agent, 'unit-test-agent');
+                return [
+                    200,
+                    "OK",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 15,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        nock(HOST)
+            .get(filenameToDownload)
+            .reply(() => {
+                return [
+                    200,
+                    "AAAAAAAAAAAAAAA",
+                    {
+                        'content-type': 'image/jpeg',
+                        'content-length': 15,
+                        'content-disposition': 'attachment; filename="image-file-1.jpg"',
+                        'last-modified': 'Wed, 21 Oct 2021 09:00:00 GMT',
+                        'etag': ''
+                    }
+                ];
+            });
+
+        const blockDownload = new BlockDownload();
+        const events = {
+            filestart: [],
+            fileprogress: [],
+            fileend: [],
+            error: []
+        };
+        blockDownload.on('filestart', (data) => {
+            events.filestart.push(data);
+        });
+        blockDownload.on('fileprogress', (data) => {
+            events.fileprogress.push(data);
+        });
+        blockDownload.on('fileend', (data) => {
+            events.fileend.push(data);
+        });
+        blockDownload.on('error', (data) => {
+            events.error.push(data);
+        });
+
+        const fileToDownload = `${HOST}${filenameToDownload}`;
+        const mockDownloadFileLocation = "./test/tmp.jpeg";
+        await blockDownload.downloadFiles({
+            downloadFiles: [{
+                fileUrl: fileToDownload,
+                filePath: Path.resolve(mockDownloadFileLocation), // where to put the file
+                fileSize: 15
+            }],
+            concurrent: true,
+            maxConcurrent: 4,
+            requestOptions: {
+                agent: 'unit-test-agent'
+            }
+        });
+
+        await fs.promises.unlink(Path.resolve(mockDownloadFileLocation), "Could not unlink mock downloaded file");
+        assert.equal(events.filestart.length, 1);
+        assert.equal(events.error.length, 0);
+        assert.ok(nock.isDone(), nock.pendingMocks());
+
+        //note: additional assertion made in nock callback at begining of this test
+    });
 });

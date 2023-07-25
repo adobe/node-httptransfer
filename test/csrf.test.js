@@ -60,4 +60,33 @@ describe('csrf', function () {
             return true;
         });
     });
+
+    it('confirm requestOptions are passed on to fetch', async function () {
+        nock('http://test')
+            .get('/libs/granite/csrf/token.json')
+            .reply(200, function () {
+                assert.strictEqual(this.req.options.agent, 'test');
+                return { token: "test-csrf-token" };
+            });
+
+        const csrfOptions = {
+            requestOptions: {
+                agent: 'test'
+            }
+        };
+
+        await getCSRFToken("http://test", csrfOptions);
+    });
+
+    it('confirm an empty requestOptions does not cause errors', async function () {
+        nock('http://test')
+            .get('/libs/granite/csrf/token.json')
+            .reply(200, '{ "token": "test-csrf-token" }')
+            .persist();
+
+        await getCSRFToken("http://test");
+        await getCSRFToken("http://test", {});
+        await getCSRFToken("http://test", { requestOptions: false });
+        await getCSRFToken("http://test", { requestOptions: {} });
+    });
 });
