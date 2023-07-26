@@ -415,5 +415,36 @@ describe('headers', function() {
                 assert.ok(e.message.includes('read failure'));
             }
         });
+        it('headers - requestOptions are passed to fetch (used for things like proxy support)', async function() {
+            nock('http://test-headers')
+                .head('/path/to/file.ext')
+                .reply(200, function() {
+                    // confirm requestOptions were sent as part of HEAD request
+                    assert.strictEqual(this.req.options.agent, 'unit-test-agent');
+                });
+
+            const options = {
+                requestOptions: {
+                    agent: 'unit-test-agent'
+                }
+            };
+
+            await getResourceHeaders('http://test-headers/path/to/file.ext', options);
+        });
+        it('headers - empty options do not cause errors', async function() {
+            nock('http://test-headers')
+                .persist()
+                .head('/path/to/file.ext')
+                .reply(200);
+
+            // no options object
+            await getResourceHeaders('http://test-headers/path/to/file.ext');
+
+            // empty options object
+            await getResourceHeaders('http://test-headers/path/to/file.ext', {});
+
+            // empty requestOptions object
+            await getResourceHeaders('http://test-headers/path/to/file.ext', { requestOptions: {} });
+        });
     });
 });
