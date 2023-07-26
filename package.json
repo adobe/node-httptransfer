@@ -1,6 +1,6 @@
 {
   "name": "@adobe/httptransfer",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "main": "index.js",
   "browser": "./es2015/index.js",
   "description": "Efficient File Transfer Module for NodeJS",
