@@ -928,13 +928,25 @@ describe('Block Download', function () {
         assert.equal(events.filestart[0].fileSize, 15);
         assert.equal(events.filestart[1].fileSize, 10);
         assert.equal(events.fileprogress.length, 2);
-        assert.equal(events.fileprogress[0].fileSize, 15);
-        assert.equal(events.fileprogress[0].transferred, 15);
-        assert.equal(events.fileprogress[1].fileSize, 10);
-        assert.equal(events.fileprogress[1].transferred, 10);
+        let file1ProgressIndex = 0;
+        let file2ProgressIndex = 1;
+        if (events.fileprogress[file1ProgressIndex].fileSize === 10) {
+            file1ProgressIndex = 1;
+            file2ProgressIndex = 0;
+        }
+        assert.equal(events.fileprogress[file1ProgressIndex].fileSize, 15);
+        assert.equal(events.fileprogress[file1ProgressIndex].transferred, 15);
+        assert.equal(events.fileprogress[file2ProgressIndex].fileSize, 10);
+        assert.equal(events.fileprogress[file2ProgressIndex].transferred, 10);
         assert.equal(events.fileend.length, 2);
-        assert.equal(events.fileprogress[0].fileSize, 15);
-        assert.equal(events.fileprogress[1].fileSize, 10);
+        let file1EndIndex = 0;
+        let file2EndIndex = 1;
+        if (events.fileend[file1EndIndex].fileSize === 10) {
+            file1EndIndex = 1;
+            file2EndIndex = 0;
+        }
+        assert.equal(events.fileend[file1EndIndex].fileSize, 15);
+        assert.equal(events.fileend[file2EndIndex].fileSize, 10);
         assert.equal(events.error.length, 0);
         assert.ok(nock.isDone(), nock.pendingMocks());
     });
