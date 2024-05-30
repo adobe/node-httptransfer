@@ -19,7 +19,7 @@ const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
 const { AEMUpload } = require('../../lib/aem/aemupload');
-const { Blob } = require('blob-polyfill');
+const { Blob } = require('node:buffer');
 const { directBinaryAccessEnabled } = require("../testutils");
 
 describe('AEM Upload', function() {
