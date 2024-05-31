@@ -19,10 +19,7 @@
           "subject": "BUGFIX-RELEASE:*",
           "release": "patch"
         }
-        ],
-        "parserOpts": {
-          "noteKeywords": ["BREAKING-RELEASE", "FEATURE-RELEASE", "BUGFIX-RELEASE"]
-        }
+        ]
       }],
       ["@semantic-release/release-notes-generator", {
         "preset": "eslint"
