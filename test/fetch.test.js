@@ -17,7 +17,7 @@
 const assert = require('assert');
 const nock = require('nock');
 const { postForm, testSetResponseBodyOverride, issuePut } = require('../lib/fetch');
-const fetch = require('node-fetch-npm');
+const fetch = require('minipass-fetch');
 
 describe('fetch', function() {
     afterEach(async function() {

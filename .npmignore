@@ -3,6 +3,7 @@
 coverage
 .nyc_output
 test/
+testbed/
 .circleci
 .travis.yml
 Jenkinsfile
@@ -12,6 +13,9 @@ Jenkinsfile
 .github/
 stryker.conf.js
 build/
+es2015/
+e2e/
+.nvmrc
 
 # npm pack leftovers
 *.tgz
@@ -23,3 +27,7 @@ build/
 
 # pipeline release config
 .releaserc.json
+
+# babel configurations
+babel.cjs.json
+babel.esm.json
