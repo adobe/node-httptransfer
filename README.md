@@ -126,6 +126,14 @@ async main() {
 
 Assuming `test.png` is 1,800,000 bytes this will upload the first 1,000,000 bytes to `http://my.server.com/test.png.1` and the next 800,000 bytes to `http://my.server.com/test.png.2`.
 
+## Debugging
+To enable debug output when using `node-httptransfer` library, set the `DEBUG` environment variable to `httptransfer:*`.
+You can also specify a specific loglevel per [./lib/logger.js](./lib/logger.js), e.g.: 
+
+```bash
+$ DEBUG='httptransfer:warn' npm run test
+```
+
 ## Testbed
 
 A CLI tool [testbed](./testbed/index.js) is provided to try out the `node-httptransfer` functionality. It supports uploading, downloading, and transferring file content. It also supports Azure Blob stores through Shared Access Signature (SAS) urls created on the fly.
