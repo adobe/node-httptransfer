@@ -16,7 +16,7 @@
 
 const assert = require('assert');
 const { AEMBinaryUpload } = require('../../lib/aem/aembinaryupload');
-const { Blob } = require('node:buffer');
+const { Blob } = require('blob-polyfill');
 
 describe('AEM Binary Upload', function() {
     it('test get transfer options', function () {

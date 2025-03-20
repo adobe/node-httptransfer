@@ -16,7 +16,7 @@
 
 const assert = require("assert");
 const Path = require("path");
-const { mkdirp } = require("mkdirp");
+const mkdirp = require("mkdirp");
 const { promises: fs } = require("fs");
 
 // not exported and not expected to be used by clients
