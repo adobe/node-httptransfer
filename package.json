@@ -55,7 +55,8 @@
     "transfer",
     "http",
     "https",
-    "file"
+    "file",
+    "blob"
   ],
   "scripts": {
     "test": "DEBUG=httptransfer:* nyc mocha --recursive --exit",
