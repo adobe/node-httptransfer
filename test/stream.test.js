@@ -383,8 +383,15 @@ describe('stream', function () {
                 assert.ok(e.message.includes('read failure'));
             }
         });
-        // node-fetch doesn't handle stream errors well, they are not caught
-        // eslint-disable-next-line mocha/no-exclusive-tests
+        // Node-fetch (v2.x) has a fundamental limitation with how it handles stream errors.
+        // When using node-fetch with a stream in the request body, errors emitted on that stream
+        // are not properly propagated to the fetch Promise. This is a known issue with node-fetch v2.x.
+        // 
+        // The fetch Promise won't resolve or reject, and the error is silently swallowed,
+        // making it impossible to test this scenario without modifying node-fetch internals
+        // or upgrading to node-fetch v3.x with significant refactoring.
+        //
+        // Reference: https://github.com/node-fetch/node-fetch/issues/753
         it.skip('201-stream-read-error', async function () {
             try {
                 nock('http://test-201-stream-read-error')
