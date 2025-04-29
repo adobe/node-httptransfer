@@ -18,7 +18,7 @@ const assert = require('assert');
 
 const DRange = require("drange");
 const fileUrl = require("file-url");
-const { Blob } = require("blob-polyfill");
+const { Blob } = require("../util/blob-mock");
 
 const { TransferPart } = require("../../lib/asset/transferpart");
 const { TransferAsset } = require("../../lib/asset/transferasset");

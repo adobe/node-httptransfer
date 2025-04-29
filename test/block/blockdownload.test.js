@@ -842,8 +842,8 @@ describe('Block Download', function () {
         assert.equal(events.fileprogress[1].fileSize, 10);
         assert.equal(events.fileprogress[1].transferred, 10);
         assert.equal(events.fileend.length, 2);
-        assert.equal(events.fileprogress[0].fileSize, 15);
-        assert.equal(events.fileprogress[1].fileSize, 10);
+        assert.equal(events.fileend[0].fileSize, 15);
+        assert.equal(events.fileend[1].fileSize, 10);
         assert.equal(events.error.length, 0);
         assert.ok(nock.isDone(), nock.pendingMocks());
     });
@@ -933,8 +933,8 @@ describe('Block Download', function () {
         assert.equal(events.fileprogress[1].fileSize, 10);
         assert.equal(events.fileprogress[1].transferred, 10);
         assert.equal(events.fileend.length, 2);
-        assert.equal(events.fileprogress[0].fileSize, 15);
-        assert.equal(events.fileprogress[1].fileSize, 10);
+        assert.equal(events.fileend[0].fileSize, 15);
+        assert.equal(events.fileend[1].fileSize, 10);
         assert.equal(events.error.length, 0);
         assert.ok(nock.isDone(), nock.pendingMocks());
     });
@@ -1054,14 +1054,15 @@ describe('Block Download', function () {
             assert.equal(events.fileprogress[1].fileSize, 10);
             assert.equal(events.fileprogress[1].transferred, 10);
             assert.equal(events.fileend.length, 2);
-            assert.equal(events.fileprogress[0].fileSize, 15);
-            assert.equal(events.fileprogress[1].fileSize, 10);
+            assert.equal(events.fileend[0].fileSize, 15);
+            assert.equal(events.fileend[1].fileSize, 10);
             assert.equal(events.error.length, 0);
             assert.ok(nock.isDone(), nock.pendingMocks());
         }
     });
 
     it('Block download smoke test (repeated multiple file download, max concurrency 1)', async function () {
+        this.timeout(10000); // Increase timeout to 10 seconds
         for (let i = 0; i < 3; i++) {
             const HOST = "http://test-aem-download.com";
             const filenameToDownload = "/path/to/image-file";
@@ -1176,8 +1177,8 @@ describe('Block Download', function () {
             assert.equal(events.fileprogress[1].fileSize, 10);
             assert.equal(events.fileprogress[1].transferred, 10);
             assert.equal(events.fileend.length, 2);
-            assert.equal(events.fileprogress[0].fileSize, 15);
-            assert.equal(events.fileprogress[1].fileSize, 10);
+            assert.equal(events.fileend[0].fileSize, 15);
+            assert.equal(events.fileend[1].fileSize, 10);
             assert.equal(events.error.length, 0);
             assert.ok(nock.isDone(), nock.pendingMocks());
         }

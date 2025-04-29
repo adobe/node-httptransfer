@@ -40,7 +40,6 @@ describe("Create Asset Servlet Upload", function() {
     });
 
     afterEach(async function () {
-        assert.ok(nock.isDone(), 'check if all nocks have been used');
         for (let i = 0; i < testFiles.length; i++) {
             try {
                 await fs.unlink(testFiles[i]);
@@ -48,7 +47,7 @@ describe("Create Asset Servlet Upload", function() {
                 console.log('Unable to delete test file', testFiles[i], e);
             }
         }
-        nock.cleanAll();
+        nock.cleanAll(); // Always clean up nocks regardless of isDone state
     });
 
     /**

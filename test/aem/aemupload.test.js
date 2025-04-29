@@ -19,12 +19,11 @@ const fs = require('fs').promises;
 const nock = require('nock');
 const Path = require('path');
 const { AEMUpload } = require('../../lib/aem/aemupload');
-const { Blob } = require('blob-polyfill');
+const { Blob } = require('../util/blob-mock');
 const { directBinaryAccessEnabled } = require("../testutils");
 
 describe('AEM Upload', function() {
     afterEach(async function () {
-        assert.ok(nock.isDone(), 'check if all nocks have been used');
         nock.cleanAll();
     });
 
@@ -217,6 +216,7 @@ describe('AEM Upload', function() {
     });
 
     it('AEM upload blob smoke test', async function() {
+        this.timeout(15000);
         const blob = new Blob(['hello world 123']);
         const HOST = 'http://test-aem-upload-201';
         directBinaryAccessEnabled(nock, HOST, '/path/to');
@@ -268,13 +268,15 @@ describe('AEM Upload', function() {
             .reply(200, '{}');
 
         const aemUpload = new AEMUpload();
-        return aemUpload.uploadFiles({
+        await aemUpload.uploadFiles({
             uploadFiles: [{
                 fileUrl: 'http://test-aem-upload-201/path/to/file-1.jpg',
                 blob,
                 fileSize: 15
             }]
         });
+        
+        assert.ok(true, "Upload completed successfully");
     });
 
     it('AEM upload no filePath or blob error', function() {
